@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Banco Orbital</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="brand-lockup">
+          <div class="brand-mark">A</div>
+          <div>
+            <p class="eyebrow">Panel Operativo</p>
+            <h1>Banco Orbital</h1>
+          </div>
+        </div>
+        <div class="status-pill">
+          <span class="status-dot"></span>
+          <span id="api-status">Conectando con la API</span>
+        </div>
+      </header>
+
+      <main class="dashboard">
+        <section class="hero-card">
+          <div class="hero-copy">
+            <p class="eyebrow">Vista Ejecutiva</p>
+            <h2>Una lectura clara del banco, pensada para transmitir orden y confianza.</h2>
+            <p class="hero-text">
+              Este panel resume clientes, cuentas, movimientos y auditoría con una estética sobria,
+              financiera y enfocada en decisiones rápidas.
+            </p>
+            <div class="hero-actions">
+              <a href="#personas-section" class="primary-link">Ver clientes</a>
+              <a href="#transacciones-section" class="secondary-link">Revisar movimientos</a>
+            </div>
+          </div>
+          <div class="hero-metrics" id="hero-metrics"></div>
+        </section>
+
+        <section class="stats-grid" id="stats-grid"></section>
+
+        <section class="content-grid">
+          <article class="panel panel-wide">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Clientes</p>
+                <h3 id="personas-section">Personas registradas</h3>
+              </div>
+              <button id="refresh-button" class="ghost-button" type="button">Actualizar datos</button>
+            </div>
+            <div id="personas-list" class="people-grid"></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Relaciones</p>
+                <h3>Perfil consolidado</h3>
+              </div>
+            </div>
+            <div id="persona-detail" class="detail-card empty-state">
+              Seleccioná una persona para ver sus cuentas, roles y destinatarios.
+            </div>
+          </article>
+        </section>
+
+        <section class="content-grid secondary-grid">
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Cuentas</p>
+                <h3>Estado de cuentas</h3>
+              </div>
+            </div>
+            <div id="cuentas-table" class="table-shell"></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Destinatarios</p>
+                <h3>Agenda reciente</h3>
+              </div>
+            </div>
+            <div id="destinatarios-list" class="stack-list"></div>
+          </article>
+        </section>
+
+        <section class="content-grid secondary-grid">
+          <article class="panel panel-wide">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Movimientos</p>
+                <h3 id="transacciones-section">Últimas transacciones</h3>
+              </div>
+            </div>
+            <div id="transacciones-table" class="table-shell"></div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <div>
+                <p class="eyebrow">Control</p>
+                <h3>Auditoría reciente</h3>
+              </div>
+            </div>
+            <div id="auditoria-list" class="timeline"></div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <template id="metric-template">
+      <article class="metric-card">
+        <p class="metric-label"></p>
+        <strong class="metric-value"></strong>
+        <span class="metric-caption"></span>
+      </article>
+    </template>
+
+    <script src="./app.js"></script>
+  </body>
+  </html>
