@@ -1,73 +1,78 @@
-# 🔧 Configuración Requerida en Clerk Dashboard
+# Configuración Clerk - Frontend
 
-El error **"JSON.parse: unexpected character"** ocurre porque **Clerk no está autorizado a conectarse desde tu localhost**.
+## Estado validado
 
-## Paso 1: Ir a Clerk Dashboard
+El flujo que quedó funcionando es:
+- sign in con `username + password`
+- usuarios ya migrados a Clerk
+- dashboard accesible desde el frontend
 
-1. Accede a: https://dashboard.clerk.com
-2. Selecciona tu aplicación "Development" o "Orbital"
-3. Click en **"Configure"** (en el top)
+## Variables de entorno
 
-## Paso 2: Configurar Application URLs
-
-En el menú izquierdo, busca **"Application URLs"** o **"Settings"**
-
-Agrega estas URLs:
-
-```
-Allowed Sign In/Up Redirects:
-- http://localhost:3000
-- http://localhost:3000/auth/sign-in
-- http://localhost:3000/auth/sign-up
-- http://localhost:3000/dashboard
-```
-
-## Paso 3: Configurar CORS / Authorized Origins
-
-En **"Settings"** o **"API Keys"**, busca **"Authorized Origins"**
-
-Agrega:
-```
-http://localhost:3000
-http://localhost:3000:3000
-localhost:3000
-```
-
-## Paso 4: Verificar las Keys
-
-1. Ve a **"API Keys"** (en el menú Developers)
-2. Copia el **NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY** (comienza con `pk_`)
-3. Copia el **CLERK_SECRET_KEY** (comienza con `sk_`)
-4. Verifica que estén en `.env.local`:
+Archivo `.env.local`:
 
 ```env
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_... ← REEMPLAZA AQUÍ
-CLERK_SECRET_KEY=sk_test_... ← REEMPLAZA AQUÍ
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+CLERK_SECRET_KEY=sk_test_...
+
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/auth/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/auth/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/dashboard
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/dashboard
+
+NEXT_PUBLIC_API_URL=http://localhost:3001
 ```
 
-## Paso 5: Restart Frontend
+## Configuración de Clerk Dashboard
 
-Una vez configurado:
+### Application URLs
 
-```bash
-cd banco-frontend
-# Presiona Ctrl+C si estaba corriendo
-npm run dev
+Usar:
+
+```text
+http://localhost:3000
+http://localhost:3000/auth/sign-in
+http://localhost:3000/auth/sign-up
+http://localhost:3000/dashboard
 ```
 
----
+### Authentication strategy usada
 
-## ✅ Checklist
+En `User & authentication`:
 
-- [ ] Aplicación creada en Clerk
-- [ ] NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY en .env.local
-- [ ] CLERK_SECRET_KEY en .env.local
-- [ ] http://localhost:3000 agregado en Authorized Origins
-- [ ] Redirect URLs configuradas
-- [ ] Frontend reiniciado (npm run dev)
+- `Username`
+  - `Sign-up with username`: ON
+  - `Sign-in with username`: ON
+- `Password`: ON
+- `Email`: OFF para la UI si no se quiere usar en login
+- `Phone`: OFF
 
-Si el error persiste, revisa la consola del navegador (F12) para ver el error exacto de Clerk.
+En `SSO connections`:
 
----
+- `Google`: OFF
 
-**Después de hacer estos cambios, el login debería funcionar correctamente.**
+## Resultado esperado
+
+La UI de login debe pedir:
+1. `username`
+2. `password`
+
+No debería mostrar:
+- Google
+- email
+- phone
+
+## Si el dashboard muestra error en la API
+
+Revisar:
+- backend levantado en `http://localhost:3001`
+- frontend levantado en `http://localhost:3000`
+- `NEXT_PUBLIC_API_URL` apuntando al backend correcto
+
+## Checklist
+
+- [ ] Clerk configurado con `username + password`
+- [ ] Google desactivado
+- [ ] `.env.local` completo
+- [ ] backend corriendo en `3001`
+- [ ] frontend corriendo en `3000`

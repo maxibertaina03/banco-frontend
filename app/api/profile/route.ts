@@ -13,27 +13,48 @@ export async function GET() {
 
     const clerkUser = await currentUser();
     const token = await getToken();
-    const apiUrl =
-      process.env.BACKEND_API_URL ||
-      process.env.NEXT_PUBLIC_API_URL ||
-      'http://localhost:3001';
+    const candidateApiUrls = Array.from(
+      new Set(
+        [
+          process.env.BACKEND_API_URL,
+          process.env.NEXT_PUBLIC_API_URL,
+          'http://localhost:3001',
+          'http://localhost:3000',
+        ].filter(Boolean)
+      )
+    ) as string[];
 
     let backend: unknown = null;
     let backendError: string | null = null;
+    let apiUrl = candidateApiUrls[0] || 'http://localhost:3001';
 
     if (token) {
-      const response = await fetch(`${apiUrl}/auth/profile`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        cache: 'no-store',
-      });
+      for (const candidate of candidateApiUrls) {
+        try {
+          const response = await fetch(`${candidate}/auth/profile`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            cache: 'no-store',
+          });
 
-      const data = await response.json();
-      if (response.ok) {
-        backend = data;
-      } else {
-        backendError = data.error || data.message || 'Error al consultar el backend';
+          const data = await response.json();
+          apiUrl = candidate;
+
+          if (response.ok) {
+            backend = data;
+            backendError = null;
+            break;
+          }
+
+          backendError =
+            data.error || data.message || `Error al consultar el backend en ${candidate}`;
+        } catch (error) {
+          backendError =
+            error instanceof Error
+              ? `No se pudo conectar con ${candidate}: ${error.message}`
+              : `No se pudo conectar con ${candidate}`;
+        }
       }
     } else {
       backendError = 'No se pudo obtener el token de Clerk';
