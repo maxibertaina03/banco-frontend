@@ -2,11 +2,13 @@
 
 import { useAuth, useUser, UserButton } from '@clerk/nextjs';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
 export default function Dashboard() {
   const { isSignedIn, getToken } = useAuth();
   const { user } = useUser();
+  const router = useRouter();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,6 +28,10 @@ export default function Dashboard() {
         if (response.ok) {
           const data = await response.json();
           setProfile(data);
+
+          if (data.backend?.user?.perfil_completo === false) {
+            router.push('/onboarding/profile');
+          }
         } else {
           const data = await response.json().catch(() => null);
           setError(data?.error || 'Error al cargar el perfil');
@@ -39,7 +45,7 @@ export default function Dashboard() {
     };
 
     fetchProfile();
-  }, [isSignedIn, getToken]);
+  }, [isSignedIn, getToken, router]);
 
   if (!isSignedIn) {
     return (

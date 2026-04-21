@@ -1,6 +1,31 @@
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
+function getCandidateApiUrls() {
+  return Array.from(
+    new Set(
+      [
+        process.env.BACKEND_API_URL,
+        process.env.NEXT_PUBLIC_API_URL,
+        'http://localhost:3001',
+      ].filter(Boolean)
+    )
+  ) as string[];
+}
+
+async function readJsonResponse(response: Response, candidate: string) {
+  const contentType = response.headers.get('content-type') || '';
+
+  if (!contentType.includes('application/json')) {
+    const text = await response.text();
+    throw new Error(
+      `El backend en ${candidate} respondió ${response.status} con contenido no JSON: ${text.slice(0, 80)}`
+    );
+  }
+
+  return response.json();
+}
+
 export async function GET() {
   try {
     const { userId, getToken } = await auth();
@@ -13,16 +38,7 @@ export async function GET() {
 
     const clerkUser = await currentUser();
     const token = await getToken();
-    const candidateApiUrls = Array.from(
-      new Set(
-        [
-          process.env.BACKEND_API_URL,
-          process.env.NEXT_PUBLIC_API_URL,
-          'http://localhost:3001',
-          'http://localhost:3000',
-        ].filter(Boolean)
-      )
-    ) as string[];
+    const candidateApiUrls = getCandidateApiUrls();
 
     let backend: unknown = null;
     let backendError: string | null = null;
@@ -38,7 +54,7 @@ export async function GET() {
             cache: 'no-store',
           });
 
-          const data = await response.json();
+          const data = await readJsonResponse(response, candidate);
           apiUrl = candidate;
 
           if (response.ok) {
@@ -83,6 +99,64 @@ export async function GET() {
       backendError,
       apiUrl,
     });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: 'Error interno del servidor',
+        details: error instanceof Error ? error.message : 'Error desconocido',
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const { userId, getToken } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+    }
+
+    const token = await getToken();
+    if (!token) {
+      return NextResponse.json(
+        { error: 'No se pudo obtener el token de Clerk' },
+        { status: 401 }
+      );
+    }
+
+    const body = await request.json();
+    const candidateApiUrls = getCandidateApiUrls();
+    let lastError = 'No se pudo conectar con el backend';
+
+    for (const candidate of candidateApiUrls) {
+      try {
+        const response = await fetch(`${candidate}/auth/profile`, {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(body),
+          cache: 'no-store',
+        });
+
+        const data = await readJsonResponse(response, candidate);
+
+        if (response.ok) {
+          return NextResponse.json(data);
+        }
+
+        lastError = data.error || data.message || `Error al consultar el backend en ${candidate}`;
+      } catch (error) {
+        lastError =
+          error instanceof Error
+            ? `No se pudo conectar con ${candidate}: ${error.message}`
+            : `No se pudo conectar con ${candidate}`;
+      }
+    }
+
+    return NextResponse.json({ error: lastError }, { status: 502 });
   } catch (error) {
     return NextResponse.json(
       {
