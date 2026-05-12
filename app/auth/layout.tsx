@@ -6,10 +6,16 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <Link href="/" className="flex justify-center mb-8">
-          <span className="text-3xl font-bold text-white">🏦 Banco</span>
+    <div className="auth-shell">
+      <div className="auth-shell__orb auth-shell__orb--one" />
+      <div className="auth-shell__orb auth-shell__orb--two" />
+      <div className="auth-shell__card">
+        <Link href="/" className="brand-mark brand-mark--center">
+          <span className="brand-mark__icon">O</span>
+          <span>
+            <strong>Orbital</strong>
+            <small>Acceso seguro</small>
+          </span>
         </Link>
         {children}
       </div>

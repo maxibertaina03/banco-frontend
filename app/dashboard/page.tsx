@@ -1,157 +1,242 @@
 'use client';
 
-import { useAuth, useUser, UserButton } from '@clerk/nextjs';
-import Link from 'next/link';
+import { useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { BankShell } from '@/components/layout/bank-shell';
+import { OrbitalAccountCard } from '@/components/user/orbital-account-card';
+import { OrbitalProductCard } from '@/components/user/orbital-product-card';
+import { OrbitalQuickActions } from '@/components/user/orbital-quick-actions';
+import { OrbitalRecentActivity } from '@/components/user/orbital-recent-activity';
+import { EmptyState, Panel, SectionTitle, StatCard } from '@/components/ui/ui-kit';
+import { hasInternalRole } from '@/lib/access';
+import { fetchJson } from '@/lib/api/client';
+import { formatCurrency, getRoleLabel } from '@/lib/utils';
+import type { DashboardOverview, DashboardOverviewPayload } from '@/types/banking';
 
-export default function Dashboard() {
-  const { isSignedIn, getToken } = useAuth();
-  const { user } = useUser();
+export default function DashboardPage() {
+  const { isLoaded, isSignedIn } = useAuth();
   const router = useRouter();
-  const [profile, setProfile] = useState<any>(null);
+  const [overview, setOverview] = useState<DashboardOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const accountsRef = useRef<HTMLDivElement | null>(null);
+  const activityRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!isSignedIn) return;
+    if (!isLoaded) {
+      return;
+    }
 
-    const fetchProfile = async () => {
+    if (!isSignedIn) {
+      router.push('/auth/sign-in');
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadOverview() {
       try {
-        const token = await getToken();
-        const response = await fetch('/api/profile', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const data = await fetchJson<DashboardOverviewPayload>('/api/me/overview');
 
-        if (response.ok) {
-          const data = await response.json();
-          setProfile(data);
-
-          if (data.backend?.user?.perfil_completo === false) {
-            router.push('/onboarding/profile');
-          }
-        } else {
-          const data = await response.json().catch(() => null);
-          setError(data?.error || 'Error al cargar el perfil');
+        if (cancelled) {
+          return;
         }
-      } catch (err) {
-        setError('Error al conectar con el servidor');
-        console.error(err);
+
+        if (data.requiresOnboarding) {
+          router.push('/onboarding/profile');
+          return;
+        }
+
+        setOverview(data as DashboardOverview);
+      } catch (loadError) {
+        if (!cancelled) {
+          setError(loadError instanceof Error ? loadError.message : 'No se pudo cargar el dashboard.');
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
+    }
+
+    void loadOverview();
+
+    return () => {
+      cancelled = true;
     };
+  }, [isLoaded, isSignedIn, router]);
 
-    fetchProfile();
-  }, [isSignedIn, getToken, router]);
+  const totalBalance = useMemo(() => {
+    return (overview?.cuentas || []).reduce((sum, cuenta) => sum + Number(cuenta.saldo || 0), 0);
+  }, [overview]);
 
-  if (!isSignedIn) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4">
-        <div className="card max-w-md w-full text-center">
-          <p className="text-white mb-4">Por favor inicia sesión primero</p>
-          <Link href="/auth/sign-in">
-            <button className="btn-primary w-full">Ir a Login</button>
-          </Link>
-        </div>
-      </div>
-    );
+  const recentTransactions = overview?.transacciones.slice(0, 5) || [];
+  const roleNames = overview?.roles.map((role) => role.nombre) || [];
+  const shellVariant = 'user';
+  const canAccessAdmin = hasInternalRole(roleNames);
+
+  function scrollToRef(ref: RefObject<HTMLDivElement>) {
+    ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  async function copyPrimaryCbu() {
+    const cbu = overview?.cuentas.find((account) => account.cbu)?.cbu;
+    if (!cbu) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(cbu);
+    } catch (_error) {
+      setError('No se pudo copiar el CBU al portapapeles.');
+    }
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <nav className="bg-black bg-opacity-30 border-b border-white border-opacity-10 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold text-white">
-            🏦 Banco
-          </Link>
-          <div className="flex items-center gap-4">
-            <span className="text-gray-300 text-sm">
-              {user?.firstName} {user?.lastName}
-            </span>
-            <UserButton />
-          </div>
-        </div>
-      </nav>
+    <BankShell
+      eyebrow="Centro de operaciones"
+      title="Resumen Orbital"
+      description="Consultá el estado general de tus cuentas, movimientos recientes y accesos disponibles."
+      variant={shellVariant}
+      showAdminLink={canAccessAdmin}
+    >
+      {loading ? <Panel>Preparando tu tablero financiero...</Panel> : null}
+      {error ? <Panel className="panel--danger">{error}</Panel> : null}
 
-      {/* Main Content */}
-      <div className="container">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-          {/* Welcome Card */}
-          <div className="card">
-            <h2 className="text-2xl font-bold text-white mb-4">
-              Bienvenido
-            </h2>
-            <div className="space-y-3 text-gray-200">
+      {overview ? (
+        <>
+          <section className="orbital-hero">
+            <div className="orbital-hero__balance">
+              <div className="orbital-hero__eyebrow">Balance total</div>
+              <strong>{formatCurrency(totalBalance)}</strong>
               <p>
-                <span className="text-gray-400">Email:</span>{' '}
-                {user?.primaryEmailAddress?.emailAddress}
-              </p>
-              <p>
-                <span className="text-gray-400">ID Clerk:</span>{' '}
-                <code className="bg-black bg-opacity-50 px-2 py-1 rounded text-xs">
-                  {user?.id}
-                </code>
+                {overview.cuentas.length} cuenta(s) conectadas y {overview.transacciones.length} movimientos cargados.
               </p>
             </div>
-          </div>
+            <div className="orbital-hero__summary">
+              <div className="orbital-summary-pill">
+                <span>Perfil</span>
+                <strong>{overview.profile.perfil_completo ? 'Completo' : 'Pendiente'}</strong>
+              </div>
+              <div className="orbital-summary-pill">
+                <span>Destinatarios</span>
+                <strong>{overview.destinatarios.length}</strong>
+              </div>
+              <div className="orbital-summary-pill">
+                <span>Acceso</span>
+                <strong>{getRoleLabel(roleNames)}</strong>
+              </div>
+            </div>
+          </section>
 
-          {/* API Status */}
-          <div className="card">
-            <h2 className="text-2xl font-bold text-white mb-4">
-              Estado de la API
-            </h2>
-            {loading && (
-              <p className="text-gray-300">Verificando conexión...</p>
-            )}
-            {error && (
-              <p className="text-red-400">{error}</p>
-            )}
-            {profile && (
-              <div className="space-y-2">
-                <p className="text-green-400">✓ Clerk respondió correctamente</p>
-                {profile.backend && (
-                  <p className="text-green-400">✓ Backend vinculado correctamente</p>
-                )}
-                {profile.backendError && (
-                  <p className="text-yellow-300">Backend pendiente: {profile.backendError}</p>
-                )}
+          <section className="stats-grid">
+            <StatCard
+              label="Saldo total"
+              value={formatCurrency(totalBalance)}
+              hint={`${overview.cuentas.length} cuenta(s) activas detectadas`}
+            />
+            <StatCard
+              label="Movimientos recientes"
+              value={String(overview.transacciones.length)}
+              hint="Se consultan los últimos 100 movimientos disponibles"
+            />
+            <StatCard
+              label="Perfil"
+              value={overview.profile.perfil_completo ? 'Completo' : 'Pendiente'}
+              hint={overview.profile.email || 'Sin email de negocio cargado'}
+            />
+            <StatCard
+              label="Acceso"
+              value={getRoleLabel(roleNames)}
+              hint={roleNames.join(', ') || 'cliente'}
+            />
+          </section>
+
+          <section className="orbital-user-grid">
+            <Panel>
+              <SectionTitle
+                title="Tu identidad bancaria"
+                description="Estos datos salen del backend, no solo de Clerk."
+              />
+              <div className="identity-card">
+                <div className="identity-card__avatar">
+                  {`${overview.persona.nombre?.[0] || ''}${overview.persona.apellido?.[0] || ''}` || 'BA'}
+                </div>
+                <div className="identity-card__content">
+                  <strong>
+                    {overview.persona.nombre} {overview.persona.apellido}
+                  </strong>
+                  <span>{overview.persona.email || 'Email no informado'}</span>
+                  <span>DNI: {overview.persona.dni || 'Pendiente'}</span>
+                  <span>Teléfono: {overview.persona.telefono || 'Pendiente'}</span>
+                </div>
+              </div>
+            </Panel>
+
+            <OrbitalProductCard />
+          </section>
+
+          <OrbitalQuickActions
+            onTransfer={() => router.push('/transferencias')}
+            onAccounts={() => scrollToRef(accountsRef)}
+            onCopyCbu={() => void copyPrimaryCbu()}
+            onContacts={() => scrollToRef(accountsRef)}
+            onActivity={() => scrollToRef(activityRef)}
+            onAdmin={() => router.push('/admin')}
+            showAdmin={canAccessAdmin}
+          />
+
+          <section ref={accountsRef}>
+            <SectionTitle
+              title="Tus cuentas"
+              description="Visualizá saldo, alias y CBU de tus productos bancarios."
+            />
+            {overview.cuentas.length === 0 ? (
+              <EmptyState
+                title="Todavía no hay cuentas vinculadas"
+                description="Cuando el backend tenga cuentas para tu persona, aparecerán acá."
+              />
+            ) : (
+              <div className="orbital-card-grid">
+                {overview.cuentas.map((cuenta) => (
+                  <OrbitalAccountCard key={cuenta.id} account={cuenta} />
+                ))}
               </div>
             )}
-          </div>
-        </div>
+          </section>
 
-        {/* Profile Data */}
-        {profile && (
-          <div className="card mt-6">
-            <h2 className="text-2xl font-bold text-white mb-4">
-              Datos del Perfil
-            </h2>
-            <pre className="bg-black bg-opacity-50 p-4 rounded text-xs text-gray-200 overflow-auto">
-              {JSON.stringify(profile, null, 2)}
-            </pre>
-          </div>
-        )}
+          <section className="orbital-user-grid">
+            <div ref={activityRef}>
+              <OrbitalRecentActivity activities={overview.transacciones.slice(0, 8)} loading={loading} />
+            </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
-          <button className="card text-center hover:bg-opacity-20 transition">
-            <h3 className="text-white font-semibold mb-2">💰 Cuentas</h3>
-            <p className="text-gray-400 text-sm">Gestionar tus cuentas</p>
-          </button>
-          <button className="card text-center hover:bg-opacity-20 transition">
-            <h3 className="text-white font-semibold mb-2">📤 Transferencias</h3>
-            <p className="text-gray-400 text-sm">Enviar dinero</p>
-          </button>
-          <button className="card text-center hover:bg-opacity-20 transition">
-            <h3 className="text-white font-semibold mb-2">📊 Historial</h3>
-            <p className="text-gray-400 text-sm">Ver transacciones</p>
-          </button>
-        </div>
-      </div>
-    </div>
+            <Panel>
+              <SectionTitle
+                title="Destinatarios y catálogo"
+                description="Resumen rápido de entidades auxiliares disponibles para esta cuenta."
+              />
+              <div className="mini-grid">
+                <div className="mini-card">
+                  <span>Destinatarios guardados</span>
+                  <strong>{overview.destinatarios.length}</strong>
+                </div>
+                <div className="mini-card">
+                  <span>Tipos de transacción</span>
+                  <strong>{overview.tiposTransaccion.length}</strong>
+                </div>
+              </div>
+              <div className="tag-row">
+                {overview.tiposTransaccion.map((tipo) => (
+                  <span key={tipo.id} className="soft-tag">
+                    {tipo.nombre}
+                  </span>
+                ))}
+              </div>
+            </Panel>
+          </section>
+        </>
+      ) : null}
+    </BankShell>
   );
 }
