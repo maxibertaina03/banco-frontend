@@ -1,7 +1,7 @@
 import type { AccountRecord } from "../../cuentas/types/cuentas.types";
 import type { RecipientRecord } from "../../destinatarios/types/destinatarios.types";
 
-export type PortalRole = "cliente" | "admin" | "operador";
+export type PortalRole = "cliente" | "admin" | "operador" | "auditor" | "tesoreria";
 
 export interface PersonaOption {
   id: string;

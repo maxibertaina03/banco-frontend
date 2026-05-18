@@ -50,6 +50,14 @@ function normalizeRole(roleName: string): PortalRole | null {
     return "operador";
   }
 
+  if (roleName === "auditor") {
+    return "auditor";
+  }
+
+  if (roleName === "tesoreria") {
+    return "tesoreria";
+  }
+
   return null;
 }
 

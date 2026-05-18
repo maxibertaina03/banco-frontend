@@ -27,7 +27,7 @@ export function createCuenta(payload: {
 }
 
 export function updateAlias(cbu: string, alias: string) {
-  return request<{ message: string }>(`/persons/${cbu}/alias`, {
+  return request<{ message: string }>(`/central-bank/persons/${cbu}/alias`, {
     method: "PUT",
     body: JSON.stringify({ alias }),
   });

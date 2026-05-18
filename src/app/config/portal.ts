@@ -4,8 +4,10 @@ export type Section = "dashboard" | "accounts" | "transactions" | "recipients" |
 
 export const roleLabels: Record<PortalRole, string> = {
   admin: "Admin",
+  auditor: "Auditor",
   cliente: "Cliente",
   operador: "Operador",
+  tesoreria: "Tesoreria",
 };
 
 export function getSectionItems(scope: "user" | "admin") {

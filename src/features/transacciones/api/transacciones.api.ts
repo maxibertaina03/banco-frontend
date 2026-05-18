@@ -44,6 +44,8 @@ export function createTransfer(payload: {
   tipo_transaccion_id: string;
   cuenta_origen_id: string;
   cuenta_destino_id?: string | null;
+  destinatario_id?: string | null;
+  cbu_destino?: string | null;
   monto: number;
   descripcion?: string | null;
   estado?: "pendiente" | "completada" | "rechazada";
