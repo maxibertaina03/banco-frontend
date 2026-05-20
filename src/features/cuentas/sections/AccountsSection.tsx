@@ -1,5 +1,5 @@
-import { AccountCard } from "../../../app/components/AccountCard";
-import { UpdateAliasForm } from "../../../app/components/UpdateAliasForm";
+import { AccountCard } from "../../../components/AccountCard";
+import { UpdateAliasForm } from "../../../components/UpdateAliasForm";
 import type { PersonaFullResponse } from "../../../lib/api";
 
 interface AccountsSectionProps {

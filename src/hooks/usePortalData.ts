@@ -6,6 +6,7 @@ import type { AccountRecord, TipoCuentaRecord } from "../features/cuentas/types/
 import {
   getAuthenticatedUserProfile,
   getPersonaFull,
+  loginAuthenticatedUser,
   getRoleOptions,
   getUserAudit,
   listPersonas,
@@ -143,6 +144,7 @@ export function usePortalData({
       const manualId = sanitizePersonaId(manualPersonaId);
       const preferredId = sanitizePersonaId(preferredPersonaId);
       const directPersonaId = requestedPersonaId || selectedId || manualId || preferredId;
+      await loginAuthenticatedUser().catch(() => null);
       const authProfile = await getAuthenticatedUserProfile().catch(() => null);
 
       if (shouldCompleteProfile(authProfile)) {

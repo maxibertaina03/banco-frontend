@@ -1,4 +1,4 @@
-import type { Section } from "../../config/portal";
+import type { Section } from "../../pages/portal.config";
 
 interface PortalTabsProps {
   items: Array<{ key: Section; label: string }>;

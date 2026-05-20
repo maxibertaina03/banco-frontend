@@ -1,5 +1,5 @@
 import { ArrowUpRight, ArrowDownLeft, ShoppingBag, Smartphone } from 'lucide-react';
-import type { UserActivity } from '../../features/transacciones/types/transacciones.types';
+import type { UserActivity } from "../features/transacciones/types/transacciones.types";
 
 interface RecentActivityProps {
   activities: UserActivity[];

@@ -1,9 +1,9 @@
 import type { FormEvent } from "react";
-import { QuickActions } from "../../../app/components/QuickActions";
-import { RecentActivity } from "../../../app/components/RecentActivity";
-import { Button } from "../../../app/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../app/components/ui/card";
-import { Input } from "../../../app/components/ui/input";
+import { QuickActions } from "../../../components/QuickActions";
+import { RecentActivity } from "../../../components/RecentActivity";
+import { Button } from "../../../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
+import { Input } from "../../../components/ui/input";
 import type { PersonaFullResponse, UserActivity } from "../../../lib/api";
 
 export interface ProfileFormState {

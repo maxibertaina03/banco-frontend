@@ -1,4 +1,4 @@
-import type { PortalRole } from "../../features/personas/types/personas.types";
+import type { PortalRole } from "../features/personas/types/personas.types";
 
 export type Section = "dashboard" | "accounts" | "transactions" | "recipients" | "admin";
 

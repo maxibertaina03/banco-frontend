@@ -1,7 +1,7 @@
 import { Building2, RefreshCcw, ShieldCheck } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import type { PersonaOption } from "../../../features/personas/types/personas.types";
+import type { PersonaOption } from "../../features/personas/types/personas.types";
 
 interface PortalToolbarProps {
   loading: boolean;

@@ -91,6 +91,12 @@ export function getAuthenticatedUserProfile() {
   return requestAbsolute<{ message: string; user: AuthenticatedUserProfile }>("/auth/profile");
 }
 
+export function loginAuthenticatedUser() {
+  return requestAbsolute<{ message: string; user: AuthenticatedUserProfile }>("/auth/login", {
+    method: "POST",
+  });
+}
+
 export function completeAuthenticatedUserProfile(payload: {
   nombre: string;
   apellido: string;

@@ -1,9 +1,9 @@
 import type { FormEvent } from "react";
 import { Users } from "lucide-react";
-import { Badge } from "../../../app/components/ui/badge";
-import { Button } from "../../../app/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../app/components/ui/card";
-import { Input } from "../../../app/components/ui/input";
+import { Badge } from "../../../components/ui/badge";
+import { Button } from "../../../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
+import { Input } from "../../../components/ui/input";
 import type { PersonaFullResponse, RoleRecord, TipoCuentaRecord } from "../../../lib/api";
 
 export interface CreateClientFormState {

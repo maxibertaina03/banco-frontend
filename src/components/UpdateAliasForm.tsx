@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Tag } from 'lucide-react';
-import { updateAlias } from '../../features/cuentas/api/cuentas.api';
+import { updateAlias } from "../features/cuentas/api/cuentas.api";
 
 interface UpdateAliasFormProps {
   cbu: string;

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { CreditCard } from "lucide-react";
-import { getSectionItems, roleLabels, type Section } from "../config/portal";
+import { getSectionItems, roleLabels, type Section } from "./portal.config";
 import { Header } from "../components/Header";
 import { PortalHero } from "../components/layout/PortalHero";
 import { PortalSummary } from "../components/layout/PortalSummary";
@@ -9,19 +9,19 @@ import { PortalTabs } from "../components/layout/PortalTabs";
 import { PortalToolbar } from "../components/layout/PortalToolbar";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
-import { PREFERRED_PERSONA_ID } from "../../lib/constants/portal";
-import { formatCurrency } from "../../lib/utils/currency";
-import { AccountsSection } from "../../features/cuentas/sections/AccountsSection";
-import { DashboardSection } from "../../features/dashboard/sections/DashboardSection";
-import { RecipientsSection } from "../../features/destinatarios/sections/RecipientsSection";
-import { getRoleOptions, getRoleScope, sanitizePersonaId } from "../../features/personas/api/personas.api";
-import { CompleteProfileSection } from "../../features/personas/sections/CompleteProfileSection";
-import type { PortalRole } from "../../features/personas/types/personas.types";
-import { TransactionsSection } from "../../features/transacciones/sections/TransactionsSection";
-import { AdminSection } from "../../features/admin/sections/AdminSection";
-import { usePortalActions } from "../../hooks/usePortalActions";
-import { usePortalData } from "../../hooks/usePortalData";
-import { usePortalForms } from "../../hooks/usePortalForms";
+import { PREFERRED_PERSONA_ID } from "../lib/constants/portal";
+import { formatCurrency } from "../lib/utils/currency";
+import { AccountsSection } from "../features/cuentas/sections/AccountsSection";
+import { DashboardSection } from "../features/dashboard/sections/DashboardSection";
+import { RecipientsSection } from "../features/destinatarios/sections/RecipientsSection";
+import { getRoleOptions, getRoleScope, sanitizePersonaId } from "../features/personas/api/personas.api";
+import { CompleteProfileSection } from "../features/personas/sections/CompleteProfileSection";
+import type { PortalRole } from "../features/personas/types/personas.types";
+import { TransactionsSection } from "../features/transacciones/sections/TransactionsSection";
+import { AdminSection } from "../features/admin/sections/AdminSection";
+import { usePortalActions } from "../hooks/usePortalActions";
+import { usePortalData } from "../hooks/usePortalData";
+import { usePortalForms } from "../hooks/usePortalForms";
 
 export function PortalPage() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
@@ -303,7 +303,7 @@ export function PortalPage() {
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm text-muted-foreground">
                   <div className="rounded-2xl bg-[#2D1548]/60 p-4">
-                    `app/pages/PortalPage.tsx`: pantalla principal del portal.
+                    `src/pages/PortalPage.tsx`: pantalla principal del portal.
                   </div>
                   <div className="rounded-2xl bg-[#2D1548]/60 p-4">
                     `hooks/usePortal*.ts`: datos, formularios y acciones.

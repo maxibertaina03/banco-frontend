@@ -1,6 +1,6 @@
 import { Bell, Menu } from 'lucide-react';
 import { UserButton, useUser } from '@clerk/clerk-react';
-import logo from '../../imports/image-3.png';
+import logo from "../imports/image-3.png";
 
 interface HeaderProps {
   displayName?: string;
