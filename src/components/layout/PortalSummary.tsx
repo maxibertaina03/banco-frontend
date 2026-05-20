@@ -1,10 +1,12 @@
+import { memo } from "react";
+
 interface PortalSummaryProps {
   activeAccountsCount: number;
   auditCount: number;
   totalBalanceLabel: string;
 }
 
-export function PortalSummary({
+export const PortalSummary = memo(function PortalSummary({
   activeAccountsCount,
   auditCount,
   totalBalanceLabel,
@@ -28,4 +30,4 @@ export function PortalSummary({
       </div>
     </div>
   );
-}
+});

@@ -1,6 +1,7 @@
 import { Building2, RefreshCcw, ShieldCheck } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { memo } from "react";
 import type { PersonaOption } from "../../features/personas/types/personas.types";
 
 interface PortalToolbarProps {
@@ -14,7 +15,7 @@ interface PortalToolbarProps {
   submitting: boolean;
 }
 
-export function PortalToolbar({
+export const PortalToolbar = memo(function PortalToolbar({
   loading,
   manualPersonaId,
   onLoadPersona,
@@ -61,4 +62,4 @@ export function PortalToolbar({
       </div>
     </section>
   );
-}
+});

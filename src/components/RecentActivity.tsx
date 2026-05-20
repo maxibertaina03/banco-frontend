@@ -1,4 +1,5 @@
 import { ArrowUpRight, ArrowDownLeft, ShoppingBag, Smartphone } from 'lucide-react';
+import { memo } from 'react';
 import type { UserActivity } from "../features/transacciones/types/transacciones.types";
 
 interface RecentActivityProps {
@@ -13,7 +14,7 @@ const iconMap = {
   service: Smartphone,
 } as const;
 
-export function RecentActivity({ activities, loading = false }: RecentActivityProps) {
+export const RecentActivity = memo(function RecentActivity({ activities, loading = false }: RecentActivityProps) {
   return (
     <div className="bg-gradient-to-br from-[#1C0B2E] to-[#2D1548] rounded-2xl p-6 border border-primary/20">
       <div className="flex items-center justify-between mb-4">
@@ -75,4 +76,4 @@ export function RecentActivity({ activities, loading = false }: RecentActivityPr
       </div>
     </div>
   );
-}
+});

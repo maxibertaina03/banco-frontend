@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, setAccessTokenProvider } from "../lib/api/client";
 import { formatCurrency } from "../lib/utils/currency";
 import { listTiposCuenta } from "../features/cuentas/api/cuentas.api";
@@ -6,9 +6,9 @@ import type { AccountRecord, TipoCuentaRecord } from "../features/cuentas/types/
 import {
   getAuthenticatedUserProfile,
   getPersonaFull,
-  loginAuthenticatedUser,
   getRoleOptions,
   getUserAudit,
+  listCentralBanks,
   listPersonas,
   listRoles,
   sanitizePersonaId,
@@ -18,34 +18,48 @@ import type {
   PersonaFullResponse,
   PersonaOption,
   RoleRecord,
+  CentralBankRecord,
 } from "../features/personas/types/personas.types";
-import { getPersonaTransactions, listTiposTransaccion } from "../features/transacciones/api/transacciones.api";
+import { getPersonaTransactionsById, listTiposTransaccion } from "../features/transacciones/api/transacciones.api";
 import type { TipoTransaccionRecord, UserActivity } from "../features/transacciones/types/transacciones.types";
 
 type GetTokenFn = () => Promise<string | null>;
 const INTERNAL_PORTAL_ROLES = new Set(["admin", "operador", "auditor", "tesoreria"]);
 
 function buildActivities(
-  transactions: Awaited<ReturnType<typeof getPersonaTransactions>>,
+  transactions: Awaited<ReturnType<typeof getPersonaTransactionsById>>,
   accounts: AccountRecord[]
 ) {
   const accountIds = new Set(accounts.map((account) => account.id));
 
   return transactions.slice(0, 8).map((transaction) => {
     const amount = Number(transaction.monto || 0);
+    const isEntrante = transaction.canal === "interbancaria_entrante";
     const incoming =
-      Boolean(transaction.cuenta_destino_id) &&
-      accountIds.has(transaction.cuenta_destino_id as string) &&
-      !accountIds.has(transaction.cuenta_origen_id);
+      isEntrante ||
+      (Boolean(transaction.cuenta_destino_id) &&
+        accountIds.has(transaction.cuenta_destino_id as string) &&
+        !accountIds.has(transaction.cuenta_origen_id as string));
+
     const date = new Date(transaction.created_at);
+
+    let recipient: string;
+    if (incoming) {
+      recipient =
+        transaction.descripcion ||
+        transaction.cuenta_origen_numero ||
+        (transaction.cbu_origen ? `CBU ...${transaction.cbu_origen.slice(-6)}` : "Transferencia entrante");
+    } else {
+      recipient =
+        transaction.cuenta_destino_numero ||
+        (transaction.cbu_destino ? `CBU ...${transaction.cbu_destino.slice(-6)}` : "Cuenta destino");
+    }
 
     return {
       id: transaction.id,
       type: incoming ? "in" : "out",
       title: transaction.tipo_transaccion_nombre || "Movimiento",
-      recipient: incoming
-        ? transaction.cuenta_origen_numero || "Cuenta origen"
-        : transaction.cuenta_destino_numero || "Cuenta destino",
+      recipient,
       amount: `${incoming ? "+" : "-"}${formatCurrency(Math.abs(amount))}`,
       date: new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "short" }).format(date),
       time: new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(date),
@@ -59,25 +73,37 @@ async function safeCatalogLoad(canLoadInternalCatalogs: boolean) {
       roles: [],
       accountTypes: [],
       transactionTypes: [],
+      banks: [],
       failed: false,
     };
   }
 
-  const [rolesResult, accountTypesResult, transactionTypesResult] = await Promise.allSettled([
+  const [rolesResult, accountTypesResult, transactionTypesResult, banksResult] = await Promise.allSettled([
     listRoles(),
     listTiposCuenta(),
     listTiposTransaccion(),
+    listCentralBanks("test"),
   ]);
 
   return {
     roles: rolesResult.status === "fulfilled" ? rolesResult.value : [],
     accountTypes: accountTypesResult.status === "fulfilled" ? accountTypesResult.value : [],
     transactionTypes: transactionTypesResult.status === "fulfilled" ? transactionTypesResult.value : [],
+    banks: banksResult.status === "fulfilled" ? banksResult.value : [],
     failed:
       rolesResult.status === "rejected" ||
       accountTypesResult.status === "rejected" ||
-      transactionTypesResult.status === "rejected",
+      transactionTypesResult.status === "rejected" ||
+      banksResult.status === "rejected",
   };
+}
+
+interface InternalCatalogs {
+  roles: RoleRecord[];
+  accountTypes: TipoCuentaRecord[];
+  transactionTypes: TipoTransaccionRecord[];
+  banks: CentralBankRecord[];
+  failed: boolean;
 }
 
 function canListPersonas(authProfile: Awaited<ReturnType<typeof getAuthenticatedUserProfile>> | null) {
@@ -126,14 +152,47 @@ export function usePortalData({
   const [roles, setRoles] = useState<RoleRecord[]>([]);
   const [accountTypes, setAccountTypes] = useState<TipoCuentaRecord[]>([]);
   const [transactionTypes, setTransactionTypes] = useState<TipoTransaccionRecord[]>([]);
+  const [banks, setBanks] = useState<CentralBankRecord[]>([]);
   const [selectedPersonaId, setSelectedPersonaId] = useState("");
   const [manualPersonaId, setManualPersonaId] = useState(normalizedInitialPersonaId);
   const [loading, setLoading] = useState(true);
   const [warning, setWarning] = useState<string | null>(null);
   const [authProfile, setAuthProfile] = useState<AuthenticatedUserProfile | null>(null);
   const [needsProfileCompletion, setNeedsProfileCompletion] = useState(false);
+  const catalogCacheRef = useRef<InternalCatalogs | null>(null);
 
-  async function loadPortal(personaIdOverride?: string) {
+  // Refresh mínimo: solo persona + transacciones (después de transferir).
+  // 2 requests en paralelo en vez del reload completo (~8-10 requests).
+  const refreshPersonaData = useCallback(async (personaId: string) => {
+    try {
+      const [nextProfile, transactions] = await Promise.all([
+        getPersonaFull(personaId),
+        getPersonaTransactionsById(personaId),
+      ]);
+      setProfile(nextProfile);
+      setActivities(buildActivities(transactions, nextProfile.cuentas));
+    } catch {
+      // silently fail: datos anteriores siguen visibles
+    }
+  }, []);
+
+  // Refresh mínimo: solo persona (después de agregar/eliminar destinatario).
+  // 1 request en vez del reload completo.
+  const refreshDestinatarios = useCallback(async (personaId: string) => {
+    try {
+      const nextProfile = await getPersonaFull(personaId);
+      setProfile(nextProfile);
+    } catch {
+      // silently fail
+    }
+  }, []);
+
+  async function loadPortal(
+    personaIdOverride?: string,
+    options?: {
+      skipCatalogReload?: boolean;
+    }
+  ) {
     setLoading(true);
     setError(null);
     setSuccess(null);
@@ -144,7 +203,9 @@ export function usePortalData({
       const manualId = sanitizePersonaId(manualPersonaId);
       const preferredId = sanitizePersonaId(preferredPersonaId);
       const directPersonaId = requestedPersonaId || selectedId || manualId || preferredId;
-      await loginAuthenticatedUser().catch(() => null);
+
+      // getAuthenticatedUserProfile ya provisiona al usuario si no existe en BD
+      // (llama internamente a getOrCreateUser). loginAuthenticatedUser era redundante.
       const authProfile = await getAuthenticatedUserProfile().catch(() => null);
 
       if (shouldCompleteProfile(authProfile)) {
@@ -157,6 +218,7 @@ export function usePortalData({
         setRoles([]);
         setAccountTypes([]);
         setTransactionTypes([]);
+        setBanks([]);
         setSelectedPersonaId("");
         setManualPersonaId("");
         setWarning(null);
@@ -179,10 +241,34 @@ export function usePortalData({
         );
       }
 
-      const nextProfile = await getPersonaFull(fallbackPersonaId);
-      const transactions = await getPersonaTransactions(nextProfile.cuentas);
+      const shouldReuseCatalogs =
+        canLoadInternalCatalogs &&
+        (options?.skipCatalogReload || Boolean(catalogCacheRef.current));
+
+      // All four fetches in parallel: persona, transactions, catalogs, audit (audit needs userId so runs after)
+      const [nextProfile, transactions, catalogs] = await Promise.all([
+        getPersonaFull(fallbackPersonaId),
+        getPersonaTransactionsById(fallbackPersonaId),
+        shouldReuseCatalogs
+          ? Promise.resolve(
+              catalogCacheRef.current ?? {
+                roles: [],
+                accountTypes: [],
+                transactionTypes: [],
+                banks: [],
+                failed: false,
+              }
+            )
+          : safeCatalogLoad(canLoadInternalCatalogs),
+      ]);
+
+      // Audit requires usuario.id — fetched in parallel now that we have the profile
       const audits = nextProfile.usuario ? await getUserAudit(nextProfile.usuario.id) : [];
-      const catalogs = await safeCatalogLoad(canLoadInternalCatalogs);
+
+      if (canLoadInternalCatalogs && !catalogs.failed) {
+        catalogCacheRef.current = catalogs;
+      }
+
       const nextWarning =
         preferredPersonaId && !preferredId
           ? "Ignoré `VITE_PERSONA_ID` porque tenía una ruta en lugar de un UUID. Usa un `persona_id` real o déjalo vacío."
@@ -204,6 +290,7 @@ export function usePortalData({
       setRoles(catalogs.roles);
       setAccountTypes(catalogs.accountTypes);
       setTransactionTypes(catalogs.transactionTypes);
+      setBanks(catalogs.banks);
       setWarning(nextWarning);
       setNeedsProfileCompletion(false);
     } catch (nextError) {
@@ -219,6 +306,7 @@ export function usePortalData({
         setRoles([]);
         setAccountTypes([]);
         setTransactionTypes([]);
+        setBanks([]);
         setSelectedPersonaId("");
         setWarning(null);
         setError(nextError.message);
@@ -256,12 +344,15 @@ export function usePortalData({
     activities,
     authProfile,
     auditCount,
+    banks,
     loadPortal,
     loading,
     manualPersonaId,
     needsProfileCompletion,
     personas,
     profile,
+    refreshDestinatarios,
+    refreshPersonaData,
     roles,
     selectedPersonaId,
     setManualPersonaId,

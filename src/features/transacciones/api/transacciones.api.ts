@@ -25,6 +25,10 @@ export function getAccountTransactions(accountId: string) {
   return request<TransactionRecord[]>(`/cuentas/${accountId}/transacciones`);
 }
 
+export function getPersonaTransactionsById(personaId: string) {
+  return request<TransactionRecord[]>(`/personas/${personaId}/transacciones`);
+}
+
 export async function getPersonaTransactions(accounts: AccountRecord[]) {
   const transactionGroups = await Promise.all(accounts.map((account) => getAccountTransactions(account.id)));
   const uniqueTransactions = new Map<string, TransactionRecord>();
@@ -41,17 +45,38 @@ export async function getPersonaTransactions(accounts: AccountRecord[]) {
 }
 
 export function createTransfer(payload: {
-  tipo_transaccion_id: string;
-  cuenta_origen_id: string;
-  cuenta_destino_id?: string | null;
-  destinatario_id?: string | null;
-  cbu_destino?: string | null;
-  monto: number;
-  descripcion?: string | null;
-  estado?: "pendiente" | "completada" | "rechazada";
+  cbuOrigen: string;
+  cbuDestino: string;
+  importe: number;
+  saldoOrigen: number;
 }) {
-  return request<TransactionRecord>("/transacciones/operar", {
+  return request<TransactionRecord>("/transacciones", {
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+export interface ResolvedRecipient {
+  alias: string | null;
+  cbu: string | null;
+  titular: string | null;
+  banco: string | null;
+}
+
+export function resolveRecipient(params: { alias?: string; cbu?: string }) {
+  const query = params.alias
+    ? `alias=${encodeURIComponent(params.alias)}`
+    : `cbu=${encodeURIComponent(params.cbu ?? "")}`;
+  return request<ResolvedRecipient>(`/transacciones/destinatario/resolver?${query}`);
+}
+
+export interface SyncIncomingResult {
+  processed: number;
+  synced: number;
+  already_recorded: number;
+  errors: number;
+}
+
+export function syncIncomingTransactions() {
+  return request<SyncIncomingResult>("/transacciones/sync-incoming", { method: "POST" });
 }

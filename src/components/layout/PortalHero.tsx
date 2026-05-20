@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { PortalRole } from "../../features/personas/types/personas.types";
 
 interface PortalHeroProps {
@@ -7,7 +8,7 @@ interface PortalHeroProps {
   roleOptions: PortalRole[];
 }
 
-export function PortalHero({
+export const PortalHero = memo(function PortalHero({
   activeRole,
   onRoleChange,
   roleLabels,
@@ -38,4 +39,4 @@ export function PortalHero({
       </div>
     </div>
   );
-}
+});

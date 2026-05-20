@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { CreditCard } from "lucide-react";
 import { getSectionItems, roleLabels, type Section } from "./portal.config";
@@ -36,12 +36,15 @@ export function PortalPage() {
     activities,
     authProfile,
     auditCount,
+    banks,
     loadPortal,
     loading,
     manualPersonaId,
     needsProfileCompletion,
     personas,
     profile,
+    refreshDestinatarios,
+    refreshPersonaData,
     roles,
     selectedPersonaId,
     setManualPersonaId,
@@ -60,17 +63,15 @@ export function PortalPage() {
   const {
     completeProfileForm,
     createClientForm,
-    profileForm,
     recipientForm,
     selectedAccountForAlias,
     setCompleteProfileForm,
     setCreateClientForm,
-    setProfileForm,
     setRecipientForm,
     setSelectedAccountForAlias,
     setTransferForm,
     transferForm,
-  } = usePortalForms(profile, transactionTypes, authProfile);
+  } = usePortalForms(profile, authProfile);
 
   const roleOptions = useMemo(() => (profile ? getRoleOptions(profile) : ["cliente"]), [profile]);
   const scope = getRoleScope(activeRole);
@@ -79,19 +80,26 @@ export function PortalPage() {
     [profile]
   );
   const {
+    bulkSyncing,
+    handleBulkSync,
     handleCompleteProfile,
     handleCreateClient,
-    handleProfileSave,
     handleRecipientCreate,
     handleRecipientDelete,
+    handleSyncAccount,
+    handleSyncIncoming,
     handleTransfer,
+    lastSyncResult,
+    syncingAccountId,
+    syncingIncoming,
   } = usePortalActions({
     completeProfileForm,
     createClientForm,
     loadPortal,
     profile,
-    profileForm,
     recipientForm,
+    refreshDestinatarios,
+    refreshPersonaData,
     setCreateClientForm,
     setError,
     setRecipientForm,
@@ -106,6 +114,36 @@ export function PortalPage() {
       setSection("dashboard");
     }
   }, [scope, section]);
+
+  const handleGoToAccounts = useCallback(() => setSection("accounts"), []);
+  const handleGoToActivity = useCallback(() => setSection("transactions"), []);
+  const handleGoToContacts = useCallback(() => setSection("recipients"), []);
+  const handleGoToTransactions = useCallback(() => setSection("transactions"), []);
+  const handleLoadPersona = useCallback((personaId?: string) => void loadPortal(personaId), [loadPortal]);
+  const handleCopyCbu = useCallback(() => {
+    const cbu = profile?.cuentas[0]?.cbu;
+    if (cbu) {
+      void navigator.clipboard.writeText(cbu);
+      setSuccess("CBU copiado al portapapeles.");
+    }
+  }, [profile?.cuentas]);
+  const handleIncome = useCallback(() => void loadPortal(profile?.persona.id), [loadPortal, profile?.persona.id]);
+  const handleAliasUpdated = useCallback(() => {
+    setSuccess("Alias actualizado correctamente.");
+    setSelectedAccountForAlias(null);
+    void loadPortal(profile?.persona.id);
+  }, [loadPortal, profile?.persona.id, setSelectedAccountForAlias]);
+  const handleSyncAccountCb = useCallback((accountId: string) => void handleSyncAccount(accountId), [handleSyncAccount]);
+  const handleBulkSyncCb = useCallback(() => void handleBulkSync(), [handleBulkSync]);
+  const handleSyncIncomingCb = useCallback(() => void handleSyncIncoming(), [handleSyncIncoming]);
+  const handleRecipientDeleteCb = useCallback(
+    (recipient: { id: string }) => void handleRecipientDelete(recipient.id),
+    [handleRecipientDelete],
+  );
+  const handleAccountSynced = useCallback(
+    async () => { await loadPortal(profile?.persona.id, { skipCatalogReload: true }); },
+    [loadPortal, profile?.persona.id],
+  );
 
   return (
     <ProtectedRoute>
@@ -141,7 +179,7 @@ export function PortalPage() {
             <PortalToolbar
               loading={loading}
               manualPersonaId={manualPersonaId}
-              onLoadPersona={(personaId) => void loadPortal(personaId)}
+              onLoadPersona={handleLoadPersona}
               onManualPersonaChange={setManualPersonaId}
               personas={personas}
               scope={scope}
@@ -191,23 +229,12 @@ export function PortalPage() {
                     <DashboardSection
                       activities={activities}
                       loading={loading}
-                      profile={profile}
-                      profileForm={profileForm}
-                      submitting={submitting}
-                      onAccounts={() => setSection("accounts")}
-                      onActivity={() => setSection("transactions")}
-                      onContacts={() => setSection("recipients")}
-                      onCopyCbu={() => {
-                        const cbu = profile.cuentas[0]?.cbu;
-                        if (cbu) {
-                          void navigator.clipboard.writeText(cbu);
-                          setSuccess("CBU copiado al portapapeles.");
-                        }
-                      }}
-                      onIncome={() => void loadPortal(profile.persona.id)}
-                      onProfileFormChange={setProfileForm}
-                      onProfileSave={handleProfileSave}
-                      onTransfer={() => setSection("transactions")}
+                      onAccounts={handleGoToAccounts}
+                      onActivity={handleGoToActivity}
+                      onContacts={handleGoToContacts}
+                      onCopyCbu={handleCopyCbu}
+                      onIncome={handleIncome}
+                      onTransfer={handleGoToTransactions}
                     />
                   )}
 
@@ -216,30 +243,32 @@ export function PortalPage() {
                       profile={profile}
                       selectedAccountForAlias={selectedAccountForAlias}
                       onAliasEdit={setSelectedAccountForAlias}
-                      onAliasUpdated={() => {
-                        setSuccess("Alias actualizado correctamente.");
-                        setSelectedAccountForAlias(null);
-                        void loadPortal(profile.persona.id);
-                      }}
+                      onAliasUpdated={handleAliasUpdated}
+                      onSyncAccount={scope === "admin" ? handleSyncAccountCb : undefined}
+                      onBulkSync={scope === "admin" ? handleBulkSyncCb : undefined}
+                      syncingAccountId={syncingAccountId}
+                      bulkSyncing={bulkSyncing}
                     />
                   )}
 
                   {section === "transactions" && (
                     <TransactionsSection
                       activities={activities}
+                      lastSyncResult={lastSyncResult}
                       loading={loading}
                       onSubmit={handleTransfer}
+                      onSyncIncoming={handleSyncIncomingCb}
                       onTransferFormChange={setTransferForm}
                       profile={profile}
                       submitting={submitting}
-                      transactionTypes={transactionTypes}
+                      syncingIncoming={syncingIncoming}
                       transferForm={transferForm}
                     />
                   )}
 
                   {section === "recipients" && (
                     <RecipientsSection
-                      onDelete={(recipient) => void handleRecipientDelete(recipient.id)}
+                      onDelete={handleRecipientDeleteCb}
                       onRecipientFormChange={setRecipientForm}
                       onSubmit={handleRecipientCreate}
                       profile={profile}
@@ -251,7 +280,9 @@ export function PortalPage() {
                   {section === "admin" && scope === "admin" && (
                     <AdminSection
                       accountTypes={accountTypes}
+                      banks={banks}
                       createClientForm={createClientForm}
+                      onAccountSynced={handleAccountSynced}
                       onCreateClientFormChange={setCreateClientForm}
                       onSubmit={handleCreateClient}
                       profile={profile}

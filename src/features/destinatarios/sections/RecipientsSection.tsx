@@ -1,4 +1,4 @@
-import type { FormEvent } from "react";
+import { memo, type FormEvent } from "react";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
@@ -27,7 +27,7 @@ interface RecipientsSectionProps {
   submitting: boolean;
 }
 
-export function RecipientsSection({
+export const RecipientsSection = memo(function RecipientsSection({
   onDelete,
   onRecipientFormChange,
   onSubmit,
@@ -111,4 +111,4 @@ export function RecipientsSection({
       </Card>
     </div>
   );
-}
+});

@@ -7,6 +7,8 @@ export interface AccountRecord {
   saldo: string | number;
   activa: boolean;
   tipo_cuenta_nombre?: string;
+  banco_central_registrada?: boolean;
+  alias?: string | null;
 }
 
 export interface TipoCuentaRecord {

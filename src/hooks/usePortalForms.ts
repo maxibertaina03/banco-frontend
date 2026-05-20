@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
 import type { CreateClientFormState } from "../features/admin/sections/AdminSection";
 import type { AuthenticatedUserProfile } from "../features/personas/types/personas.types";
-import type { ProfileFormState } from "../features/dashboard/sections/DashboardSection";
 import type { RecipientFormState } from "../features/destinatarios/sections/RecipientsSection";
 import type { PersonaFullResponse } from "../features/personas/types/personas.types";
-import type { TipoTransaccionRecord } from "../features/transacciones/types/transacciones.types";
 import type { TransferFormState } from "../features/transacciones/sections/TransactionsSection";
 
 export interface CompleteProfileFormState {
@@ -18,10 +16,9 @@ export interface CompleteProfileFormState {
 
 export function usePortalForms(
   profile: PersonaFullResponse | null,
-  transactionTypes: TipoTransaccionRecord[],
   authProfile: AuthenticatedUserProfile | null
 ) {
-  const [profileForm, setProfileForm] = useState<ProfileFormState>({
+  const [, setLegacyProfileForm] = useState({
     nombre: "",
     apellido: "",
     email: "",
@@ -34,9 +31,8 @@ export function usePortalForms(
     banco: "",
   });
   const [transferForm, setTransferForm] = useState<TransferFormState>({
-    tipoTransaccionId: "",
     cuentaOrigenId: "",
-    cuentaDestinoId: "",
+    cbuDestino: "",
     monto: "",
     descripcion: "",
   });
@@ -46,12 +42,7 @@ export function usePortalForms(
     dni: "",
     email: "",
     telefono: "",
-    clerkId: "",
-    roleId: "",
-    tipoCuentaId: "",
-    numeroCuenta: "",
-    cbu: "",
-    saldo: "0",
+    environment: "test",
   });
   const [selectedAccountForAlias, setSelectedAccountForAlias] = useState<string | null>(null);
   const [completeProfileForm, setCompleteProfileForm] = useState<CompleteProfileFormState>({
@@ -68,7 +59,7 @@ export function usePortalForms(
       return;
     }
 
-    setProfileForm({
+    setLegacyProfileForm({
       nombre: profile.persona.nombre,
       apellido: profile.persona.apellido,
       email: profile.persona.email,
@@ -84,10 +75,9 @@ export function usePortalForms(
 
     setTransferForm((current) => ({
       ...current,
-      tipoTransaccionId: current.tipoTransaccionId || transactionTypes[0]?.id || "",
       cuentaOrigenId: current.cuentaOrigenId || profile.cuentas[0]?.id || "",
     }));
-  }, [profile, transactionTypes]);
+  }, [profile]);
 
   useEffect(() => {
     if (!authProfile) {
@@ -107,12 +97,10 @@ export function usePortalForms(
   return {
     completeProfileForm,
     createClientForm,
-    profileForm,
     recipientForm,
     selectedAccountForAlias,
     setCompleteProfileForm,
     setCreateClientForm,
-    setProfileForm,
     setRecipientForm,
     setSelectedAccountForAlias,
     setTransferForm,

@@ -1,4 +1,4 @@
-import type { FormEvent } from "react";
+import { memo, type FormEvent } from "react";
 import { ShieldCheck } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
@@ -13,7 +13,7 @@ interface CompleteProfileSectionProps {
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
 }
 
-export function CompleteProfileSection({ form, submitting, onChange, onSubmit }: CompleteProfileSectionProps) {
+export const CompleteProfileSection = memo(function CompleteProfileSection({ form, submitting, onChange, onSubmit }: CompleteProfileSectionProps) {
   return (
     <Card className="border-primary/20 bg-gradient-to-br from-[#1C0B2E] to-[#2D1548]">
       <CardHeader className="space-y-3">
@@ -99,4 +99,4 @@ export function CompleteProfileSection({ form, submitting, onChange, onSubmit }:
       </CardContent>
     </Card>
   );
-}
+});

@@ -1,10 +1,13 @@
 export interface TransactionRecord {
   id: string;
   tipo_transaccion_id: string;
-  cuenta_origen_id: string;
+  cuenta_origen_id?: string | null;
   cuenta_destino_id?: string | null;
-  cuenta_origen_numero?: string;
+  cuenta_origen_numero?: string | null;
   cuenta_destino_numero?: string | null;
+  cbu_origen?: string | null;
+  cbu_destino?: string | null;
+  canal?: "local" | "interbancaria_saliente" | "interbancaria_entrante" | null;
   monto: string | number;
   descripcion?: string | null;
   estado: "pendiente" | "completada" | "rechazada";

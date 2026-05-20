@@ -1,18 +1,16 @@
-import type { FormEvent } from "react";
-import { createCuenta } from "../features/cuentas/api/cuentas.api";
+import { useState, type FormEvent } from "react";
 import { createDestinatario, deleteDestinatario } from "../features/destinatarios/api/destinatarios.api";
 import {
-  assignPersonaRole,
+  bulkSyncAccounts,
   completeAuthenticatedUserProfile,
-  createPersona,
-  createUsuario,
-  updatePersona,
-  updateUsuario,
+  registerPersonFromAdmin,
+  syncCentralBankAccount,
 } from "../features/personas/api/personas.api";
 import type { PersonaFullResponse } from "../features/personas/types/personas.types";
-import { createTransfer } from "../features/transacciones/api/transacciones.api";
+import { createTransfer, syncIncomingTransactions } from "../features/transacciones/api/transacciones.api";
+import type { SyncIncomingResult } from "../features/transacciones/api/transacciones.api";
+import { ApiError } from "../lib/api/client";
 import type { CreateClientFormState } from "../features/admin/sections/AdminSection";
-import type { ProfileFormState } from "../features/dashboard/sections/DashboardSection";
 import type { RecipientFormState } from "../features/destinatarios/sections/RecipientsSection";
 import type { CompleteProfileFormState } from "./usePortalForms";
 import type { TransferFormState } from "../features/transacciones/sections/TransactionsSection";
@@ -22,8 +20,9 @@ interface UsePortalActionsParams {
   createClientForm: CreateClientFormState;
   loadPortal: (personaIdOverride?: string) => Promise<void>;
   profile: PersonaFullResponse | null;
-  profileForm: ProfileFormState;
   recipientForm: RecipientFormState;
+  refreshDestinatarios: (personaId: string) => Promise<void>;
+  refreshPersonaData: (personaId: string) => Promise<void>;
   setCreateClientForm: React.Dispatch<React.SetStateAction<CreateClientFormState>>;
   setError: (value: string | null) => void;
   setRecipientForm: React.Dispatch<React.SetStateAction<RecipientFormState>>;
@@ -33,13 +32,19 @@ interface UsePortalActionsParams {
   transferForm: TransferFormState;
 }
 
+export interface SyncState {
+  syncingAccountId: string | null;
+  bulkSyncing: boolean;
+}
+
 export function usePortalActions({
   completeProfileForm,
   createClientForm,
   loadPortal,
   profile,
-  profileForm,
   recipientForm,
+  refreshDestinatarios,
+  refreshPersonaData,
   setCreateClientForm,
   setError,
   setRecipientForm,
@@ -48,6 +53,10 @@ export function usePortalActions({
   setTransferForm,
   transferForm,
 }: UsePortalActionsParams) {
+  const [syncingAccountId, setSyncingAccountId] = useState<string | null>(null);
+  const [bulkSyncing, setBulkSyncing] = useState(false);
+  const [syncingIncoming, setSyncingIncoming] = useState(false);
+  const [lastSyncResult, setLastSyncResult] = useState<SyncIncomingResult | null>(null);
   async function handleCompleteProfile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -56,7 +65,7 @@ export function usePortalActions({
     setSuccess(null);
 
     try {
-      await completeAuthenticatedUserProfile({
+      const result = await completeAuthenticatedUserProfile({
         nombre: completeProfileForm.nombre,
         apellido: completeProfileForm.apellido,
         dni: completeProfileForm.dni,
@@ -65,39 +74,13 @@ export function usePortalActions({
         fecha_nacimiento: completeProfileForm.fechaNacimiento,
       });
 
-      setSuccess("Perfil completado correctamente.");
+      const cbuMsg = result.centralBank?.cbu
+        ? ` Tu CBU Brocoly asignado: ${result.centralBank.cbu}${result.centralBank.alias ? ` (alias: ${result.centralBank.alias})` : ""}.`
+        : "";
+      setSuccess(`Perfil completado correctamente.${cbuMsg}`);
       await loadPortal();
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "No se pudo completar el perfil.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  async function handleProfileSave(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!profile) return;
-
-    setSubmitting(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      await updatePersona(profile.persona.id, {
-        nombre: profileForm.nombre,
-        apellido: profileForm.apellido,
-        email: profileForm.email,
-        telefono: profileForm.telefono || null,
-      });
-
-      if (profile.usuario) {
-        await updateUsuario(profile.usuario.id, { activo: profileForm.activo });
-      }
-
-      setSuccess("Perfil actualizado correctamente.");
-      await loadPortal(profile.persona.id);
-    } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "No se pudo actualizar el perfil.");
     } finally {
       setSubmitting(false);
     }
@@ -121,7 +104,7 @@ export function usePortalActions({
 
       setRecipientForm({ alias: "", cbu: "", banco: "" });
       setSuccess("Destinatario agregado.");
-      await loadPortal(profile.persona.id);
+      await refreshDestinatarios(profile.persona.id);
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "No se pudo crear el destinatario.");
     } finally {
@@ -131,8 +114,33 @@ export function usePortalActions({
 
   async function handleTransfer(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!transferForm.tipoTransaccionId || !transferForm.cuentaOrigenId || !transferForm.monto) {
-      setError("Completa tipo de transaccion, cuenta origen y monto.");
+    if (!profile) {
+      setError("No pude resolver el perfil actual para transferir.");
+      return;
+    }
+
+    if (!transferForm.cbuDestino) {
+      setError("Debes verificar el CBU o alias destino en el Banco Central antes de transferir.");
+      return;
+    }
+
+    const importe = Number(transferForm.monto);
+    if (!transferForm.monto || importe <= 0 || isNaN(importe)) {
+      setError("Ingresa un monto válido mayor a cero.");
+      return;
+    }
+
+    const originAccount = profile.cuentas.find((account) => account.id === transferForm.cuentaOrigenId);
+
+    if (!originAccount?.cbu) {
+      setError("No pude resolver el CBU de la cuenta origen.");
+      return;
+    }
+
+    if (originAccount.banco_central_registrada === false) {
+      setError(
+        "La cuenta origen no está registrada en el Banco Central Brocoly. Un administrador debe sincronizarla antes de poder transferir."
+      );
       return;
     }
 
@@ -142,24 +150,38 @@ export function usePortalActions({
 
     try {
       await createTransfer({
-        tipo_transaccion_id: transferForm.tipoTransaccionId,
-        cuenta_origen_id: transferForm.cuentaOrigenId,
-        cuenta_destino_id: transferForm.cuentaDestinoId || null,
-        monto: Number(transferForm.monto),
-        descripcion: transferForm.descripcion || null,
-        estado: "completada",
+        cbuOrigen: originAccount.cbu,
+        cbuDestino: transferForm.cbuDestino,
+        importe,
+        saldoOrigen: Number(originAccount.saldo || 0),
       });
 
-      setTransferForm((current) => ({
-        ...current,
-        monto: "",
-        descripcion: "",
-        cuentaDestinoId: "",
-      }));
-      setSuccess("Operacion registrada.");
-      await loadPortal(profile?.persona.id);
+      // HTTP 201 = aprobada por Brocoly
+      setTransferForm((current) => ({ ...current, monto: "", descripcion: "", cbuDestino: "" }));
+      setSuccess("Transferencia aprobada por el Banco Central Brocoly.");
+      await refreshPersonaData(profile.persona.id);
     } catch (nextError) {
-      setError(nextError instanceof Error ? nextError.message : "No se pudo registrar la operacion.");
+      // Limpiar monto para que el usuario re-intente conscientemente
+      setTransferForm((current) => ({ ...current, monto: "" }));
+
+      if (nextError instanceof ApiError) {
+        if (nextError.status === 422) {
+          // Brocoly rechazó por saldo insuficiente; la transacción quedó registrada como rechazada
+          setError("Saldo insuficiente. El Banco Central registró la transferencia como rechazada.");
+          await refreshPersonaData(profile.persona.id);
+        } else if (nextError.status === 429) {
+          setError("El Banco Central está limitando las solicitudes. Espera unos segundos e intenta de nuevo.");
+        } else if (nextError.status === 502 || nextError.status === 503) {
+          setError("No se pudo conectar con el Banco Central. Verifica tu conexión e intenta de nuevo.");
+        } else if (nextError.status === 400 && nextError.message.includes("saldoOrigen")) {
+          setError("El saldo de tu cuenta no está actualizado. Recarga el portal e intenta de nuevo.");
+          await refreshPersonaData(profile.persona.id);
+        } else {
+          setError(nextError.message || "No se pudo registrar la transferencia.");
+        }
+      } else {
+        setError(nextError instanceof Error ? nextError.message : "No se pudo registrar la transferencia.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -174,7 +196,7 @@ export function usePortalActions({
     try {
       await deleteDestinatario(recipientId);
       setSuccess("Destinatario eliminado.");
-      await loadPortal(profile.persona.id);
+      await refreshDestinatarios(profile.persona.id);
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "No se pudo eliminar.");
     } finally {
@@ -190,34 +212,14 @@ export function usePortalActions({
     setSuccess(null);
 
     try {
-      const persona = await createPersona({
+      const result = await registerPersonFromAdmin({
         nombre: createClientForm.nombre,
         apellido: createClientForm.apellido,
         dni: createClientForm.dni,
-        email: createClientForm.email,
-        telefono: createClientForm.telefono || null,
+        email: createClientForm.email || undefined,
+        telefono: createClientForm.telefono || undefined,
+        environment: createClientForm.environment,
       });
-
-      await createUsuario({
-        persona_id: persona.id,
-        clerk_id: createClientForm.clerkId || `orbital_${createClientForm.dni}`,
-        activo: true,
-      });
-
-      if (createClientForm.roleId) {
-        await assignPersonaRole({ persona_id: persona.id, rol_id: createClientForm.roleId });
-      }
-
-      if (createClientForm.tipoCuentaId && createClientForm.numeroCuenta && createClientForm.cbu) {
-        await createCuenta({
-          persona_id: persona.id,
-          tipo_cuenta_id: createClientForm.tipoCuentaId,
-          numero_cuenta: createClientForm.numeroCuenta,
-          cbu: createClientForm.cbu,
-          saldo: Number(createClientForm.saldo || 0),
-          activa: true,
-        });
-      }
 
       setCreateClientForm({
         nombre: "",
@@ -225,15 +227,13 @@ export function usePortalActions({
         dni: "",
         email: "",
         telefono: "",
-        clerkId: "",
-        roleId: "",
-        tipoCuentaId: "",
-        numeroCuenta: "",
-        cbu: "",
-        saldo: "0",
+        environment: createClientForm.environment,
       });
-      setSuccess("Cliente creado en Orbital.");
-      await loadPortal(persona.id);
+      const brocolyCbu = result.centralBankPerson?.cbu || result.cuenta.cbu;
+      setSuccess(
+        `${result.message} CBU Brocoly: ${brocolyCbu}${result.cuenta.cbu && result.cuenta.cbu !== brocolyCbu ? ` | CBU local: ${result.cuenta.cbu}` : ""}${result.cuenta.alias ? ` | Alias: ${result.cuenta.alias}` : ""}`
+      );
+      await loadPortal(result.persona.id);
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "No se pudo crear el cliente.");
     } finally {
@@ -241,12 +241,77 @@ export function usePortalActions({
     }
   }
 
+  async function handleSyncIncoming() {
+    if (!profile || syncingIncoming) return;
+
+    setSyncingIncoming(true);
+    setLastSyncResult(null);
+
+    try {
+      const result = await syncIncomingTransactions();
+      setLastSyncResult(result);
+      if (result.synced > 0) {
+        setSuccess(`Se registraron ${result.synced} transferencia${result.synced !== 1 ? "s" : ""} entrante${result.synced !== 1 ? "s" : ""} nueva${result.synced !== 1 ? "s" : ""}.`);
+        await refreshPersonaData(profile.persona.id);
+      }
+    } catch {
+      // best-effort: no mostramos error para no alarmar al usuario
+    } finally {
+      setSyncingIncoming(false);
+    }
+  }
+
+  async function handleSyncAccount(accountId: string) {
+    if (!profile || syncingAccountId) return;
+
+    setSyncingAccountId(accountId);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const result = await syncCentralBankAccount(accountId, "test");
+      const warnings = result.warnings?.join(" ") || "";
+      setSuccess(`Cuenta sincronizada con Brocoly. CBU: ${result.account.cbu}${warnings ? ` — ${warnings}` : ""}`);
+      await refreshPersonaData(profile.persona.id);
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : "No se pudo sincronizar la cuenta.");
+    } finally {
+      setSyncingAccountId(null);
+    }
+  }
+
+  async function handleBulkSync() {
+    if (!profile || bulkSyncing) return;
+
+    setBulkSyncing(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const result = await bulkSyncAccounts({ environment: "test" });
+      setSuccess(
+        `Sincronización completada: ${result.successCount} exitosas, ${result.errorCount} con error.`
+      );
+      await refreshPersonaData(profile.persona.id);
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : "No se pudo ejecutar la sincronización masiva.");
+    } finally {
+      setBulkSyncing(false);
+    }
+  }
+
   return {
+    bulkSyncing,
     handleCompleteProfile,
     handleCreateClient,
-    handleProfileSave,
     handleRecipientCreate,
     handleRecipientDelete,
+    handleSyncAccount,
+    handleBulkSync,
+    handleSyncIncoming,
     handleTransfer,
+    lastSyncResult,
+    syncingAccountId,
+    syncingIncoming,
   };
 }

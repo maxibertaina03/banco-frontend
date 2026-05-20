@@ -1,3 +1,4 @@
+import { memo } from "react";
 import type { Section } from "../../pages/portal.config";
 
 interface PortalTabsProps {
@@ -6,7 +7,7 @@ interface PortalTabsProps {
   section: Section;
 }
 
-export function PortalTabs({ items, onSectionChange, section }: PortalTabsProps) {
+export const PortalTabs = memo(function PortalTabs({ items, onSectionChange, section }: PortalTabsProps) {
   return (
     <div className="mb-8 flex flex-wrap gap-3">
       {items.map((item) => (
@@ -23,4 +24,4 @@ export function PortalTabs({ items, onSectionChange, section }: PortalTabsProps)
       ))}
     </div>
   );
-}
+});

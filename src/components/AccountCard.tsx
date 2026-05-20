@@ -1,16 +1,29 @@
-import { Eye, EyeOff, TrendingUp } from 'lucide-react';
-import { useState } from 'react';
+import { CheckCircle, Eye, EyeOff, RefreshCw, TrendingUp, XCircle } from 'lucide-react';
+import { memo, useState } from 'react';
 
 interface AccountCardProps {
   tipo: string;
   saldo: string;
   cbu?: string;
-  alias?: string;
+  alias?: string | null;
   moneda?: string;
   activa?: boolean;
+  bancoCentralRegistrada?: boolean;
+  syncing?: boolean;
+  onSync?: () => void;
 }
 
-export function AccountCard({ tipo, saldo, cbu, alias, moneda = 'ARS', activa = true }: AccountCardProps) {
+export const AccountCard = memo(function AccountCard({
+  tipo,
+  saldo,
+  cbu,
+  alias,
+  moneda = 'ARS',
+  activa = true,
+  bancoCentralRegistrada,
+  syncing = false,
+  onSync,
+}: AccountCardProps) {
   const [showBalance, setShowBalance] = useState(true);
 
   const formatSaldo = (amount: string) => {
@@ -22,9 +35,11 @@ export function AccountCard({ tipo, saldo, cbu, alias, moneda = 'ARS', activa = 
     }).format(num);
   };
 
+  const syncKnown = bancoCentralRegistrada !== undefined;
+
   return (
     <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#1C0B2E] via-[#2D1548] to-[#3D2060] p-6 border border-primary/20 hover:border-primary/40 transition-all">
-      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl"></div>
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl" />
 
       <div className="relative z-10">
         <div className="flex items-start justify-between mb-6">
@@ -43,9 +58,25 @@ export function AccountCard({ tipo, saldo, cbu, alias, moneda = 'ARS', activa = 
             </div>
           </div>
 
-          <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#A855F7]/20 text-[#C084FC] text-sm">
-            <TrendingUp className="w-3 h-3" />
-            <span>{activa ? 'Activa' : 'Suspendida'}</span>
+          <div className="flex flex-col items-end gap-2">
+            <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#A855F7]/20 text-[#C084FC] text-sm">
+              <TrendingUp className="w-3 h-3" />
+              <span>{activa ? 'Activa' : 'Suspendida'}</span>
+            </div>
+
+            {syncKnown && (
+              bancoCentralRegistrada ? (
+                <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-400/15 text-emerald-400 text-xs">
+                  <CheckCircle className="w-3 h-3" />
+                  <span>Brocoly</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-400/15 text-amber-400 text-xs">
+                  <XCircle className="w-3 h-3" />
+                  <span>Sin sincronizar</span>
+                </div>
+              )
+            )}
           </div>
         </div>
 
@@ -62,7 +93,18 @@ export function AccountCard({ tipo, saldo, cbu, alias, moneda = 'ARS', activa = 
             <p className="text-xs font-mono tracking-wider">{cbu}</p>
           </div>
         )}
+
+        {onSync && !bancoCentralRegistrada && (
+          <button
+            onClick={onSync}
+            disabled={syncing}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-300 transition hover:bg-amber-400/20 disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3 h-3 ${syncing ? 'animate-spin' : ''}`} />
+            {syncing ? 'Sincronizando...' : 'Sincronizar con Brocoly'}
+          </button>
+        )}
       </div>
     </div>
   );
-}
+});
