@@ -1,3 +1,7 @@
 node_modules/
 .env
+.env.local
 .next/
+
+# Build output: producido por `npm run build`, no debe trackearse.
+dist/
