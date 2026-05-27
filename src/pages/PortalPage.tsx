@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { CreditCard } from "lucide-react";
 import { getSectionItems, roleLabels, type Section } from "./portal.config";
@@ -8,20 +8,46 @@ import { PortalSummary } from "../components/layout/PortalSummary";
 import { PortalTabs } from "../components/layout/PortalTabs";
 import { PortalToolbar } from "../components/layout/PortalToolbar";
 import { ProtectedRoute } from "../components/ProtectedRoute";
+import { SectionLoader } from "../components/SectionLoader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { PREFERRED_PERSONA_ID } from "../lib/constants/portal";
 import { formatCurrency } from "../lib/utils/currency";
-import { AccountsSection } from "../features/cuentas/sections/AccountsSection";
-import { DashboardSection } from "../features/dashboard/sections/DashboardSection";
-import { RecipientsSection } from "../features/destinatarios/sections/RecipientsSection";
 import { getRoleOptions, getRoleScope, sanitizePersonaId } from "../features/personas/api/personas.api";
-import { CompleteProfileSection } from "../features/personas/sections/CompleteProfileSection";
 import type { PortalRole } from "../features/personas/types/personas.types";
-import { TransactionsSection } from "../features/transacciones/sections/TransactionsSection";
-import { AdminSection } from "../features/admin/sections/AdminSection";
 import { usePortalActions } from "../hooks/usePortalActions";
 import { usePortalData } from "../hooks/usePortalData";
 import { usePortalForms } from "../hooks/usePortalForms";
+import { ErrorBoundary } from "../components/ErrorBoundary";
+
+// Sections cargadas perezosamente: cada una se descarga en su propio chunk
+// cuando el usuario navega a esa tab. Beneficio principal: el cliente normal
+// nunca descarga AdminSection (~30 KB con su árbol).
+// Vite admite la forma `import(...).then(m => ({ default: m.Named }))` para
+// re-exportar un named export como default sin tocar el archivo origen.
+const AccountsSection = lazy(() =>
+  import("../features/cuentas/sections/AccountsSection").then((m) => ({ default: m.AccountsSection }))
+);
+const AdminSection = lazy(() =>
+  import("../features/admin/sections/AdminSection").then((m) => ({ default: m.AdminSection }))
+);
+const CompleteProfileSection = lazy(() =>
+  import("../features/personas/sections/CompleteProfileSection").then((m) => ({
+    default: m.CompleteProfileSection,
+  }))
+);
+const DashboardSection = lazy(() =>
+  import("../features/dashboard/sections/DashboardSection").then((m) => ({ default: m.DashboardSection }))
+);
+const RecipientsSection = lazy(() =>
+  import("../features/destinatarios/sections/RecipientsSection").then((m) => ({
+    default: m.RecipientsSection,
+  }))
+);
+const TransactionsSection = lazy(() =>
+  import("../features/transacciones/sections/TransactionsSection").then((m) => ({
+    default: m.TransactionsSection,
+  }))
+);
 
 export function PortalPage() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
@@ -61,19 +87,13 @@ export function PortalPage() {
     setSuccess,
   });
   const {
-    completeProfileForm,
     createClientForm,
-    recipientForm,
     selectedAccountForAlias,
-    setCompleteProfileForm,
     setCreateClientForm,
-    setRecipientForm,
     setSelectedAccountForAlias,
-    setTransferForm,
-    transferForm,
-  } = usePortalForms(profile, authProfile);
+  } = usePortalForms();
 
-  const roleOptions = useMemo(() => (profile ? getRoleOptions(profile) : ["cliente"]), [profile]);
+  const roleOptions = useMemo<PortalRole[]>(() => (profile ? getRoleOptions(profile) : ["cliente"]), [profile]);
   const scope = getRoleScope(activeRole);
   const totalBalance = useMemo(
     () => profile?.cuentas.reduce((sum, account) => sum + Number(account.saldo || 0), 0) || 0,
@@ -90,23 +110,20 @@ export function PortalPage() {
     handleSyncIncoming,
     handleTransfer,
     lastSyncResult,
+    recipientResetSignal,
     syncingAccountId,
     syncingIncoming,
+    transferResetSignal,
   } = usePortalActions({
-    completeProfileForm,
     createClientForm,
     loadPortal,
     profile,
-    recipientForm,
     refreshDestinatarios,
     refreshPersonaData,
     setCreateClientForm,
     setError,
-    setRecipientForm,
     setSubmitting,
     setSuccess,
-    setTransferForm,
-    transferForm,
   });
 
   useEffect(() => {
@@ -207,12 +224,13 @@ export function PortalPage() {
           )}
 
           {needsProfileCompletion ? (
-            <CompleteProfileSection
-              form={completeProfileForm}
-              submitting={submitting}
-              onChange={setCompleteProfileForm}
-              onSubmit={handleCompleteProfile}
-            />
+            <Suspense fallback={<SectionLoader />}>
+              <CompleteProfileSection
+                authProfile={authProfile}
+                submitting={submitting}
+                onSubmit={handleCompleteProfile}
+              />
+            </Suspense>
           ) : (
             <>
               <PortalTabs items={getSectionItems(scope)} onSectionChange={setSection} section={section} />
@@ -224,74 +242,82 @@ export function PortalPage() {
                   </CardContent>
                 </Card>
               ) : (
-                <>
+                <Suspense fallback={<SectionLoader />}>
                   {section === "dashboard" && (
-                    <DashboardSection
-                      activities={activities}
-                      loading={loading}
-                      onAccounts={handleGoToAccounts}
-                      onActivity={handleGoToActivity}
-                      onContacts={handleGoToContacts}
-                      onCopyCbu={handleCopyCbu}
-                      onIncome={handleIncome}
-                      onTransfer={handleGoToTransactions}
-                    />
+                    <ErrorBoundary>
+                      <DashboardSection
+                        activities={activities}
+                        loading={loading}
+                        onAccounts={handleGoToAccounts}
+                        onActivity={handleGoToActivity}
+                        onContacts={handleGoToContacts}
+                        onCopyCbu={handleCopyCbu}
+                        onIncome={handleIncome}
+                        onTransfer={handleGoToTransactions}
+                      />
+                    </ErrorBoundary>
                   )}
 
                   {section === "accounts" && (
-                    <AccountsSection
-                      profile={profile}
-                      selectedAccountForAlias={selectedAccountForAlias}
-                      onAliasEdit={setSelectedAccountForAlias}
-                      onAliasUpdated={handleAliasUpdated}
-                      onSyncAccount={scope === "admin" ? handleSyncAccountCb : undefined}
-                      onBulkSync={scope === "admin" ? handleBulkSyncCb : undefined}
-                      syncingAccountId={syncingAccountId}
-                      bulkSyncing={bulkSyncing}
-                    />
+                    <ErrorBoundary>
+                      <AccountsSection
+                        profile={profile}
+                        selectedAccountForAlias={selectedAccountForAlias}
+                        onAliasEdit={setSelectedAccountForAlias}
+                        onAliasUpdated={handleAliasUpdated}
+                        onSyncAccount={scope === "admin" ? handleSyncAccountCb : undefined}
+                        onBulkSync={scope === "admin" ? handleBulkSyncCb : undefined}
+                        syncingAccountId={syncingAccountId}
+                        bulkSyncing={bulkSyncing}
+                      />
+                    </ErrorBoundary>
                   )}
 
                   {section === "transactions" && (
-                    <TransactionsSection
-                      activities={activities}
-                      lastSyncResult={lastSyncResult}
-                      loading={loading}
-                      onSubmit={handleTransfer}
-                      onSyncIncoming={handleSyncIncomingCb}
-                      onTransferFormChange={setTransferForm}
-                      profile={profile}
-                      submitting={submitting}
-                      syncingIncoming={syncingIncoming}
-                      transferForm={transferForm}
-                    />
+                    <ErrorBoundary>
+                      <TransactionsSection
+                        activities={activities}
+                        lastSyncResult={lastSyncResult}
+                        loading={loading}
+                        onSubmit={handleTransfer}
+                        onSyncIncoming={handleSyncIncomingCb}
+                        profile={profile}
+                        submitting={submitting}
+                        syncingIncoming={syncingIncoming}
+                        resetSignal={transferResetSignal}
+                      />
+                    </ErrorBoundary>
                   )}
 
                   {section === "recipients" && (
-                    <RecipientsSection
-                      onDelete={handleRecipientDeleteCb}
-                      onRecipientFormChange={setRecipientForm}
-                      onSubmit={handleRecipientCreate}
-                      profile={profile}
-                      recipientForm={recipientForm}
-                      submitting={submitting}
-                    />
+                    <ErrorBoundary>
+                      <RecipientsSection
+                        onDelete={handleRecipientDeleteCb}
+                        onSubmit={handleRecipientCreate}
+                        profile={profile}
+                        submitting={submitting}
+                        resetSignal={recipientResetSignal}
+                      />
+                    </ErrorBoundary>
                   )}
 
                   {section === "admin" && scope === "admin" && (
-                    <AdminSection
-                      accountTypes={accountTypes}
-                      banks={banks}
-                      createClientForm={createClientForm}
-                      onAccountSynced={handleAccountSynced}
-                      onCreateClientFormChange={setCreateClientForm}
-                      onSubmit={handleCreateClient}
-                      profile={profile}
-                      roles={roles}
-                      submitting={submitting}
-                      totalBalance={formatCurrency(totalBalance)}
-                    />
+                    <ErrorBoundary>
+                      <AdminSection
+                        accountTypes={accountTypes}
+                        banks={banks}
+                        createClientForm={createClientForm}
+                        onAccountSynced={handleAccountSynced}
+                        onCreateClientFormChange={setCreateClientForm}
+                        onSubmit={handleCreateClient}
+                        profile={profile}
+                        roles={roles}
+                        submitting={submitting}
+                        totalBalance={formatCurrency(totalBalance)}
+                      />
+                    </ErrorBoundary>
                   )}
-                </>
+                </Suspense>
               )}
             </>
           )}

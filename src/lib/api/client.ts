@@ -22,7 +22,14 @@ export function setAccessTokenProvider(provider: AccessTokenProvider | null) {
   accessTokenProvider = provider;
 }
 
-async function buildHeaders(init?: RequestInit) {
+// Opciones extendidas: agregamos `idempotencyKey` para operaciones que el
+// backend protege con la tabla `idempotency_keys` (transferencias).
+export interface RequestOptions extends Omit<RequestInit, "headers"> {
+  headers?: HeadersInit;
+  idempotencyKey?: string;
+}
+
+async function buildHeaders(init?: RequestOptions) {
   const token = accessTokenProvider ? await accessTokenProvider() : null;
   const headers = new Headers(init?.headers);
 
@@ -30,6 +37,10 @@ async function buildHeaders(init?: RequestInit) {
 
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  if (init?.idempotencyKey) {
+    headers.set("Idempotency-Key", init.idempotencyKey);
   }
 
   return headers;
@@ -58,24 +69,23 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export async function request<T>(path: string, init?: RequestInit): Promise<T> {
+// Separa nuestras extensiones de las opciones nativas de fetch antes de pasar
+// el objeto a `fetch`. También evita que un caller sobrescriba accidentalmente
+// los headers calculados (Authorization, Content-Type, Idempotency-Key).
+function toFetchInit(headers: Headers, options?: RequestOptions): RequestInit {
+  if (!options) return { headers };
+  const { idempotencyKey: _idempotencyKey, headers: _headers, ...rest } = options;
+  return { ...rest, headers };
+}
+
+export async function request<T>(path: string, init?: RequestOptions): Promise<T> {
   const headers = await buildHeaders(init);
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers,
-    ...init,
-  });
-
+  const response = await fetch(`${API_BASE_URL}${path}`, toFetchInit(headers, init));
   return handleResponse<T>(response);
 }
 
-export async function requestAbsolute<T>(path: string, init?: RequestInit): Promise<T> {
+export async function requestAbsolute<T>(path: string, init?: RequestOptions): Promise<T> {
   const headers = await buildHeaders(init);
-
-  const response = await fetch(path, {
-    headers,
-    ...init,
-  });
-
+  const response = await fetch(path, toFetchInit(headers, init));
   return handleResponse<T>(response);
 }

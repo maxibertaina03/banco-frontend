@@ -1,14 +1,18 @@
 import { AlertTriangle, CheckCircle, Loader2, RefreshCcw, Search, XCircle } from "lucide-react";
-import { memo, useEffect, useRef, useState, type FormEvent } from "react";
+import { memo, useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { RecentActivity } from "../../../components/RecentActivity";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
 import { Textarea } from "../../../components/ui/textarea";
 import type { PersonaFullResponse, UserActivity } from "../../../lib/api";
+import { transferSchema, type TransferFormValues } from "../../../lib/schemas";
 import { type ResolvedRecipient, resolveRecipient } from "../api/transacciones.api";
 import type { SyncIncomingResult } from "../api/transacciones.api";
 
+// Mantenido por compatibilidad con consumidores que aún lo importan.
 export interface TransferFormState {
   cuentaOrigenId: string;
   cbuDestino: string;
@@ -20,13 +24,13 @@ interface TransactionsSectionProps {
   activities: UserActivity[];
   lastSyncResult: SyncIncomingResult | null;
   loading: boolean;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmit: (values: TransferFormValues) => Promise<void> | void;
   onSyncIncoming: () => void;
-  onTransferFormChange: (next: TransferFormState) => void;
   profile: PersonaFullResponse;
   submitting: boolean;
   syncingIncoming: boolean;
-  transferForm: TransferFormState;
+  // El padre incrementa este número tras un submit OK para limpiar el form.
+  resetSignal?: number;
 }
 
 type LookupState = "idle" | "loading" | "found" | "not_found";
@@ -37,18 +41,40 @@ export const TransactionsSection = memo(function TransactionsSection({
   loading,
   onSubmit,
   onSyncIncoming,
-  onTransferFormChange,
   profile,
   submitting,
   syncingIncoming,
-  transferForm,
+  resetSignal,
 }: TransactionsSectionProps) {
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm<TransferFormValues>({
+    resolver: zodResolver(transferSchema),
+    mode: "onTouched",
+    defaultValues: {
+      cuentaOrigenId: profile.cuentas[0]?.id || "",
+      cbuDestino: "",
+      monto: "",
+      descripcion: "",
+    },
+  });
+
+  const cuentaOrigenId = watch("cuentaOrigenId");
+  const cbuDestino = watch("cbuDestino");
+  const monto = watch("monto");
+
+  // ── Lookup en Brocoly (alias o CBU) ────────────────────────────────────────
   const [lookupState, setLookupState] = useState<LookupState>("idle");
   const [resolvedRecipient, setResolvedRecipient] = useState<ResolvedRecipient | null>(null);
   const [lookupInput, setLookupInput] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Auto-sync on mount (best-effort, no await blocking the render)
+  // Auto-sync de transferencias entrantes al montar (best-effort).
   const syncCalledRef = useRef(false);
   useEffect(() => {
     if (!syncCalledRef.current) {
@@ -57,15 +83,6 @@ export const TransactionsSection = memo(function TransactionsSection({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Refs so the async lookup never closes over stale props
-  const onTransferFormChangeRef = useRef(onTransferFormChange);
-  onTransferFormChangeRef.current = onTransferFormChange;
-  const transferFormRef = useRef(transferForm);
-  transferFormRef.current = transferForm;
-
-  const selectedOrigin = profile.cuentas.find((account) => account.id === transferForm.cuentaOrigenId);
-  const originNotRegistered = selectedOrigin && selectedOrigin.banco_central_registrada === false;
 
   async function runLookup(value: string) {
     const trimmed = value.trim();
@@ -86,8 +103,7 @@ export const TransactionsSection = memo(function TransactionsSection({
       if (cbu) {
         setResolvedRecipient(result);
         setLookupState("found");
-        // Read from ref — never stale, never causes re-render loop
-        onTransferFormChangeRef.current({ ...transferFormRef.current, cbuDestino: cbu });
+        setValue("cbuDestino", cbu, { shouldValidate: true, shouldDirty: true });
       } else {
         setLookupState("not_found");
       }
@@ -98,17 +114,36 @@ export const TransactionsSection = memo(function TransactionsSection({
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    // 900ms debounce to avoid hammering Brocoly's rate limit
     debounceRef.current = setTimeout(() => void runLookup(lookupInput), 900);
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lookupInput]); // only re-fires when the user types, not on every form change
+  }, [lookupInput]);
+
+  // Reset cuando el padre lo solicita (post-submit exitoso).
+  useEffect(() => {
+    if (resetSignal === undefined) return;
+    reset({
+      cuentaOrigenId: profile.cuentas[0]?.id || "",
+      cbuDestino: "",
+      monto: "",
+      descripcion: "",
+    });
+    setLookupInput("");
+    setLookupState("idle");
+    setResolvedRecipient(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resetSignal]);
 
   function handleSelectRecipient(cbu: string, alias?: string | null) {
     const displayValue = alias || cbu;
     setLookupInput(displayValue);
-    onTransferFormChange({ ...transferForm, cbuDestino: cbu });
+    setValue("cbuDestino", cbu, { shouldValidate: true, shouldDirty: true });
   }
+
+  const selectedOrigin = profile.cuentas.find((account) => account.id === cuentaOrigenId);
+  const originNotRegistered = selectedOrigin && selectedOrigin.banco_central_registrada === false;
 
   return (
     <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
@@ -120,15 +155,11 @@ export const TransactionsSection = memo(function TransactionsSection({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="grid gap-3" onSubmit={onSubmit}>
-            {/* Cuenta origen */}
+          <form className="grid gap-3" onSubmit={handleSubmit(onSubmit)} noValidate>
             <div className="grid gap-1">
               <label className="text-xs text-muted-foreground">Cuenta origen</label>
               <select
-                value={transferForm.cuentaOrigenId}
-                onChange={(event) =>
-                  onTransferFormChange({ ...transferForm, cuentaOrigenId: event.target.value })
-                }
+                {...register("cuentaOrigenId")}
                 className="h-11 rounded-xl border border-primary/20 bg-[#2D1548]/60 px-4 text-sm outline-none"
               >
                 {profile.cuentas.map((account) => (
@@ -138,6 +169,9 @@ export const TransactionsSection = memo(function TransactionsSection({
                   </option>
                 ))}
               </select>
+              {errors.cuentaOrigenId && (
+                <span className="text-xs text-destructive">{errors.cuentaOrigenId.message}</span>
+              )}
 
               {originNotRegistered && (
                 <div className="flex items-start gap-2 rounded-xl border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs text-amber-300">
@@ -149,7 +183,6 @@ export const TransactionsSection = memo(function TransactionsSection({
               )}
             </div>
 
-            {/* Destinatarios guardados */}
             {profile.destinatarios.length > 0 && (
               <div className="grid gap-1">
                 <label className="text-xs text-muted-foreground">Contactos guardados</label>
@@ -171,7 +204,6 @@ export const TransactionsSection = memo(function TransactionsSection({
               </div>
             )}
 
-            {/* CBU / Alias destino con lookup en Brocoly */}
             <div className="grid gap-1">
               <label className="text-xs text-muted-foreground">CBU o alias destino</label>
               <div className="relative">
@@ -180,7 +212,7 @@ export const TransactionsSection = memo(function TransactionsSection({
                   onChange={(event) => {
                     setLookupInput(event.target.value);
                     if (!event.target.value.trim()) {
-                      onTransferFormChange({ ...transferForm, cbuDestino: "" });
+                      setValue("cbuDestino", "", { shouldValidate: true });
                       setResolvedRecipient(null);
                       setLookupState("idle");
                     }
@@ -213,40 +245,44 @@ export const TransactionsSection = memo(function TransactionsSection({
                   No se encontró este CBU o alias en el Banco Central Brocoly.
                 </p>
               )}
+              {errors.cbuDestino && lookupState !== "loading" && (
+                <span className="text-xs text-destructive">{errors.cbuDestino.message}</span>
+              )}
             </div>
 
-            {/* Monto */}
             <div className="grid gap-1">
               <label className="text-xs text-muted-foreground">Monto</label>
               <Input
-                value={transferForm.monto}
-                onChange={(event) => onTransferFormChange({ ...transferForm, monto: event.target.value })}
+                {...register("monto")}
                 placeholder="0.00"
                 type="number"
                 min="0.01"
                 step="0.01"
+                aria-invalid={errors.monto ? "true" : "false"}
               />
+              {errors.monto && (
+                <span className="text-xs text-destructive">{errors.monto.message}</span>
+              )}
             </div>
 
-            {/* Descripción */}
             <Textarea
-              value={transferForm.descripcion}
-              onChange={(event) =>
-                onTransferFormChange({ ...transferForm, descripcion: event.target.value })
-              }
+              {...register("descripcion")}
               placeholder="Descripción (opcional)"
               rows={2}
             />
+            {errors.descripcion && (
+              <span className="text-xs text-destructive">{errors.descripcion.message}</span>
+            )}
 
             <Button
               type="submit"
               disabled={
                 submitting ||
-                !transferForm.cbuDestino ||
+                !cbuDestino ||
                 lookupState === "loading" ||
                 lookupState === "not_found" ||
-                !transferForm.monto ||
-                Number(transferForm.monto) <= 0
+                !monto ||
+                Number(monto) <= 0
               }
             >
               {submitting ? "Procesando..." : "Transferir vía Brocoly"}

@@ -44,15 +44,19 @@ export async function getPersonaTransactions(accounts: AccountRecord[]) {
   );
 }
 
-export function createTransfer(payload: {
-  cbuOrigen: string;
-  cbuDestino: string;
-  importe: number;
-  saldoOrigen: number;
-}) {
+export function createTransfer(
+  payload: {
+    cbuOrigen: string;
+    cbuDestino: string;
+    importe: number;
+    saldoOrigen: number;
+  },
+  options?: { idempotencyKey?: string }
+) {
   return request<TransactionRecord>("/transacciones", {
     method: "POST",
     body: JSON.stringify(payload),
+    idempotencyKey: options?.idempotencyKey,
   });
 }
 

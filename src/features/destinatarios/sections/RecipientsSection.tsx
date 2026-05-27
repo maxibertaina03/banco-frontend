@@ -1,4 +1,6 @@
-import { memo, type FormEvent } from "react";
+import { memo, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
@@ -11,7 +13,10 @@ import {
   TableRow,
 } from "../../../components/ui/table";
 import type { PersonaFullResponse, RecipientRecord } from "../../../lib/api";
+import { recipientSchema, type RecipientFormValues } from "../../../lib/schemas";
 
+// Mantenido para retrocompatibilidad con consumidores que aún lo importan
+// (usePortalForms.ts antes lo usaba). Se quitará al final de la migración.
 export interface RecipientFormState {
   alias: string;
   cbu: string;
@@ -20,21 +25,37 @@ export interface RecipientFormState {
 
 interface RecipientsSectionProps {
   onDelete: (recipient: RecipientRecord) => void;
-  onRecipientFormChange: (next: RecipientFormState) => void;
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onSubmit: (values: RecipientFormValues) => Promise<void> | void;
   profile: PersonaFullResponse;
-  recipientForm: RecipientFormState;
   submitting: boolean;
+  // Permite que el padre indique "el último submit fue exitoso" para resetear el form.
+  resetSignal?: number;
 }
 
 export const RecipientsSection = memo(function RecipientsSection({
   onDelete,
-  onRecipientFormChange,
   onSubmit,
   profile,
-  recipientForm,
   submitting,
+  resetSignal,
 }: RecipientsSectionProps) {
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isValid },
+  } = useForm<RecipientFormValues>({
+    resolver: zodResolver(recipientSchema),
+    mode: "onTouched",
+    defaultValues: { alias: "", cbu: "", banco: "" },
+  });
+
+  // Reset cuando el padre lo solicita (tras submit OK).
+  useEffect(() => {
+    if (resetSignal === undefined) return;
+    reset({ alias: "", cbu: "", banco: "" });
+  }, [resetSignal, reset]);
+
   return (
     <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
       <Card className="border-primary/20 bg-gradient-to-br from-[#1C0B2E] to-[#2D1548]">
@@ -43,29 +64,42 @@ export const RecipientsSection = memo(function RecipientsSection({
           <CardDescription>Alta sobre `destinatarios`.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="grid gap-3" onSubmit={onSubmit}>
-            <Input
-              value={recipientForm.alias}
-              onChange={(event) =>
-                onRecipientFormChange({ ...recipientForm, alias: event.target.value })
-              }
-              placeholder="Alias"
-            />
-            <Input
-              value={recipientForm.cbu}
-              onChange={(event) =>
-                onRecipientFormChange({ ...recipientForm, cbu: event.target.value })
-              }
-              placeholder="CBU externo"
-            />
-            <Input
-              value={recipientForm.banco}
-              onChange={(event) =>
-                onRecipientFormChange({ ...recipientForm, banco: event.target.value })
-              }
-              placeholder="Banco externo"
-            />
-            <Button type="submit" disabled={submitting}>
+          <form className="grid gap-3" onSubmit={handleSubmit(onSubmit)} noValidate>
+            <div className="grid gap-1">
+              <Input
+                {...register("alias")}
+                placeholder="Alias"
+                aria-invalid={errors.alias ? "true" : "false"}
+              />
+              {errors.alias && (
+                <span className="text-xs text-destructive">{errors.alias.message}</span>
+              )}
+            </div>
+
+            <div className="grid gap-1">
+              <Input
+                {...register("cbu")}
+                placeholder="CBU externo"
+                inputMode="numeric"
+                aria-invalid={errors.cbu ? "true" : "false"}
+              />
+              {errors.cbu && (
+                <span className="text-xs text-destructive">{errors.cbu.message}</span>
+              )}
+            </div>
+
+            <div className="grid gap-1">
+              <Input
+                {...register("banco")}
+                placeholder="Banco externo"
+                aria-invalid={errors.banco ? "true" : "false"}
+              />
+              {errors.banco && (
+                <span className="text-xs text-destructive">{errors.banco.message}</span>
+              )}
+            </div>
+
+            <Button type="submit" disabled={submitting || !isValid}>
               Agregar destinatario
             </Button>
           </form>

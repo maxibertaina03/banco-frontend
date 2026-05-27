@@ -21,7 +21,6 @@ export interface RoleRecord {
 export interface UserRecord {
   id: string;
   persona_id: string;
-  clerk_id: string;
   activo: boolean;
   created_at?: string;
 }
