@@ -22,7 +22,7 @@ import type {
   RoleRecord,
   TipoCuentaRecord,
 } from "../../../lib/api";
-import { BrocolyMassSyncSection } from "./BrocolyMassSyncSection";
+import { InterbankMassSyncSection } from "./InterbankMassSyncSection";
 
 export interface CreateClientFormState {
   nombre: string;
@@ -351,7 +351,7 @@ const SingleAccountSyncCard = memo(function SingleAccountSyncCard({ environment,
     if (!accountId) { setError("Elegí una cuenta para sincronizar."); setResult(null); return; }
     setLoading(true); setError(null); setResult(null);
     try { setResult(await syncCentralBankAccount(accountId, environment)); await onAccountSynced(); }
-    catch (err) { setError(err instanceof Error ? err.message : "No se pudo sincronizar la cuenta con Brocoly."); }
+    catch (err) { setError(err instanceof Error ? err.message : "No se pudo sincronizar la cuenta."); }
     finally { setLoading(false); }
   }
 
@@ -376,7 +376,7 @@ const SingleAccountSyncCard = memo(function SingleAccountSyncCard({ environment,
         {error && <div className="rounded-2xl bg-[#2D1548]/60 p-4 text-sm text-destructive">{error}</div>}
         {result && (
           <div className="grid gap-3 md:grid-cols-2">
-            <div className="rounded-2xl bg-[#2D1548]/60 p-4"><p className="text-xs text-muted-foreground">CBU devuelto por Brocoly</p><p className="font-mono text-sm text-primary">{result.centralBank?.cbu || result.account?.cbu || "Sin CBU"}</p></div>
+            <div className="rounded-2xl bg-[#2D1548]/60 p-4"><p className="text-xs text-muted-foreground">CBU asignado por el Banco Central</p><p className="font-mono text-sm text-primary">{result.centralBank?.cbu || result.account?.cbu || "Sin CBU"}</p></div>
             <div className="rounded-2xl bg-[#2D1548]/60 p-4"><p className="text-xs text-muted-foreground">Alias</p><p className="text-sm">{result.account?.alias || "Sin alias"}</p></div>
             <div className="rounded-2xl bg-[#2D1548]/60 p-4 md:col-span-2"><p className="text-xs text-muted-foreground">Estado local</p><p className="text-sm">{result.account?.banco_central_registrada ? "Cuenta lista para transferencias por Banco Central" : "La cuenta todavía no quedó marcada como sincronizada"}</p></div>
             {result.warnings && result.warnings.length > 0 && (
@@ -408,9 +408,9 @@ export const AdminSection = memo(function AdminSection({
       {/* Registrar persona */}
       <Card className="border-primary/20 bg-gradient-to-br from-[#1C0B2E] to-[#2D1548]">
         <CardHeader>
-          <CardTitle>Registrar persona</CardTitle>
+          <CardTitle>Registrar nuevo cliente</CardTitle>
           <CardDescription>
-            Registra la persona en Banco Central y sincroniza la base local con el CBU devuelto.
+            Da de alta a un cliente nuevo y le asigna su primera cuenta con CBU.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -423,7 +423,7 @@ export const AdminSection = memo(function AdminSection({
               <Input value={createClientForm.dni} onChange={(e) => onCreateClientFormChange({ ...createClientForm, dni: e.target.value })} placeholder="DNI" />
               <Input value={createClientForm.email} onChange={(e) => onCreateClientFormChange({ ...createClientForm, email: e.target.value })} placeholder="Email" />
             </div>
-            <Input value={createClientForm.telefono} onChange={(e) => onCreateClientFormChange({ ...createClientForm, telefono: e.target.value })} placeholder="Telefono opcional" />
+            <Input value={createClientForm.telefono} onChange={(e) => onCreateClientFormChange({ ...createClientForm, telefono: e.target.value })} placeholder="Teléfono (opcional)" />
             <select
               value={createClientForm.environment}
               onChange={(e) => onCreateClientFormChange({ ...createClientForm, environment: e.target.value as "test" | "prod" })}
@@ -433,13 +433,13 @@ export const AdminSection = memo(function AdminSection({
               <option value="prod">Entorno prod</option>
             </select>
             <div className="rounded-2xl bg-[#2D1548]/60 p-4 text-sm text-muted-foreground">
-              Si el DNI ya existe en tu banco en Banco Central, se reutiliza el CBU y se sincroniza tu BD local.
-              Si no existe, se crea una persona nueva y una cuenta local inicial.
+              Si el DNI ya tiene cuenta registrada se reutiliza; caso contrario, se crea un alta nueva
+              con una cuenta inicial.
             </div>
             <div className="rounded-2xl bg-[#2D1548]/60 p-4 text-sm text-emerald-300">
-              El CBU asignado por Brocoly se muestra en el mensaje de éxito superior cuando termina el alta.
+              El CBU asignado se muestra en el aviso de éxito al confirmar el alta.
             </div>
-            <Button type="submit" disabled={submitting}>Registrar persona</Button>
+            <Button type="submit" disabled={submitting}>Registrar cliente</Button>
           </form>
         </CardContent>
       </Card>
@@ -473,7 +473,7 @@ export const AdminSection = memo(function AdminSection({
           </div>
           <div className="flex items-center gap-3 rounded-2xl bg-[#2D1548]/60 p-4 text-sm text-muted-foreground">
             <Users className="h-4 w-4 text-primary" />
-            Si `roles`, `tipos-cuenta` o `tipos-transaccion` fallan en backend, este panel sigue usable pero con menos ayudas visuales.
+            Si algunos catálogos no cargan, podés seguir operando con funciones reducidas en este panel.
           </div>
         </CardContent>
       </Card>
@@ -507,7 +507,7 @@ export const AdminSection = memo(function AdminSection({
       </Card>
 
       {/* Sub-components — each manages its own state */}
-      <BrocolyMassSyncSection environment={env} />
+      <InterbankMassSyncSection environment={env} />
       <SingleAccountSyncCard environment={env} profile={profile} onAccountSynced={onAccountSynced} />
       <TransactionListCard environment={env} />
       <BankLookupCard environment={env} />

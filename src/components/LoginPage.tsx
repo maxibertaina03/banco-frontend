@@ -6,7 +6,7 @@ export function LoginPage() {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-white mb-2">Banco Orbital</h1>
-          <p className="text-purple-200">Tu banca digital conectada</p>
+          <p className="text-purple-200">Tu banca digital</p>
         </div>
         <div className="bg-[#1C0B2E]/50 rounded-2xl border border-primary/20 p-8 backdrop-blur-sm">
           <SignIn

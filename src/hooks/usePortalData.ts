@@ -185,28 +185,14 @@ export function usePortalData({
 
   const warning = useMemo<string | null>(() => {
     if (needsProfileCompletion) return null;
-    if (preferredHadInvalidPath) {
-      return "Ignoré `VITE_PERSONA_ID` porque tenía una ruta en lugar de un UUID. Usa un `persona_id` real o déjalo vacío.";
-    }
-    if (personasQuery.isError && Boolean(directPersonaId)) {
-      return "El portal se cargó usando un persona_id directo, sin depender del listado general.";
-    }
-    if (!directPersonaId && authProfileUser?.persona_id && !canLoadInternalCatalogs) {
-      return "El portal se cargó usando la persona asociada al usuario autenticado.";
-    }
-    if (catalogs.failed) {
-      return "Algunos catálogos del backend devolvieron error. Las vistas de cliente siguen operativas y el panel admin cargará con menos opciones.";
+    // Warnings técnicos de bootstrap (VITE_PERSONA_ID inválido, fallback a
+    // persona del JWT, etc.) se silencian — el sistema sigue operando OK y
+    // un cliente final no debería ver mensajes con jerga interna.
+    if (catalogs.failed && canLoadInternalCatalogs) {
+      return "Algunas funciones del panel administrativo no están disponibles momentáneamente.";
     }
     return null;
-  }, [
-    needsProfileCompletion,
-    preferredHadInvalidPath,
-    personasQuery.isError,
-    directPersonaId,
-    authProfileUser?.persona_id,
-    canLoadInternalCatalogs,
-    catalogs.failed,
-  ]);
+  }, [needsProfileCompletion, canLoadInternalCatalogs, catalogs.failed]);
 
   // ── Loading agregado ───────────────────────────────────────────────────────
   // Solo lo que bloquea el render principal: auth + perfil + transacciones.
@@ -230,7 +216,7 @@ export function usePortalData({
       setError(queryError.message);
       return;
     }
-    setError(queryError instanceof Error ? queryError.message : "No se pudo cargar Orbital.");
+    setError(queryError instanceof Error ? queryError.message : "No pudimos cargar tu información. Intentá refrescar la página.");
   }, [authProfileQuery.error, personaFullQuery.error, transactionsQuery.error, setError]);
 
   // ── API imperativa de refresh ──────────────────────────────────────────────

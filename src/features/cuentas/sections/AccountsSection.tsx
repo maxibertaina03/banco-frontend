@@ -33,10 +33,10 @@ export const AccountsSection = memo(function AccountsSection({
         <div className="flex items-center justify-between rounded-2xl border border-amber-400/20 bg-amber-400/5 px-5 py-4">
           <div>
             <p className="text-sm font-medium text-amber-300">
-              {unsynced.length} {unsynced.length === 1 ? "cuenta sin sincronizar" : "cuentas sin sincronizar"} con Brocoly
+              {unsynced.length} {unsynced.length === 1 ? "cuenta sin habilitar" : "cuentas sin habilitar"} para transferencias interbancarias
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Las cuentas sincronizadas pueden operar transferencias interbancarias reales.
+              Las cuentas habilitadas pueden enviar y recibir transferencias a otros bancos.
             </p>
           </div>
           <button
@@ -45,7 +45,7 @@ export const AccountsSection = memo(function AccountsSection({
             className="flex items-center gap-2 rounded-xl border border-amber-400/30 bg-amber-400/15 px-4 py-2 text-sm text-amber-300 transition hover:bg-amber-400/25 disabled:opacity-50"
           >
             <RefreshCw className={`h-4 w-4 ${bulkSyncing ? "animate-spin" : ""}`} />
-            {bulkSyncing ? "Sincronizando..." : "Sincronizar todas"}
+            {bulkSyncing ? "Habilitando..." : "Habilitar todas"}
           </button>
         </div>
       )}

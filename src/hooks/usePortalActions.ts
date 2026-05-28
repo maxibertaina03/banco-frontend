@@ -84,7 +84,7 @@ export function usePortalActions({
       });
 
       const cbuMsg = result.centralBank?.cbu
-        ? ` Tu CBU Brocoly asignado: ${result.centralBank.cbu}${result.centralBank.alias ? ` (alias: ${result.centralBank.alias})` : ""}.`
+        ? ` Te asignamos el CBU ${result.centralBank.cbu}${result.centralBank.alias ? ` (alias: ${result.centralBank.alias})` : ""}.`
         : "";
       setSuccess(`Perfil completado correctamente.${cbuMsg}`);
       await loadPortal();
@@ -133,7 +133,7 @@ export function usePortalActions({
 
     if (originAccount.banco_central_registrada === false) {
       setError(
-        "La cuenta origen no está registrada en el Banco Central Brocoly. Un administrador debe sincronizarla antes de poder transferir."
+        "La cuenta origen todavía no está habilitada para transferencias a otros bancos. Comunicate con el banco para activarla."
       );
       return;
     }
@@ -159,18 +159,18 @@ export function usePortalActions({
       });
 
       setTransferResetSignal((n) => n + 1);
-      setSuccess("Transferencia aprobada por el Banco Central Brocoly.");
+      setSuccess("Transferencia realizada con éxito.");
     } catch (nextError) {
       // No reseteamos el form completo: el usuario probablemente quiera ajustar el monto.
       if (nextError instanceof ApiError) {
         if (nextError.status === 422) {
-          setError("Saldo insuficiente. El Banco Central registró la transferencia como rechazada.");
+          setError("Saldo insuficiente. La transferencia fue rechazada.");
         } else if (nextError.status === 429) {
-          setError("El Banco Central está limitando las solicitudes. Espera unos segundos e intenta de nuevo.");
+          setError("Estás haciendo demasiadas operaciones seguidas. Esperá unos segundos e intentá de nuevo.");
         } else if (nextError.status === 502 || nextError.status === 503) {
-          setError("No se pudo conectar con el Banco Central. Verifica tu conexión e intenta de nuevo.");
+          setError("Servicio momentáneamente no disponible. Verificá tu conexión e intentá nuevamente.");
         } else if (nextError.status === 400 && nextError.message.includes("saldoOrigen")) {
-          setError("El saldo de tu cuenta no está actualizado. Recarga el portal e intenta de nuevo.");
+          setError("El saldo de tu cuenta cambió. Refrescá la pantalla e intentá de nuevo.");
         } else {
           setError(nextError.message || "No se pudo registrar la transferencia.");
         }
@@ -223,9 +223,9 @@ export function usePortalActions({
         telefono: "",
         environment: createClientForm.environment,
       });
-      const brocolyCbu = result.centralBankPerson?.cbu || result.cuenta.cbu;
+      const cbuAsignado = result.centralBankPerson?.cbu || result.cuenta.cbu;
       setSuccess(
-        `${result.message} CBU Brocoly: ${brocolyCbu}${result.cuenta.cbu && result.cuenta.cbu !== brocolyCbu ? ` | CBU local: ${result.cuenta.cbu}` : ""}${result.cuenta.alias ? ` | Alias: ${result.cuenta.alias}` : ""}`
+        `${result.message} CBU: ${cbuAsignado}${result.cuenta.alias ? ` · Alias: ${result.cuenta.alias}` : ""}`
       );
       await loadPortal(result.persona.id);
     } catch (nextError) {
@@ -261,7 +261,7 @@ export function usePortalActions({
     try {
       const result = await syncCentralBankAccount(accountId, "test");
       const warnings = result.warnings?.join(" ") || "";
-      setSuccess(`Cuenta sincronizada con Brocoly. CBU: ${result.account.cbu}${warnings ? ` — ${warnings}` : ""}`);
+      setSuccess(`Cuenta habilitada para transferencias interbancarias. CBU: ${result.account.cbu}${warnings ? ` — ${warnings}` : ""}`);
       await refreshPersonaData(profile.persona.id);
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "No se pudo sincronizar la cuenta.");

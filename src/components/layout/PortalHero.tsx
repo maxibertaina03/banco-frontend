@@ -17,9 +17,9 @@ export const PortalHero = memo(function PortalHero({
   return (
     <div className="rounded-3xl bg-gradient-to-br from-[#A855F7] via-[#9333EA] to-[#7C3AED] p-8 text-white shadow-2xl">
       <p className="text-sm uppercase tracking-[0.24em] text-white/80">Banco Orbital</p>
-      <h1 className="mt-3">Tu banca digital conectada al backend real</h1>
+      <h1 className="mt-3">Tu banca digital, simple y a un clic</h1>
       <p className="mt-3 max-w-2xl text-white/85">
-        Mantiene la identidad visual púrpura de Orbital y unifica cliente, operador y admin dentro de una sola app por roles.
+        Consultá tus cuentas, transferí dinero y administrá tus contactos desde un solo lugar.
       </p>
       <div className="mt-6 flex flex-wrap gap-3">
         {roleOptions.map((role) => (

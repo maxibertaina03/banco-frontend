@@ -68,12 +68,12 @@ export const AccountCard = memo(function AccountCard({
               bancoCentralRegistrada ? (
                 <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-400/15 text-emerald-400 text-xs">
                   <CheckCircle className="w-3 h-3" />
-                  <span>Brocoly</span>
+                  <span>Habilitada</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-400/15 text-amber-400 text-xs">
                   <XCircle className="w-3 h-3" />
-                  <span>Sin sincronizar</span>
+                  <span>Pendiente</span>
                 </div>
               )
             )}
@@ -101,7 +101,7 @@ export const AccountCard = memo(function AccountCard({
             className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-xs text-amber-300 transition hover:bg-amber-400/20 disabled:opacity-50"
           >
             <RefreshCw className={`w-3 h-3 ${syncing ? 'animate-spin' : ''}`} />
-            {syncing ? 'Sincronizando...' : 'Sincronizar con Brocoly'}
+            {syncing ? 'Habilitando...' : 'Habilitar para transferencias interbancarias'}
           </button>
         )}
       </div>

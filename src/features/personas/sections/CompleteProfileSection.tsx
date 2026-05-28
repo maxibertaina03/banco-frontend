@@ -58,9 +58,9 @@ export const CompleteProfileSection = memo(function CompleteProfileSection({
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary">
           <ShieldCheck className="h-6 w-6" />
         </div>
-        <CardTitle>Completa tu perfil para continuar</CardTitle>
+        <CardTitle>Completá tu perfil para continuar</CardTitle>
         <CardDescription>
-          Terminamos el alta en Clerk, pero todavía faltan datos obligatorios en la base local de Orbital.
+          Necesitamos algunos datos adicionales para terminar el alta de tu cuenta.
         </CardDescription>
       </CardHeader>
 
@@ -121,11 +121,11 @@ export const CompleteProfileSection = memo(function CompleteProfileSection({
           </div>
 
           <div className="grid gap-1">
-            <Label htmlFor="complete-profile-telefono">Telefono</Label>
+            <Label htmlFor="complete-profile-telefono">Teléfono</Label>
             <Input
               id="complete-profile-telefono"
               {...register("telefono")}
-              placeholder="Telefono"
+              placeholder="Teléfono"
               aria-invalid={errors.telefono ? "true" : "false"}
             />
             {errors.telefono && (
@@ -147,7 +147,7 @@ export const CompleteProfileSection = memo(function CompleteProfileSection({
           </div>
 
           <div className="md:col-span-2 flex items-center justify-between gap-3 rounded-2xl bg-[#2D1548]/60 p-4 text-sm text-muted-foreground">
-            <p>Cuando guardes, se marcará `perfil_completo = true` y el portal volverá a cargar tus datos.</p>
+            <p>Al guardar, tu cuenta queda lista para operar.</p>
             <Button type="submit" disabled={submitting || !isValid}>
               Guardar y continuar
             </Button>

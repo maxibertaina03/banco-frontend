@@ -61,7 +61,7 @@ export const RecipientsSection = memo(function RecipientsSection({
       <Card className="border-primary/20 bg-gradient-to-br from-[#1C0B2E] to-[#2D1548]">
         <CardHeader>
           <CardTitle>Nuevo destinatario</CardTitle>
-          <CardDescription>Alta sobre `destinatarios`.</CardDescription>
+          <CardDescription>Sumá un contacto a tu agenda para transferir más rápido.</CardDescription>
         </CardHeader>
         <CardContent>
           <form className="grid gap-3" onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -79,7 +79,7 @@ export const RecipientsSection = memo(function RecipientsSection({
             <div className="grid gap-1">
               <Input
                 {...register("cbu")}
-                placeholder="CBU externo"
+                placeholder="CBU (22 dígitos)"
                 inputMode="numeric"
                 aria-invalid={errors.cbu ? "true" : "false"}
               />
@@ -91,7 +91,7 @@ export const RecipientsSection = memo(function RecipientsSection({
             <div className="grid gap-1">
               <Input
                 {...register("banco")}
-                placeholder="Banco externo"
+                placeholder="Banco del destinatario"
                 aria-invalid={errors.banco ? "true" : "false"}
               />
               {errors.banco && (
@@ -108,8 +108,8 @@ export const RecipientsSection = memo(function RecipientsSection({
 
       <Card className="border-primary/20 bg-gradient-to-br from-[#1C0B2E] to-[#2D1548]">
         <CardHeader>
-          <CardTitle>Agenda de confianza</CardTitle>
-          <CardDescription>Destinatarios actuales de la persona seleccionada.</CardDescription>
+          <CardTitle>Agenda de contactos</CardTitle>
+          <CardDescription>Tus destinatarios guardados.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>

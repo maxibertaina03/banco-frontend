@@ -68,7 +68,7 @@ export const TransactionsSection = memo(function TransactionsSection({
   const cbuDestino = watch("cbuDestino");
   const monto = watch("monto");
 
-  // ── Lookup en Brocoly (alias o CBU) ────────────────────────────────────────
+  // ── Lookup en Banco Central (alias o CBU) ────────────────────────────────────────
   const [lookupState, setLookupState] = useState<LookupState>("idle");
   const [resolvedRecipient, setResolvedRecipient] = useState<ResolvedRecipient | null>(null);
   const [lookupInput, setLookupInput] = useState("");
@@ -151,7 +151,7 @@ export const TransactionsSection = memo(function TransactionsSection({
         <CardHeader>
           <CardTitle>Realizar transferencia</CardTitle>
           <CardDescription>
-            Usa CBU o alias. Destinos locales se acreditan al instante; externos van por Banco Central Brocoly.
+            Ingresá CBU o alias. Las transferencias a cuentas Orbital se acreditan al instante; a otros bancos son procesadas por la red interbancaria.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -177,7 +177,7 @@ export const TransactionsSection = memo(function TransactionsSection({
                 <div className="flex items-start gap-2 rounded-xl border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-xs text-amber-300">
                   <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                   <span>
-                    Esta cuenta no está sincronizada con Brocoly. Las transferencias serán rechazadas por el Banco Central hasta que un administrador la sincronice.
+                    Esta cuenta todavía no está habilitada para transferencias a otros bancos. Comunicate con el banco para activarla.
                   </span>
                 </div>
               )}
@@ -217,7 +217,7 @@ export const TransactionsSection = memo(function TransactionsSection({
                       setLookupState("idle");
                     }
                   }}
-                  placeholder="Ej: juan.perez.orbital o 22 dígitos"
+                  placeholder="alias.bancario o CBU de 22 dígitos"
                   className="pr-9"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -231,7 +231,7 @@ export const TransactionsSection = memo(function TransactionsSection({
               {lookupState === "found" && resolvedRecipient && (
                 <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-xs">
                   <p className="font-medium text-emerald-300">
-                    {resolvedRecipient.titular || "Titular verificado en Brocoly"}
+                    {resolvedRecipient.titular || "Titular verificado"}
                   </p>
                   <p className="font-mono text-muted-foreground">{resolvedRecipient.cbu}</p>
                   {resolvedRecipient.banco && (
@@ -242,7 +242,7 @@ export const TransactionsSection = memo(function TransactionsSection({
 
               {lookupState === "not_found" && lookupInput.trim() && (
                 <p className="text-xs text-destructive">
-                  No se encontró este CBU o alias en el Banco Central Brocoly.
+                  No encontramos ningún titular con este CBU o alias. Verificá los datos.
                 </p>
               )}
               {errors.cbuDestino && lookupState !== "loading" && (
@@ -285,7 +285,7 @@ export const TransactionsSection = memo(function TransactionsSection({
                 Number(monto) <= 0
               }
             >
-              {submitting ? "Procesando..." : "Transferir vía Brocoly"}
+              {submitting ? "Procesando..." : "Confirmar transferencia"}
             </Button>
           </form>
         </CardContent>
@@ -301,7 +301,7 @@ export const TransactionsSection = memo(function TransactionsSection({
             className="flex items-center gap-1.5 rounded-lg border border-primary/20 bg-[#2D1548]/60 px-3 py-1.5 text-xs text-primary transition hover:bg-[#2D1548] disabled:opacity-50"
           >
             <RefreshCcw className={`h-3.5 w-3.5 ${syncingIncoming ? "animate-spin" : ""}`} />
-            {syncingIncoming ? "Consultando Brocoly..." : "Actualizar"}
+            {syncingIncoming ? "Buscando..." : "Actualizar"}
           </button>
         </div>
 

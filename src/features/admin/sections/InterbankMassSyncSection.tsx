@@ -9,11 +9,11 @@ import {
 } from "../../personas/api/personas.api";
 import type { SyncAccountRecord } from "../../personas/types/personas.types";
 
-interface BrocolyMassSyncSectionProps {
+interface InterbankMassSyncSectionProps {
   environment: "test" | "prod";
 }
 
-export const BrocolyMassSyncSection = memo(function BrocolyMassSyncSection({ environment }: BrocolyMassSyncSectionProps) {
+export const InterbankMassSyncSection = memo(function InterbankMassSyncSection({ environment }: InterbankMassSyncSectionProps) {
   const [accounts, setAccounts] = useState<SyncAccountRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -120,7 +120,7 @@ export const BrocolyMassSyncSection = memo(function BrocolyMassSyncSection({ env
           <div>
             <CardTitle className="flex items-center gap-2">
               <RefreshCcw className="h-5 w-5 text-primary" />
-              Vincular cuentas con Brocoly
+              Vincular cuentas con Banco Central
             </CardTitle>
             <CardDescription className="mt-1">
               Registra cada cuenta en el Banco Central y obtiene su CBU real. Las cuentas ya vinculadas pueden
@@ -144,7 +144,7 @@ export const BrocolyMassSyncSection = memo(function BrocolyMassSyncSection({ env
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-2xl bg-[#2D1548]/60 p-4 text-center">
               <p className="text-2xl font-semibold text-emerald-400">{synced.length}</p>
-              <p className="mt-1 text-xs text-muted-foreground">Vinculadas a Brocoly</p>
+              <p className="mt-1 text-xs text-muted-foreground">Vinculadas a Banco Central</p>
             </div>
             <div className="rounded-2xl bg-[#2D1548]/60 p-4 text-center">
               <p className="text-2xl font-semibold text-amber-400">{unsynced.length}</p>
@@ -161,7 +161,7 @@ export const BrocolyMassSyncSection = memo(function BrocolyMassSyncSection({ env
         {ready.length > 0 && (
           <div className="flex items-center justify-between rounded-2xl border border-amber-400/20 bg-amber-400/5 px-4 py-3">
             <p className="text-sm text-amber-300">
-              {ready.length} {ready.length === 1 ? "cuenta lista" : "cuentas listas"} para vincular con Brocoly
+              {ready.length} {ready.length === 1 ? "cuenta lista" : "cuentas listas"} para vincular con Banco Central
             </p>
             <Button
               type="button"
@@ -225,7 +225,7 @@ export const BrocolyMassSyncSection = memo(function BrocolyMassSyncSection({ env
                         {account.banco_central_registrada ? (
                           <span className="flex items-center gap-1 rounded-full bg-emerald-400/15 px-2 py-0.5 text-xs text-emerald-400">
                             <CheckCircle className="h-3 w-3" />
-                            Brocoly
+                            Banco Central
                           </span>
                         ) : (
                           <span className="flex items-center gap-1 rounded-full bg-amber-400/15 px-2 py-0.5 text-xs text-amber-400">
@@ -239,7 +239,7 @@ export const BrocolyMassSyncSection = memo(function BrocolyMassSyncSection({ env
                         {account.cbu ? (
                           <span className="font-mono">CBU: {account.cbu}</span>
                         ) : (
-                          <span className="text-amber-400/70">Sin CBU Brocoly</span>
+                          <span className="text-amber-400/70">Sin CBU Banco Central</span>
                         )}
                         {account.alias && <span>Alias: {account.alias}</span>}
                       </div>
@@ -273,7 +273,7 @@ export const BrocolyMassSyncSection = memo(function BrocolyMassSyncSection({ env
                         type="button"
                         onClick={() => void handleSyncOne(account.id)}
                         disabled={isSyncing || !!syncingId || bulkSyncing || !account.sync_ready}
-                        title={!account.sync_ready ? account.sync_issues.join(". ") : "Vincular con Brocoly"}
+                        title={!account.sync_ready ? account.sync_issues.join(". ") : "Vincular con Banco Central"}
                         className="flex shrink-0 items-center gap-1.5 rounded-xl border border-primary/20 bg-[#2D1548]/60 px-3 py-1.5 text-xs text-primary transition hover:bg-[#2D1548] disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`} />
