@@ -322,7 +322,14 @@ export function PortalPage() {
             </>
           )}
 
-          {!needsProfileCompletion && (
+          {/*
+            Bloque oculto temporalmente — placeholder para futuras features:
+              - Tarjeta Orbital: pendiente de wirear con `tarjetas_credito` y consumos.
+              - Mapa de integración: documentación inline (movida a CHANGELOG.md).
+            No eliminar: cuando se implemente el módulo de tarjetas, descomentar
+            la Card de "Tarjeta Orbital" y conectarla al endpoint correspondiente.
+          */}
+          {/* {!needsProfileCompletion && (
             <section className="mt-10 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
               <Card className="border-primary/20 bg-gradient-to-br from-[#1C0B2E] to-[#2D1548]">
                 <CardHeader>
@@ -371,7 +378,7 @@ export function PortalPage() {
                 </CardContent>
               </Card>
             </section>
-          )}
+          )} */}
         </main>
       </div>
     </ProtectedRoute>
