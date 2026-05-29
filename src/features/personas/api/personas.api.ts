@@ -129,6 +129,23 @@ export function completeAuthenticatedUserProfile(payload: {
   });
 }
 
+// Edición parcial del perfil ya completo. Envia solo los campos que el
+// usuario quiere cambiar (al menos uno).
+export function updateAuthenticatedUserProfile(payload: Partial<{
+  nombre: string;
+  apellido: string;
+  telefono: string;
+  email: string;
+}>) {
+  return requestAbsolute<{
+    message: string;
+    user: AuthenticatedUserProfile;
+  }>("/auth/profile", {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
 export function listAccountsForSync(options?: { environment?: string; limit?: number }) {
   const params = new URLSearchParams();
   if (options?.environment) params.set("environment", options.environment);

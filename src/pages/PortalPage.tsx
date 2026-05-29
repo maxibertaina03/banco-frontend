@@ -17,6 +17,8 @@ import type { PortalRole } from "../features/personas/types/personas.types";
 import { usePortalActions } from "../hooks/usePortalActions";
 import { usePortalData } from "../hooks/usePortalData";
 import { usePortalForms } from "../hooks/usePortalForms";
+import { useNotifications } from "../hooks/useNotifications";
+import { usePersonaTransactions } from "../lib/queries";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 
 // Sections cargadas perezosamente: cada una se descarga en su propio chunk
@@ -99,6 +101,19 @@ export function PortalPage() {
     () => profile?.cuentas.reduce((sum, account) => sum + Number(account.saldo || 0), 0) || 0,
     [profile]
   );
+
+  // Notificaciones: TanStack Query dedupe el request (usePortalData ya las pide).
+  const personaTransactionsQuery = usePersonaTransactions(profile?.persona.id);
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+  } = useNotifications({
+    personaId: profile?.persona.id,
+    transactions: personaTransactionsQuery.data ?? [],
+    accounts: profile?.cuentas ?? [],
+  });
   const {
     bulkSyncing,
     handleBulkSync,
@@ -173,6 +188,12 @@ export function PortalPage() {
                 ? `${authProfile.nombre} ${authProfile.apellido}`.trim() || "Orbital"
                 : "Orbital"
           }
+          authProfile={authProfile}
+          personaId={profile?.persona.id}
+          notifications={notifications}
+          unreadCount={unreadCount}
+          onMarkAsRead={markAsRead}
+          onMarkAllAsRead={markAllAsRead}
         />
 
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">

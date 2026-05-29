@@ -1,5 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
-import { getAuthenticatedUserProfile, getPersonaFull, getUserAudit, listPersonas } from "../../features/personas/api/personas.api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  getAuthenticatedUserProfile,
+  getPersonaFull,
+  getUserAudit,
+  listPersonas,
+  updateAuthenticatedUserProfile,
+} from "../../features/personas/api/personas.api";
 import { queryKeys } from "./keys";
 
 // Perfil del usuario autenticado en Clerk + sus datos en BD.
@@ -28,6 +34,26 @@ export function usePersonas(options: { enabled?: boolean } = {}) {
     queryKey: queryKeys.personas.list(),
     queryFn: () => listPersonas(),
     enabled: options.enabled ?? true,
+  });
+}
+
+// Mutation para edición parcial del perfil. Al completarse invalida auth
+// profile y persona full (para que se reflejen los cambios en toda la UI).
+export function useUpdateProfile(personaId: string | null | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: Partial<{
+      nombre: string;
+      apellido: string;
+      telefono: string;
+      email: string;
+    }>) => updateAuthenticatedUserProfile(payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.auth.profile });
+      if (personaId) {
+        qc.invalidateQueries({ queryKey: queryKeys.personas.full(personaId) });
+      }
+    },
   });
 }
 
