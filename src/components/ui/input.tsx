@@ -2,9 +2,14 @@ import * as React from "react";
 
 import { cn } from "./utils";
 
-function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+// forwardRef es necesario en React 18 para que react-hook-form (y cualquier
+// consumidor que pase `ref`) pueda acceder al <input> real. Sin esto el ref
+// queda nulo y RHF no puede leer el valor → los forms se rompen.
+const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
+  ({ className, type, ...props }, ref) => {
   return (
     <input
+      ref={ref}
       type={type}
       data-slot="input"
       className={cn(
@@ -16,6 +21,8 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
       {...props}
     />
   );
-}
+  },
+);
+Input.displayName = "Input";
 
 export { Input };
