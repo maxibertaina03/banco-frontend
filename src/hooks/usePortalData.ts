@@ -16,7 +16,6 @@ import {
   usePersonaFull,
   usePersonaTransactions,
   usePersonas,
-  useUserAudit,
 } from "../lib/queries";
 
 type GetTokenFn = () => Promise<string | null>;
@@ -161,9 +160,6 @@ export function usePortalData({
   const profile = (personaFullQuery.data ?? null) as PersonaFullResponse | null;
   const transactions = transactionsQuery.data ?? [];
 
-  const usuarioId = profile?.usuario?.id ?? null;
-  const auditQuery = useUserAudit(usuarioId);
-
   // ── Catálogos (solo internos) ──────────────────────────────────────────────
   const catalogs = useInternalCatalogs({
     enabled: isAuthReady && canLoadInternalCatalogs && !needsProfileCompletion,
@@ -196,7 +192,7 @@ export function usePortalData({
 
   // ── Loading agregado ───────────────────────────────────────────────────────
   // Solo lo que bloquea el render principal: auth + perfil + transacciones.
-  // Catálogos cargan en background; auditoría también.
+  // Catálogos cargan en background.
   const loading =
     !isLoaded ||
     (isAuthReady &&
@@ -280,7 +276,6 @@ export function usePortalData({
     accountTypes: catalogs.tiposCuenta,
     activities,
     authProfile: authProfileUser,
-    auditCount: auditQuery.data?.length ?? 0,
     banks: catalogs.bancos,
     loadPortal,
     loading,

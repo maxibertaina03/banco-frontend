@@ -76,7 +76,6 @@ export function PortalPage() {
     manualPersonaId,
     setManualPersonaId,
     activities,
-    auditCount,
     transactionTypes,
     roles,
     bulkSyncing,
@@ -136,7 +135,6 @@ export function PortalPage() {
               />
               <PortalSummary
                 activeAccountsCount={profile?.cuentas.filter((account) => account.activa).length || 0}
-                auditCount={auditCount}
                 totalBalanceLabel={formatCurrency(totalBalance)}
               />
             </section>

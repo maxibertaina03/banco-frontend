@@ -2,13 +2,11 @@ import { memo } from "react";
 
 interface PortalSummaryProps {
   activeAccountsCount: number;
-  auditCount: number;
   totalBalanceLabel: string;
 }
 
 export const PortalSummary = memo(function PortalSummary({
   activeAccountsCount,
-  auditCount,
   totalBalanceLabel,
 }: PortalSummaryProps) {
   return (
@@ -22,10 +20,6 @@ export const PortalSummary = memo(function PortalSummary({
         <div className="flex items-center justify-between rounded-2xl bg-[#2D1548]/60 p-4">
           <span>Cuentas activas</span>
           <span className="text-xl text-primary">{activeAccountsCount}</span>
-        </div>
-        <div className="flex items-center justify-between rounded-2xl bg-[#2D1548]/60 p-4">
-          <span>Auditoría</span>
-          <span className="text-xl text-primary">{auditCount}</span>
         </div>
       </div>
     </div>
