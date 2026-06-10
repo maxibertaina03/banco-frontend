@@ -5,6 +5,8 @@ import type { UserActivity } from "../features/transacciones/types/transacciones
 interface RecentActivityProps {
   activities: UserActivity[];
   loading?: boolean;
+  /** Al tocar un movimiento, abre su detalle. */
+  onSelect?: (activityId: string) => void;
 }
 
 const iconMap = {
@@ -14,7 +16,7 @@ const iconMap = {
   service: Smartphone,
 } as const;
 
-export const RecentActivity = memo(function RecentActivity({ activities, loading = false }: RecentActivityProps) {
+export const RecentActivity = memo(function RecentActivity({ activities, loading = false, onSelect }: RecentActivityProps) {
   return (
     <div className="bg-gradient-to-br from-[#1C0B2E] to-[#2D1548] rounded-2xl p-6 border border-primary/20">
       <div className="flex items-center justify-between mb-4">
@@ -43,6 +45,15 @@ export const RecentActivity = memo(function RecentActivity({ activities, loading
           return (
             <div
               key={activity.id}
+              role={onSelect ? "button" : undefined}
+              tabIndex={onSelect ? 0 : undefined}
+              onClick={() => onSelect?.(activity.id)}
+              onKeyDown={(e) => {
+                if (onSelect && (e.key === "Enter" || e.key === " ")) {
+                  e.preventDefault();
+                  onSelect(activity.id);
+                }
+              }}
               className="flex items-center gap-4 p-3 rounded-xl hover:bg-[#2D1548]/70 transition-colors cursor-pointer"
             >
               <div

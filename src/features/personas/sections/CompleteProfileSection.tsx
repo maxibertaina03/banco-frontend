@@ -1,7 +1,7 @@
 import { memo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ShieldCheck } from "lucide-react";
+import { Loader2, ShieldCheck } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
@@ -149,7 +149,14 @@ export const CompleteProfileSection = memo(function CompleteProfileSection({
           <div className="md:col-span-2 flex items-center justify-between gap-3 rounded-2xl bg-[#2D1548]/60 p-4 text-sm text-muted-foreground">
             <p>Al guardar, tu cuenta queda lista para operar.</p>
             <Button type="submit" disabled={submitting || !isValid}>
-              Guardar y continuar
+              {submitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                "Guardar y continuar"
+              )}
             </Button>
           </div>
         </form>

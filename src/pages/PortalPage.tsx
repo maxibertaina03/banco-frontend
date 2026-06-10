@@ -10,6 +10,8 @@ import { SectionLoader } from "../components/SectionLoader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { formatCurrency } from "../lib/utils/currency";
 import { ErrorBoundary } from "../components/ErrorBoundary";
+import { TransferReceiptDialog } from "../components/TransferReceiptDialog";
+import { TransactionDetailDialog } from "../components/TransactionDetailDialog";
 import { usePortalPage } from "../hooks/usePortalPage";
 
 // Sections cargadas perezosamente: cada una se descarga en su propio chunk
@@ -103,6 +105,11 @@ export function PortalPage() {
     handleTransfer,
     refreshDestinatarios,
     refreshPersonaData,
+    transferReceipt,
+    setTransferReceipt,
+    selectedTransaction,
+    setSelectedTransaction,
+    openTransactionDetail,
   } = usePortalPage();
 
   return (
@@ -202,6 +209,7 @@ export function PortalPage() {
                         onCopyCbu={handleCopyCbu}
                         onIncome={handleIncome}
                         onTransfer={handleGoToTransactions}
+                        onSelectActivity={openTransactionDetail}
                       />
                     </ErrorBoundary>
                   )}
@@ -233,6 +241,7 @@ export function PortalPage() {
                         submitting={submitting}
                         syncingIncoming={syncingIncoming}
                         resetSignal={transferResetSignal}
+                        onSelectActivity={openTransactionDetail}
                       />
                     </ErrorBoundary>
                   )}
@@ -328,6 +337,21 @@ export function PortalPage() {
             </section>
           )} */}
         </main>
+
+        {/* Comprobante de transferencia exitosa (estilo banco) */}
+        <TransferReceiptDialog
+          open={transferReceipt !== null}
+          onOpenChange={(o) => { if (!o) setTransferReceipt(null); }}
+          transaction={transferReceipt}
+        />
+
+        {/* Detalle de un movimiento al tocarlo en la lista */}
+        <TransactionDetailDialog
+          open={selectedTransaction !== null}
+          onOpenChange={(o) => { if (!o) setSelectedTransaction(null); }}
+          transaction={selectedTransaction}
+          accounts={profile?.cuentas ?? []}
+        />
       </div>
     </ProtectedRoute>
   );

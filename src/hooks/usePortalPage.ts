@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { PREFERRED_PERSONA_ID } from "../lib/constants/portal";
 import { sanitizePersonaId } from "../features/personas/api/personas.api";
 import type { PortalRole } from "../features/personas/types/personas.types";
+import type { TransactionRecord } from "../features/transacciones/types/transacciones.types";
 import type { Section } from "../pages/portal.config";
 import { useNotifications } from "./useNotifications";
 import { usePersonaTransactions } from "../lib/queries";
@@ -92,6 +93,8 @@ export function usePortalPage() {
     syncingAccountId,
     syncingIncoming,
     transferResetSignal,
+    transferReceipt,
+    setTransferReceipt,
   } = usePortalActions({
     createClientForm,
     loadPortal,
@@ -103,6 +106,17 @@ export function usePortalPage() {
     setSubmitting,
     setSuccess,
   });
+
+  // Detalle de un movimiento: al tocar uno en la lista, lo buscamos en las
+  // transacciones que ya tenemos cargadas (mismas que alimentan notificaciones).
+  const [selectedTransaction, setSelectedTransaction] = useState<TransactionRecord | null>(null);
+  const openTransactionDetail = useCallback(
+    (transactionId: string) => {
+      const found = (personaTransactionsQuery.data ?? []).find((tx) => tx.id === transactionId);
+      if (found) setSelectedTransaction(found);
+    },
+    [personaTransactionsQuery.data],
+  );
 
   useEffect(() => {
     if (scope === "user" && section === "admin") {
@@ -191,6 +205,13 @@ export function usePortalPage() {
     syncingAccountId,
     syncingIncoming,
     transferResetSignal,
+
+    // Comprobante de transferencia + detalle de movimiento
+    transferReceipt,
+    setTransferReceipt,
+    selectedTransaction,
+    setSelectedTransaction,
+    openTransactionDetail,
 
     // Handlers
     handleGoToAccounts,

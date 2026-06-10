@@ -7,6 +7,7 @@ import {
 } from "../features/personas/api/personas.api";
 import type { PersonaFullResponse } from "../features/personas/types/personas.types";
 import type { SyncIncomingResult } from "../features/transacciones/api/transacciones.api";
+import type { TransactionRecord } from "../features/transacciones/types/transacciones.types";
 import { ApiError } from "../lib/api/client";
 import {
   useCreateDestinatario,
@@ -51,6 +52,8 @@ export function usePortalActions({
   const [syncingAccountId, setSyncingAccountId] = useState<string | null>(null);
   const [bulkSyncing, setBulkSyncing] = useState(false);
   const [lastSyncResult, setLastSyncResult] = useState<SyncIncomingResult | null>(null);
+  // Comprobante de la última transferencia exitosa (alimenta el modal estilo banco).
+  const [transferReceipt, setTransferReceipt] = useState<TransactionRecord | null>(null);
 
   // Counter que se incrementa después de cada submit exitoso. Las sections lo
   // observan vía prop `resetSignal` para limpiar el form RHF interno. Tener
@@ -150,7 +153,7 @@ export function usePortalActions({
     const idempotencyKey = crypto.randomUUID();
 
     try {
-      await createTransferMutation.mutateAsync({
+      const created = await createTransferMutation.mutateAsync({
         cbuOrigen: originAccount.cbu,
         cbuDestino: values.cbuDestino,
         importe,
@@ -159,7 +162,8 @@ export function usePortalActions({
       });
 
       setTransferResetSignal((n) => n + 1);
-      setSuccess("Transferencia realizada con éxito.");
+      // En vez del banner verde, mostramos un comprobante estilo banco.
+      setTransferReceipt(created);
     } catch (nextError) {
       // No reseteamos el form completo: el usuario probablemente quiera ajustar el monto.
       if (nextError instanceof ApiError) {
@@ -305,5 +309,7 @@ export function usePortalActions({
     syncingAccountId,
     syncingIncoming,
     transferResetSignal,
+    transferReceipt,
+    setTransferReceipt,
   };
 }

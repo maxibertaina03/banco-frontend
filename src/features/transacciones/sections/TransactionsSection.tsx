@@ -31,6 +31,7 @@ interface TransactionsSectionProps {
   syncingIncoming: boolean;
   // El padre incrementa este número tras un submit OK para limpiar el form.
   resetSignal?: number;
+  onSelectActivity?: (id: string) => void;
 }
 
 type LookupState = "idle" | "loading" | "found" | "not_found";
@@ -45,6 +46,7 @@ export const TransactionsSection = memo(function TransactionsSection({
   submitting,
   syncingIncoming,
   resetSignal,
+  onSelectActivity,
 }: TransactionsSectionProps) {
   const {
     register,
@@ -285,7 +287,14 @@ export const TransactionsSection = memo(function TransactionsSection({
                 Number(monto) <= 0
               }
             >
-              {submitting ? "Procesando..." : "Confirmar transferencia"}
+              {submitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Procesando...
+                </>
+              ) : (
+                "Confirmar transferencia"
+              )}
             </Button>
           </form>
         </CardContent>
@@ -316,7 +325,7 @@ export const TransactionsSection = memo(function TransactionsSection({
           </p>
         )}
 
-        <RecentActivity activities={activities} loading={loading || syncingIncoming} />
+        <RecentActivity activities={activities} loading={loading || syncingIncoming} onSelect={onSelectActivity} />
       </div>
     </div>
   );

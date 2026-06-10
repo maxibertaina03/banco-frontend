@@ -12,6 +12,7 @@ interface DashboardSectionProps {
   onCopyCbu: () => void;
   onIncome: () => void;
   onTransfer: () => void;
+  onSelectActivity?: (id: string) => void;
 }
 
 export const DashboardSection = memo(function DashboardSection({
@@ -23,6 +24,7 @@ export const DashboardSection = memo(function DashboardSection({
   onCopyCbu,
   onIncome,
   onTransfer,
+  onSelectActivity,
 }: DashboardSectionProps) {
   return (
     <>
@@ -38,7 +40,7 @@ export const DashboardSection = memo(function DashboardSection({
       </div>
 
       <div className="grid gap-6">
-        <RecentActivity activities={activities} loading={loading} />
+        <RecentActivity activities={activities} loading={loading} onSelect={onSelectActivity} />
       </div>
     </>
   );

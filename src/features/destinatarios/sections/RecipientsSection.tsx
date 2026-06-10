@@ -1,6 +1,7 @@
 import { memo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
@@ -100,7 +101,14 @@ export const RecipientsSection = memo(function RecipientsSection({
             </div>
 
             <Button type="submit" disabled={submitting || !isValid}>
-              Agregar destinatario
+              {submitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Agregando...
+                </>
+              ) : (
+                "Agregar destinatario"
+              )}
             </Button>
           </form>
         </CardContent>
