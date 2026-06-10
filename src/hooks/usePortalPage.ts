@@ -136,6 +136,13 @@ export function usePortalPage() {
       setSuccess("CBU copiado al portapapeles.");
     }
   }, [profile?.cuentas]);
+  const handleCopyAlias = useCallback(() => {
+    const alias = profile?.cuentas[0]?.alias;
+    if (alias) {
+      void navigator.clipboard.writeText(alias);
+      setSuccess("Alias copiado al portapapeles.");
+    }
+  }, [profile?.cuentas]);
   const handleIncome = useCallback(() => void loadPortal(profile?.persona.id), [loadPortal, profile?.persona.id]);
   const handleAliasUpdated = useCallback(() => {
     setSuccess("Alias actualizado correctamente.");
@@ -220,6 +227,7 @@ export function usePortalPage() {
     handleGoToTransactions,
     handleLoadPersona,
     handleCopyCbu,
+    handleCopyAlias,
     handleIncome,
     handleAliasUpdated,
     handleSyncAccountCb,

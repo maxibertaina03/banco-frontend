@@ -92,6 +92,7 @@ export function PortalPage() {
     handleGoToTransactions,
     handleLoadPersona,
     handleCopyCbu,
+    handleCopyAlias,
     handleIncome,
     handleAliasUpdated,
     handleSyncAccountCb,
@@ -146,6 +147,7 @@ export function PortalPage() {
                 cbu={profile?.cuentas[0]?.cbu}
                 alias={profile?.cuentas[0]?.alias}
                 onCopyCbu={handleCopyCbu}
+                onCopyAlias={handleCopyAlias}
               />
             </section>
           )}
