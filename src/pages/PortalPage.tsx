@@ -143,6 +143,9 @@ export function PortalPage() {
               <PortalSummary
                 activeAccountsCount={profile?.cuentas.filter((account) => account.activa).length || 0}
                 totalBalanceLabel={formatCurrency(totalBalance)}
+                cbu={profile?.cuentas[0]?.cbu}
+                alias={profile?.cuentas[0]?.alias}
+                onCopyCbu={handleCopyCbu}
               />
             </section>
           )}
@@ -206,7 +209,6 @@ export function PortalPage() {
                         onAccounts={handleGoToAccounts}
                         onActivity={handleGoToActivity}
                         onContacts={handleGoToContacts}
-                        onCopyCbu={handleCopyCbu}
                         onIncome={handleIncome}
                         onTransfer={handleGoToTransactions}
                         onSelectActivity={openTransactionDetail}
@@ -350,7 +352,7 @@ export function PortalPage() {
           open={selectedTransaction !== null}
           onOpenChange={(o) => { if (!o) setSelectedTransaction(null); }}
           transaction={selectedTransaction}
-          accounts={profile?.cuentas ?? []}
+          profile={profile}
         />
       </div>
     </ProtectedRoute>

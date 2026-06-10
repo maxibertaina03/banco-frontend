@@ -3,13 +3,14 @@ import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
 import { formatCurrency } from "../lib/utils/currency";
 import type { TransactionRecord } from "../features/transacciones/types/transacciones.types";
-import type { AccountRecord } from "../features/cuentas/types/cuentas.types";
+import type { PersonaFullResponse } from "../features/personas/types/personas.types";
 
 interface TransactionDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   transaction: TransactionRecord | null;
-  accounts: AccountRecord[];
+  /** Perfil del usuario logueado (para resolver nombres de origen/destino). */
+  profile: PersonaFullResponse | null;
 }
 
 const ESTADO_STYLE: Record<string, string> = {
@@ -42,11 +43,24 @@ function formatDateTime(iso?: string): string {
   }).format(new Date(iso));
 }
 
-function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+function Row({
+  label,
+  value,
+  mono,
+  sub,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+  sub?: string | null;
+}) {
   return (
     <div className="flex items-start justify-between gap-4 py-2.5">
       <span className="text-xs text-muted-foreground">{label}</span>
-      <span className={`text-right text-sm ${mono ? "font-mono break-all" : ""}`}>{value}</span>
+      <div className="text-right">
+        <span className={`text-sm ${mono ? "font-mono break-all" : ""}`}>{value}</span>
+        {sub && <p className="font-mono text-xs text-muted-foreground break-all">{sub}</p>}
+      </div>
     </div>
   );
 }
@@ -56,11 +70,15 @@ export function TransactionDetailDialog({
   open,
   onOpenChange,
   transaction,
-  accounts,
+  profile,
 }: TransactionDetailDialogProps) {
   if (!transaction) return null;
 
+  const accounts = profile?.cuentas ?? [];
   const accountIds = new Set(accounts.map((a) => a.id));
+  const userName =
+    `${profile?.persona.nombre ?? ""} ${profile?.persona.apellido ?? ""}`.trim() || null;
+
   const incoming =
     transaction.canal === "interbancaria_entrante" ||
     (Boolean(transaction.cuenta_destino_id) &&
@@ -69,12 +87,19 @@ export function TransactionDetailDialog({
 
   const amount = Number(transaction.monto || 0);
   const estado = transaction.estado || "completada";
-  const origen =
-    transaction.cuenta_origen_numero ||
-    (transaction.cbu_origen ? transaction.cbu_origen : "—");
-  const destino =
-    transaction.cuenta_destino_numero ||
-    (transaction.cbu_destino ? transaction.cbu_destino : "—");
+
+  // Referencia técnica (número de cuenta / CBU) de cada lado.
+  const origenRef = transaction.cuenta_origen_numero || transaction.cbu_origen || null;
+  const destinoRef = transaction.cuenta_destino_numero || transaction.cbu_destino || null;
+
+  // Nombre de cada lado: si la cuenta es del usuario logueado → su nombre;
+  // si el destino coincide con un destinatario guardado → su alias; si no, null.
+  const originIsUser = Boolean(transaction.cuenta_origen_id && accountIds.has(transaction.cuenta_origen_id));
+  const destIsUser = Boolean(transaction.cuenta_destino_id && accountIds.has(transaction.cuenta_destino_id));
+  const savedDest = profile?.destinatarios?.find((d) => d.cbu_externo === transaction.cbu_destino);
+
+  const origenName = originIsUser ? userName : null;
+  const destinoName = destIsUser ? userName : savedDest?.alias ?? null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -106,8 +131,18 @@ export function TransactionDetailDialog({
           {transaction.canal && (
             <Row label="Canal" value={CANAL_LABEL[transaction.canal] || transaction.canal} />
           )}
-          <Row label="Origen" value={origen} mono={origen !== "—"} />
-          <Row label="Destino" value={destino} mono={destino !== "—"} />
+          <Row
+            label="Origen"
+            value={origenName || origenRef || "—"}
+            sub={origenName ? origenRef : null}
+            mono={!origenName && Boolean(origenRef)}
+          />
+          <Row
+            label="Destino"
+            value={destinoName || destinoRef || "—"}
+            sub={destinoName ? destinoRef : null}
+            mono={!destinoName && Boolean(destinoRef)}
+          />
           {transaction.descripcion && <Row label="Descripción" value={transaction.descripcion} />}
           <Row label="Fecha y hora" value={formatDateTime(transaction.created_at)} />
           <Row label="N° de operación" value={transaction.id} mono />

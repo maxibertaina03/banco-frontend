@@ -9,7 +9,6 @@ interface DashboardSectionProps {
   onAccounts: () => void;
   onActivity: () => void;
   onContacts: () => void;
-  onCopyCbu: () => void;
   onIncome: () => void;
   onTransfer: () => void;
   onSelectActivity?: (id: string) => void;
@@ -21,7 +20,6 @@ export const DashboardSection = memo(function DashboardSection({
   onAccounts,
   onActivity,
   onContacts,
-  onCopyCbu,
   onIncome,
   onTransfer,
   onSelectActivity,
@@ -35,7 +33,6 @@ export const DashboardSection = memo(function DashboardSection({
           onContacts={onContacts}
           onActivity={onActivity}
           onIncome={onIncome}
-          onCopyCbu={onCopyCbu}
         />
       </div>
 
