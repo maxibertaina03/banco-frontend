@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { AccountRecord } from "../features/cuentas/types/cuentas.types";
-import type { TransactionRecord } from "../features/transacciones/types/transacciones.types";
+import type { Cuenta } from "../features/cuentas/types/cuentas.types";
+import type { Transaccion } from "../features/transacciones/types/transacciones.types";
 
 // Sistema de notificaciones bancarias.
 //
@@ -20,7 +20,7 @@ export interface NotificationItem {
   title: string;
   amount: number;
   amountLabel: string;
-  recipient: string;
+  destinatario: string;
   date: string;
   isoDate: string;
   read: boolean;
@@ -77,11 +77,11 @@ function formatDate(iso: string): string {
 
 interface UseNotificationsParams {
   personaId: string | null | undefined;
-  transactions: TransactionRecord[];
-  accounts: AccountRecord[];
+  transacciones: Transaccion[];
+  cuentas: Cuenta[];
 }
 
-export function useNotifications({ personaId, transactions, accounts }: UseNotificationsParams) {
+export function useNotifications({ personaId, transacciones, cuentas }: UseNotificationsParams) {
   const [readIds, setReadIds] = useState<Set<string>>(() =>
     personaId ? readStored(personaId) : new Set()
   );
@@ -98,23 +98,23 @@ export function useNotifications({ personaId, transactions, accounts }: UseNotif
 
   // Detectar transferencias entrantes a este usuario.
   const incoming = useMemo(() => {
-    const accountIds = new Set(accounts.map((a) => a.id));
-    return transactions
+    const idsCuenta = new Set(cuentas.map((a) => a.id));
+    return transacciones
       .filter((tx) => {
         const isInterbankIncoming = tx.canal === "interbancaria_entrante";
         const isLocalIncoming =
           Boolean(tx.cuenta_destino_id) &&
-          accountIds.has(tx.cuenta_destino_id as string) &&
-          !accountIds.has(tx.cuenta_origen_id as string);
+          idsCuenta.has(tx.cuenta_destino_id as string) &&
+          !idsCuenta.has(tx.cuenta_origen_id as string);
         return isInterbankIncoming || isLocalIncoming;
       })
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-  }, [transactions, accounts]);
+  }, [transacciones, cuentas]);
 
   const notifications = useMemo<NotificationItem[]>(() => {
     return incoming.slice(0, 30).map((tx) => {
       const amount = Number(tx.monto || 0);
-      const recipient =
+      const destinatario =
         tx.descripcion ||
         tx.cuenta_origen_numero ||
         (tx.cbu_origen ? `CBU ...${tx.cbu_origen.slice(-6)}` : "Transferencia recibida");
@@ -123,7 +123,7 @@ export function useNotifications({ personaId, transactions, accounts }: UseNotif
         title: tx.canal === "deposito_efectivo" ? "Depósito acreditado" : "Transferencia recibida",
         amount,
         amountLabel: `+${formatCurrency(Math.abs(amount))}`,
-        recipient,
+        destinatario,
         date: formatDate(tx.created_at),
         isoDate: tx.created_at,
         read: readIds.has(tx.id),

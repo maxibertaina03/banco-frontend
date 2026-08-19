@@ -1,17 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  createTransfer,
-  getPersonaTransactionsById,
-  syncIncomingTransactions,
+  crearTransferencia,
+  obtenerTransaccionesDePersonaPorId,
+  sincronizarTransaccionesEntrantes,
 } from "../../features/transacciones/api/transacciones.api";
 import { queryKeys } from "./keys";
 
-export function usePersonaTransactions(personaId: string | null | undefined) {
+export function useTransaccionesDePersona(personaId: string | null | undefined) {
   return useQuery({
     queryKey: personaId
       ? queryKeys.transacciones.byPersona(personaId)
       : ["transacciones", "byPersona", "disabled"],
-    queryFn: () => getPersonaTransactionsById(personaId as string),
+    queryFn: () => obtenerTransaccionesDePersonaPorId(personaId as string),
     enabled: Boolean(personaId),
   });
 }
@@ -23,7 +23,7 @@ export function usePersonaTransactions(personaId: string | null | undefined) {
 // `idempotencyKey` (opcional): UUID v4 generado por el caller. Si el usuario
 // reintenta la misma operación (red mala, etc.) con la misma key, el backend
 // devuelve la respuesta cacheada sin re-ejecutar la transferencia.
-export function useCreateTransfer(personaId: string | null | undefined) {
+export function useCrearTransferencia(personaId: string | null | undefined) {
   const qc = useQueryClient();
 
   return useMutation({
@@ -36,7 +36,7 @@ export function useCreateTransfer(personaId: string | null | undefined) {
       importe: number;
       saldoOrigen: number;
       idempotencyKey?: string;
-    }) => createTransfer(payload, { idempotencyKey }),
+    }) => crearTransferencia(payload, { idempotencyKey }),
     onSuccess: () => {
       if (!personaId) return;
       qc.invalidateQueries({ queryKey: queryKeys.personas.full(personaId) });
@@ -60,7 +60,7 @@ export function useSyncIncoming(personaId: string | null | undefined) {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: () => syncIncomingTransactions(),
+    mutationFn: () => sincronizarTransaccionesEntrantes(),
     onSuccess: (result) => {
       if (!personaId || result.synced <= 0) return;
       qc.invalidateQueries({ queryKey: queryKeys.personas.full(personaId) });

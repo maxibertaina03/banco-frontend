@@ -10,8 +10,8 @@ import { SectionLoader } from "../components/SectionLoader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
 import { formatCurrency } from "../lib/utils/currency";
 import { ErrorBoundary } from "../components/ErrorBoundary";
-import { TransferReceiptDialog } from "../components/TransferReceiptDialog";
-import { TransactionDetailDialog } from "../components/TransactionDetailDialog";
+import { DialogoComprobanteTransferencia } from "../components/DialogoComprobanteTransferencia";
+import { DialogoDetalleTransaccion } from "../components/DialogoDetalleTransaccion";
 import { usePortalPage } from "../hooks/usePortalPage";
 
 // Sections cargadas perezosamente: cada una se descarga en su propio chunk
@@ -19,45 +19,45 @@ import { usePortalPage } from "../hooks/usePortalPage";
 // nunca descarga AdminSection (~30 KB con su árbol).
 // Vite admite la forma `import(...).then(m => ({ default: m.Named }))` para
 // re-exportar un named export como default sin tocar el archivo origen.
-const AccountsSection = lazy(() =>
-  import("../features/cuentas/sections/AccountsSection").then((m) => ({ default: m.AccountsSection }))
+const SeccionCuentas = lazy(() =>
+  import("../features/cuentas/sections/SeccionCuentas").then((m) => ({ default: m.SeccionCuentas }))
 );
 const AdminSection = lazy(() =>
   import("../features/admin/sections/AdminSection").then((m) => ({ default: m.AdminSection }))
 );
-const CompleteProfileSection = lazy(() =>
-  import("../features/personas/sections/CompleteProfileSection").then((m) => ({
-    default: m.CompleteProfileSection,
+const SeccionCompletarPerfil = lazy(() =>
+  import("../features/personas/sections/SeccionCompletarPerfil").then((m) => ({
+    default: m.SeccionCompletarPerfil,
   }))
 );
 const DashboardSection = lazy(() =>
   import("../features/dashboard/sections/DashboardSection").then((m) => ({ default: m.DashboardSection }))
 );
-const RecipientsSection = lazy(() =>
-  import("../features/destinatarios/sections/RecipientsSection").then((m) => ({
-    default: m.RecipientsSection,
+const SeccionDestinatarios = lazy(() =>
+  import("../features/destinatarios/sections/SeccionDestinatarios").then((m) => ({
+    default: m.SeccionDestinatarios,
   }))
 );
-const TransactionsSection = lazy(() =>
-  import("../features/transacciones/sections/TransactionsSection").then((m) => ({
-    default: m.TransactionsSection,
+const SeccionTransacciones = lazy(() =>
+  import("../features/transacciones/sections/SeccionTransacciones").then((m) => ({
+    default: m.SeccionTransacciones,
   }))
 );
 
 export function PortalPage() {
   const {
-    activeRole,
-    setActiveRole,
+    rolActivo,
+    setRolActivo,
     section,
     setSection,
     error,
     setError,
     success,
     setSuccess,
-    authProfile,
-    profile,
+    perfilAutenticado,
+    perfil,
     loading,
-    needsProfileCompletion,
+    necesitaCompletarPerfil,
     warning,
     scope,
     totalBalance,
@@ -67,50 +67,50 @@ export function PortalPage() {
     markAllAsRead,
     createClientForm,
     setCreateClientForm,
-    selectedAccountForAlias,
-    setSelectedAccountForAlias,
+    cuentaSeleccionadaParaAlias,
+    setCuentaSeleccionadaParaAlias,
     submitting,
     personas,
     selectedPersonaId,
     roleOptions,
-    accountTypes,
+    tiposDeCuenta,
     banks,
     manualPersonaId,
     setManualPersonaId,
     activities,
-    transactionTypes,
+    tiposDeTransaccion,
     roles,
     bulkSyncing,
     lastSyncResult,
-    recipientResetSignal,
-    syncingAccountId,
+    contadorResetDestinatario,
+    idCuentaSincronizando,
     syncingIncoming,
-    transferResetSignal,
-    handleGoToAccounts,
+    contadorResetTransferencia,
+    manejarIrACuentas,
     handleGoToActivity,
     handleGoToContacts,
-    handleGoToTransactions,
+    manejarIrATransacciones,
     handleLoadPersona,
     handleCopyCbu,
     handleCopyAlias,
     handleIncome,
     handleAliasUpdated,
-    handleSyncAccountCb,
+    manejarSincronizarCuentaCb,
     handleBulkSyncCb,
     handleSyncIncomingCb,
-    handleRecipientDeleteCb,
-    handleAccountSynced,
-    handleCompleteProfile,
+    manejarEliminarDestinatarioCb,
+    manejarCuentaSincronizada,
+    manejarCompletarPerfil,
     handleCreateClient,
-    handleRecipientCreate,
-    handleTransfer,
-    refreshDestinatarios,
-    refreshPersonaData,
-    transferReceipt,
-    setTransferReceipt,
-    selectedTransaction,
-    setSelectedTransaction,
-    openTransactionDetail,
+    manejarCrearDestinatario,
+    manejarTransferir,
+    refrescarDestinatarios,
+    refrescarDatosDePersona,
+    comprobanteTransferencia,
+    setComprobanteTransferencia,
+    transaccionSeleccionada,
+    setTransaccionSeleccionada,
+    abrirDetalleDeTransaccion,
   } = usePortalPage();
 
   return (
@@ -118,14 +118,14 @@ export function PortalPage() {
       <div className="min-h-screen bg-background">
         <Header
           displayName={
-            profile
-              ? `${profile.persona.nombre} ${profile.persona.apellido}`
-              : authProfile
-                ? `${authProfile.nombre} ${authProfile.apellido}`.trim() || "Orbital"
+            perfil
+              ? `${perfil.persona.nombre} ${perfil.persona.apellido}`
+              : perfilAutenticado
+                ? `${perfilAutenticado.nombre} ${perfilAutenticado.apellido}`.trim() || "Orbital"
                 : "Orbital"
           }
-          authProfile={authProfile}
-          personaId={profile?.persona.id}
+          perfilAutenticado={perfilAutenticado}
+          personaId={perfil?.persona.id}
           notifications={notifications}
           unreadCount={unreadCount}
           onMarkAsRead={markAsRead}
@@ -133,26 +133,26 @@ export function PortalPage() {
         />
 
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-          {!needsProfileCompletion && (
+          {!necesitaCompletarPerfil && (
             <section className="mb-8 grid gap-6 lg:grid-cols-[1.45fr_0.55fr]">
               <PortalHero
-                activeRole={activeRole}
-                onRoleChange={setActiveRole}
+                rolActivo={rolActivo}
+                onRoleChange={setRolActivo}
                 roleLabels={roleLabels}
                 roleOptions={roleOptions}
               />
               <PortalSummary
-                activeAccountsCount={profile?.cuentas.filter((account) => account.activa).length || 0}
+                cantidadCuentasActivas={perfil?.cuentas.filter((cuenta) => cuenta.activa).length || 0}
                 totalBalanceLabel={formatCurrency(totalBalance)}
-                cbu={profile?.cuentas[0]?.cbu}
-                alias={profile?.cuentas[0]?.alias}
+                cbu={perfil?.cuentas[0]?.cbu}
+                alias={perfil?.cuentas[0]?.alias}
                 onCopyCbu={handleCopyCbu}
                 onCopyAlias={handleCopyAlias}
               />
             </section>
           )}
 
-          {!needsProfileCompletion && (
+          {!necesitaCompletarPerfil && (
             <PortalToolbar
               loading={loading}
               manualPersonaId={manualPersonaId}
@@ -183,19 +183,19 @@ export function PortalPage() {
             </div>
           )}
 
-          {needsProfileCompletion ? (
+          {necesitaCompletarPerfil ? (
             <Suspense fallback={<SectionLoader />}>
-              <CompleteProfileSection
-                authProfile={authProfile}
+              <SeccionCompletarPerfil
+                perfilAutenticado={perfilAutenticado}
                 submitting={submitting}
-                onSubmit={handleCompleteProfile}
+                onSubmit={manejarCompletarPerfil}
               />
             </Suspense>
           ) : (
             <>
               <PortalTabs items={getSectionItems(scope)} onSectionChange={setSection} section={section} />
 
-              {loading || !profile ? (
+              {loading || !perfil ? (
                 <Card className="border-primary/20 bg-[#1C0B2E]">
                   <CardContent className="py-12 text-center text-sm text-muted-foreground">
                     Cargando datos de Orbital...
@@ -208,56 +208,56 @@ export function PortalPage() {
                       <DashboardSection
                         activities={activities}
                         loading={loading}
-                        onAccounts={handleGoToAccounts}
+                        onCuentas={manejarIrACuentas}
                         onActivity={handleGoToActivity}
                         onContacts={handleGoToContacts}
                         onIncome={handleIncome}
-                        onTransfer={handleGoToTransactions}
-                        onSelectActivity={openTransactionDetail}
+                        onTransferir={manejarIrATransacciones}
+                        onSelectActivity={abrirDetalleDeTransaccion}
                       />
                     </ErrorBoundary>
                   )}
 
-                  {section === "accounts" && (
+                  {section === "cuentas" && (
                     <ErrorBoundary>
-                      <AccountsSection
-                        profile={profile}
-                        selectedAccountForAlias={selectedAccountForAlias}
-                        onAliasEdit={setSelectedAccountForAlias}
+                      <SeccionCuentas
+                        perfil={perfil}
+                        cuentaSeleccionadaParaAlias={cuentaSeleccionadaParaAlias}
+                        onAliasEdit={setCuentaSeleccionadaParaAlias}
                         onAliasUpdated={handleAliasUpdated}
-                        onSyncAccount={scope === "admin" ? handleSyncAccountCb : undefined}
+                        onSincronizarCuenta={scope === "admin" ? manejarSincronizarCuentaCb : undefined}
                         onBulkSync={scope === "admin" ? handleBulkSyncCb : undefined}
-                        syncingAccountId={syncingAccountId}
+                        idCuentaSincronizando={idCuentaSincronizando}
                         bulkSyncing={bulkSyncing}
                       />
                     </ErrorBoundary>
                   )}
 
-                  {section === "transactions" && (
+                  {section === "transacciones" && (
                     <ErrorBoundary>
-                      <TransactionsSection
+                      <SeccionTransacciones
                         activities={activities}
                         lastSyncResult={lastSyncResult}
                         loading={loading}
-                        onSubmit={handleTransfer}
+                        onSubmit={manejarTransferir}
                         onSyncIncoming={handleSyncIncomingCb}
-                        profile={profile}
+                        perfil={perfil}
                         submitting={submitting}
                         syncingIncoming={syncingIncoming}
-                        resetSignal={transferResetSignal}
-                        onSelectActivity={openTransactionDetail}
+                        resetSignal={contadorResetTransferencia}
+                        onSelectActivity={abrirDetalleDeTransaccion}
                       />
                     </ErrorBoundary>
                   )}
 
-                  {section === "recipients" && (
+                  {section === "destinatarios" && (
                     <ErrorBoundary>
-                      <RecipientsSection
-                        onDelete={handleRecipientDeleteCb}
-                        onSubmit={handleRecipientCreate}
-                        profile={profile}
+                      <SeccionDestinatarios
+                        onDelete={manejarEliminarDestinatarioCb}
+                        onSubmit={manejarCrearDestinatario}
+                        perfil={perfil}
                         submitting={submitting}
-                        resetSignal={recipientResetSignal}
+                        resetSignal={contadorResetDestinatario}
                       />
                     </ErrorBoundary>
                   )}
@@ -265,13 +265,13 @@ export function PortalPage() {
                   {section === "admin" && scope === "admin" && (
                     <ErrorBoundary>
                       <AdminSection
-                        accountTypes={accountTypes}
+                        tiposDeCuenta={tiposDeCuenta}
                         banks={banks}
                         createClientForm={createClientForm}
-                        onAccountSynced={handleAccountSynced}
+                        onCuentaSincronizada={manejarCuentaSincronizada}
                         onCreateClientFormChange={setCreateClientForm}
                         onSubmit={handleCreateClient}
-                        profile={profile}
+                        perfil={perfil}
                         roles={roles}
                         submitting={submitting}
                         totalBalance={formatCurrency(totalBalance)}
@@ -290,7 +290,7 @@ export function PortalPage() {
             No eliminar: cuando se implemente el módulo de tarjetas, descomentar
             la Card de "Tarjeta Orbital" y conectarla al endpoint correspondiente.
           */}
-          {/* {!needsProfileCompletion && (
+          {/* {!necesitaCompletarPerfil && (
             <section className="mt-10 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
               <Card className="border-primary/20 bg-gradient-to-br from-[#1C0B2E] to-[#2D1548]">
                 <CardHeader>
@@ -307,7 +307,7 @@ export function PortalPage() {
                     <div className="mt-6 flex items-end justify-between">
                       <div>
                         <p className="text-xs text-white/60">Titular</p>
-                        <p>{profile?.persona.nombre || "Orbital User"}</p>
+                        <p>{perfil?.persona.nombre || "Orbital User"}</p>
                       </div>
                       <div>
                         <p className="text-xs text-white/60">Vence</p>
@@ -343,18 +343,18 @@ export function PortalPage() {
         </main>
 
         {/* Comprobante de transferencia exitosa (estilo banco) */}
-        <TransferReceiptDialog
-          open={transferReceipt !== null}
-          onOpenChange={(o) => { if (!o) setTransferReceipt(null); }}
-          transaction={transferReceipt}
+        <DialogoComprobanteTransferencia
+          open={comprobanteTransferencia !== null}
+          onOpenChange={(o) => { if (!o) setComprobanteTransferencia(null); }}
+          transaccion={comprobanteTransferencia}
         />
 
         {/* Detalle de un movimiento al tocarlo en la lista */}
-        <TransactionDetailDialog
-          open={selectedTransaction !== null}
-          onOpenChange={(o) => { if (!o) setSelectedTransaction(null); }}
-          transaction={selectedTransaction}
-          profile={profile}
+        <DialogoDetalleTransaccion
+          open={transaccionSeleccionada !== null}
+          onOpenChange={(o) => { if (!o) setTransaccionSeleccionada(null); }}
+          transaccion={transaccionSeleccionada}
+          perfil={perfil}
         />
       </div>
     </ProtectedRoute>

@@ -1,21 +1,21 @@
 import { request } from "../../../lib/api/client";
-import type { RecipientRecord } from "../types/destinatarios.types";
+import type { Destinatario } from "../types/destinatarios.types";
 
-export type { RecipientRecord } from "../types/destinatarios.types";
+export type { Destinatario } from "../types/destinatarios.types";
 
-export function createDestinatario(payload: {
+export function crearDestinatario(payload: {
   persona_id: string;
   alias?: string | null;
   cbu_externo: string;
   banco_externo?: string | null;
 }) {
-  return request<RecipientRecord>("/destinatarios", {
+  return request<Destinatario>("/destinatarios", {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
-export function updateDestinatario(
+export function actualizarDestinatario(
   destinatarioId: string,
   payload: Partial<{
     alias: string | null;
@@ -23,13 +23,13 @@ export function updateDestinatario(
     banco_externo: string | null;
   }>
 ) {
-  return request<RecipientRecord>(`/destinatarios/${destinatarioId}`, {
+  return request<Destinatario>(`/destinatarios/${destinatarioId}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
 }
 
-export function deleteDestinatario(destinatarioId: string) {
+export function eliminarDestinatario(destinatarioId: string) {
   return request<{ message: string }>(`/destinatarios/${destinatarioId}`, {
     method: "DELETE",
   });

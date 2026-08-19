@@ -1,9 +1,9 @@
-import type { AccountRecord } from "../../cuentas/types/cuentas.types";
-import type { RecipientRecord } from "../../destinatarios/types/destinatarios.types";
+import type { Cuenta } from "../../cuentas/types/cuentas.types";
+import type { Destinatario } from "../../destinatarios/types/destinatarios.types";
 
-export type PortalRole = "cliente" | "admin" | "operador" | "auditor" | "tesoreria";
+export type RolDePortal = "cliente" | "admin" | "operador" | "auditor" | "tesoreria";
 
-export interface PersonaOption {
+export interface OpcionDePersona {
   id: string;
   nombre: string;
   apellido: string;
@@ -12,20 +12,20 @@ export interface PersonaOption {
   telefono?: string | null;
 }
 
-export interface RoleRecord {
+export interface Rol {
   id: string;
   nombre: string;
   descripcion?: string | null;
 }
 
-export interface UserRecord {
+export interface Usuario {
   id: string;
   persona_id: string;
   activo: boolean;
   created_at?: string;
 }
 
-export interface AuthenticatedUserProfile extends UserRecord {
+export interface PerfilUsuarioAutenticado extends Usuario {
   nombre: string;
   apellido: string;
   dni?: string | null;
@@ -33,10 +33,10 @@ export interface AuthenticatedUserProfile extends UserRecord {
   telefono?: string | null;
   fecha_nacimiento?: string | null;
   perfil_completo: boolean;
-  roles: RoleRecord[];
+  roles: Rol[];
 }
 
-export interface AuditRecord {
+export interface RegistroDeAuditoria {
   id: string;
   usuario_id: string;
   accion: string;
@@ -48,12 +48,12 @@ export interface AuditRecord {
   created_at: string;
 }
 
-export interface PersonaFullResponse {
-  persona: PersonaOption;
-  usuario: UserRecord | null;
-  cuentas: AccountRecord[];
-  destinatarios: RecipientRecord[];
-  roles: RoleRecord[];
+export interface PersonaCompleta {
+  persona: OpcionDePersona;
+  usuario: Usuario | null;
+  cuentas: Cuenta[];
+  destinatarios: Destinatario[];
+  roles: Rol[];
 }
 
 export interface AdminCentralRegistrationResult {
@@ -68,8 +68,8 @@ export interface AdminCentralRegistrationResult {
     dni?: string;
     message?: string;
   };
-  persona: PersonaOption;
-  cuenta: AccountRecord;
+  persona: OpcionDePersona;
+  cuenta: Cuenta;
 }
 
 export interface CentralBankRecord {
@@ -110,7 +110,7 @@ export interface CentralBankTransactionParty {
   alias?: string | null;
 }
 
-export interface CentralBankTransactionRecord {
+export interface TransaccionDelCentral {
   _id?: string;
   cbuOrigen: string;
   cbuDestino: string;
@@ -123,13 +123,13 @@ export interface CentralBankTransactionRecord {
   personaDestino?: CentralBankTransactionParty | null;
 }
 
-export interface SyncAccountRecord {
+export interface CuentaParaSincronizar {
   id: string;
   persona_id: string;
   numero_cuenta: string;
   cbu: string | null;
   alias?: string | null;
-  saldo: string | number;
+  saldo: number;
   activa: boolean;
   banco_central_registrada: boolean;
   nombre: string;
@@ -142,8 +142,8 @@ export interface SyncAccountRecord {
   suggested_alias?: string | null;
 }
 
-export interface CentralBankAccountSyncResult {
-  account: {
+export interface ResultadoSincronizacionCuenta {
+  cuenta: {
     id: string;
     cbu?: string | null;
     alias?: string | null;

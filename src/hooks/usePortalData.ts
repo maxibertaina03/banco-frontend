@@ -2,27 +2,27 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ApiError, setAccessTokenProvider } from "../lib/api/client";
 import { formatCurrency } from "../lib/utils/currency";
-import type { AccountRecord } from "../features/cuentas/types/cuentas.types";
-import { sanitizePersonaId } from "../features/personas/api/personas.api";
+import type { Cuenta } from "../features/cuentas/types/cuentas.types";
+import { sanearIdDePersona } from "../features/personas/api/personas.api";
 import type {
-  AuthenticatedUserProfile,
-  PersonaFullResponse,
+  PerfilUsuarioAutenticado,
+  PersonaCompleta,
 } from "../features/personas/types/personas.types";
-import type { UserActivity } from "../features/transacciones/types/transacciones.types";
+import type { ActividadDeUsuario } from "../features/transacciones/types/transacciones.types";
 import {
   queryKeys,
-  useAuthProfile,
-  useInternalCatalogs,
+  usePerfilAutenticado,
+  useCatalogosInternos,
   usePersonaFull,
-  usePersonaTransactions,
+  useTransaccionesDePersona,
   usePersonas,
 } from "../lib/queries";
 
 type GetTokenFn = () => Promise<string | null>;
 const INTERNAL_PORTAL_ROLES = new Set(["admin", "operador", "auditor", "tesoreria"]);
 
-function buildActivities(
-  transactions: Array<{
+function armarActividades(
+  transacciones: Array<{
     id: string;
     monto: string | number;
     canal?: string | null;
@@ -36,48 +36,48 @@ function buildActivities(
     tipo_transaccion_nombre?: string | null;
     created_at: string;
   }>,
-  accounts: AccountRecord[]
+  cuentas: Cuenta[]
 ) {
-  const accountIds = new Set(accounts.map((account) => account.id));
+  const idsCuenta = new Set(cuentas.map((cuenta) => cuenta.id));
 
-  return transactions.slice(0, 8).map((transaction) => {
-    const amount = Number(transaction.monto || 0);
-    const isEntrante = transaction.canal === "interbancaria_entrante";
+  return transacciones.slice(0, 8).map((transaccion) => {
+    const amount = Number(transaccion.monto || 0);
+    const isEntrante = transaccion.canal === "interbancaria_entrante";
     const incoming =
       isEntrante ||
-      (Boolean(transaction.cuenta_destino_id) &&
-        accountIds.has(transaction.cuenta_destino_id as string) &&
-        !accountIds.has(transaction.cuenta_origen_id as string));
+      (Boolean(transaccion.cuenta_destino_id) &&
+        idsCuenta.has(transaccion.cuenta_destino_id as string) &&
+        !idsCuenta.has(transaccion.cuenta_origen_id as string));
 
-    const date = new Date(transaction.created_at);
+    const date = new Date(transaccion.created_at);
 
-    let recipient: string;
+    let destinatario: string;
     if (incoming) {
-      recipient =
-        transaction.descripcion ||
-        transaction.cuenta_origen_numero ||
-        (transaction.cbu_origen ? `CBU ...${transaction.cbu_origen.slice(-6)}` : "Transferencia entrante");
+      destinatario =
+        transaccion.descripcion ||
+        transaccion.cuenta_origen_numero ||
+        (transaccion.cbu_origen ? `CBU ...${transaccion.cbu_origen.slice(-6)}` : "Transferencia entrante");
     } else {
-      recipient =
-        transaction.cuenta_destino_numero ||
-        (transaction.cbu_destino ? `CBU ...${transaction.cbu_destino.slice(-6)}` : "Cuenta destino");
+      destinatario =
+        transaccion.cuenta_destino_numero ||
+        (transaccion.cbu_destino ? `CBU ...${transaccion.cbu_destino.slice(-6)}` : "Cuenta destino");
     }
 
     return {
-      id: transaction.id,
+      id: transaccion.id,
       type: incoming ? "in" : "out",
-      title: transaction.tipo_transaccion_nombre || "Movimiento",
-      recipient,
+      title: transaccion.tipo_transaccion_nombre || "Movimiento",
+      destinatario,
       amount: `${incoming ? "+" : "-"}${formatCurrency(Math.abs(amount))}`,
       date: new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "short" }).format(date),
       time: new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(date),
-    } satisfies UserActivity;
+    } satisfies ActividadDeUsuario;
   });
 }
 
-function isInternalProfile(authProfile: AuthenticatedUserProfile | null | undefined) {
+function esPerfilInterno(perfilAutenticado: PerfilUsuarioAutenticado | null | undefined) {
   return Boolean(
-    authProfile?.roles?.some((role) => INTERNAL_PORTAL_ROLES.has(String(role.nombre || "").toLowerCase()))
+    perfilAutenticado?.roles?.some((role) => INTERNAL_PORTAL_ROLES.has(String(role.nombre || "").toLowerCase()))
   );
 }
 
@@ -100,8 +100,8 @@ export function usePortalData({
   setError,
   setSuccess,
 }: UsePortalDataParams) {
-  const normalizedInitialPersonaId = sanitizePersonaId(initialPersonaId);
-  const sanitizedPreferred = sanitizePersonaId(preferredPersonaId);
+  const normalizedInitialPersonaId = sanearIdDePersona(initialPersonaId);
+  const sanitizedPreferred = sanearIdDePersona(preferredPersonaId);
   const preferredHadInvalidPath = Boolean(preferredPersonaId) && !sanitizedPreferred;
 
   const queryClient = useQueryClient();
@@ -122,22 +122,22 @@ export function usePortalData({
     return () => setAccessTokenProvider(null);
   }, [getToken, isAuthReady]);
 
-  // ── Auth profile ────────────────────────────────────────────────────────────
-  const authProfileQuery = useAuthProfile({ enabled: isAuthReady });
-  const authProfileUser = (authProfileQuery.data?.user ?? null) as AuthenticatedUserProfile | null;
-  const canLoadInternalCatalogs = isInternalProfile(authProfileUser);
+  // ── Auth perfil ────────────────────────────────────────────────────────────
+  const queryPerfilAutenticado = usePerfilAutenticado({ enabled: isAuthReady });
+  const usuarioDelPerfil = (queryPerfilAutenticado.data?.user ?? null) as PerfilUsuarioAutenticado | null;
+  const canLoadInternalCatalogs = esPerfilInterno(usuarioDelPerfil);
 
   // Si el usuario no es interno Y no tiene perfil completo, debe completar.
-  const needsProfileCompletion = useMemo(() => {
-    if (!authProfileUser) return false;
+  const necesitaCompletarPerfil = useMemo(() => {
+    if (!usuarioDelPerfil) return false;
     if (canLoadInternalCatalogs) return false;
-    return authProfileUser.perfil_completo === false;
-  }, [authProfileUser, canLoadInternalCatalogs]);
+    return usuarioDelPerfil.perfil_completo === false;
+  }, [usuarioDelPerfil, canLoadInternalCatalogs]);
 
   // ── Resolver qué persona mostrar ───────────────────────────────────────────
   const directPersonaId =
-    sanitizePersonaId(selectedPersonaId) ||
-    sanitizePersonaId(manualPersonaId) ||
+    sanearIdDePersona(selectedPersonaId) ||
+    sanearIdDePersona(manualPersonaId) ||
     sanitizedPreferred;
 
   // Solo internos listan todas las personas, y solo si no hay direct.
@@ -146,41 +146,41 @@ export function usePortalData({
 
   const activePersonaId =
     directPersonaId ||
-    authProfileUser?.persona_id ||
+    usuarioDelPerfil?.persona_id ||
     personasQuery.data?.[0]?.id ||
     "";
 
   // ── Queries dependientes de la persona activa ──────────────────────────────
   // Se deshabilitan si no hay persona o si falta completar perfil (no tiene
   // sentido pegarle al backend hasta que el usuario complete los datos).
-  const profileEnabled = isAuthReady && Boolean(activePersonaId) && !needsProfileCompletion;
-  const personaFullQuery = usePersonaFull(profileEnabled ? activePersonaId : null);
-  const transactionsQuery = usePersonaTransactions(profileEnabled ? activePersonaId : null);
+  const perfilHabilitado = isAuthReady && Boolean(activePersonaId) && !necesitaCompletarPerfil;
+  const personaFullQuery = usePersonaFull(perfilHabilitado ? activePersonaId : null);
+  const queryTransacciones = useTransaccionesDePersona(perfilHabilitado ? activePersonaId : null);
 
-  const profile = (personaFullQuery.data ?? null) as PersonaFullResponse | null;
-  const transactions = transactionsQuery.data ?? [];
+  const perfil = (personaFullQuery.data ?? null) as PersonaCompleta | null;
+  const transacciones = queryTransacciones.data ?? [];
 
   // ── Catálogos (solo internos) ──────────────────────────────────────────────
-  const catalogs = useInternalCatalogs({
-    enabled: isAuthReady && canLoadInternalCatalogs && !needsProfileCompletion,
+  const catalogs = useCatalogosInternos({
+    enabled: isAuthReady && canLoadInternalCatalogs && !necesitaCompletarPerfil,
   });
 
   // ── Sincronizar selectedPersonaId con la persona realmente cargada ─────────
   useEffect(() => {
-    if (profile?.persona.id) {
-      setSelectedPersonaId(profile.persona.id);
-      setManualPersonaId(profile.persona.id);
+    if (perfil?.persona.id) {
+      setSelectedPersonaId(perfil.persona.id);
+      setManualPersonaId(perfil.persona.id);
     }
-  }, [profile?.persona.id]);
+  }, [perfil?.persona.id]);
 
   // ── Derivados ──────────────────────────────────────────────────────────────
   const activities = useMemo(
-    () => buildActivities(transactions, profile?.cuentas ?? []),
-    [transactions, profile?.cuentas]
+    () => armarActividades(transacciones, perfil?.cuentas ?? []),
+    [transacciones, perfil?.cuentas]
   );
 
   const warning = useMemo<string | null>(() => {
-    if (needsProfileCompletion) return null;
+    if (necesitaCompletarPerfil) return null;
     // Warnings técnicos de bootstrap (VITE_PERSONA_ID inválido, fallback a
     // persona del JWT, etc.) se silencian — el sistema sigue operando OK y
     // un cliente final no debería ver mensajes con jerga interna.
@@ -188,7 +188,7 @@ export function usePortalData({
       return "Algunas funciones del panel administrativo no están disponibles momentáneamente.";
     }
     return null;
-  }, [needsProfileCompletion, canLoadInternalCatalogs, catalogs.failed]);
+  }, [necesitaCompletarPerfil, canLoadInternalCatalogs, catalogs.failed]);
 
   // ── Loading agregado ───────────────────────────────────────────────────────
   // Solo lo que bloquea el render principal: auth + perfil + transacciones.
@@ -196,16 +196,16 @@ export function usePortalData({
   const loading =
     !isLoaded ||
     (isAuthReady &&
-      (authProfileQuery.isLoading ||
-        (profileEnabled && (personaFullQuery.isLoading || transactionsQuery.isLoading))));
+      (queryPerfilAutenticado.isLoading ||
+        (perfilHabilitado && (personaFullQuery.isLoading || queryTransacciones.isLoading))));
 
   // ── Propagación de errores al banner del portal ────────────────────────────
   // Las queries reportan error individualmente; lo elevamos al estado global de
   // la página para mostrarlo en el banner. PROFILE_INCOMPLETE se trata distinto:
-  // ya activa needsProfileCompletion y muestra un mensaje específico.
+  // ya activa necesitaCompletarPerfil y muestra un mensaje específico.
   useEffect(() => {
     const queryError =
-      authProfileQuery.error || personaFullQuery.error || transactionsQuery.error;
+      queryPerfilAutenticado.error || personaFullQuery.error || queryTransacciones.error;
     if (!queryError) return;
 
     if (queryError instanceof ApiError && queryError.code === "PROFILE_INCOMPLETE") {
@@ -213,13 +213,13 @@ export function usePortalData({
       return;
     }
     setError(queryError instanceof Error ? queryError.message : "No pudimos cargar tu información. Intentá refrescar la página.");
-  }, [authProfileQuery.error, personaFullQuery.error, transactionsQuery.error, setError]);
+  }, [queryPerfilAutenticado.error, personaFullQuery.error, queryTransacciones.error, setError]);
 
   // ── API imperativa de refresh ──────────────────────────────────────────────
   // Mantiene la signatura previa para no romper consumidores. Internamente
   // invalida las queries y deja que TanStack Query refetchee lo activo.
 
-  const refreshPersonaData = useCallback(
+  const refrescarDatosDePersona = useCallback(
     async (personaId: string) => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.personas.full(personaId) }),
@@ -229,17 +229,17 @@ export function usePortalData({
     [queryClient]
   );
 
-  const refreshDestinatarios = useCallback(
+  const refrescarDestinatarios = useCallback(
     async (personaId: string) => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.personas.full(personaId) });
     },
     [queryClient]
   );
 
-  // loadPortal: si recibe personaIdOverride cambia la persona activa (lo cual
+  // cargarPortal: si recibe personaIdOverride cambia la persona activa (lo cual
   // dispara nuevos fetchs por cambio de queryKey); si no, invalida todo lo
   // relacionado al portal para forzar refetch.
-  const loadPortal = useCallback(
+  const cargarPortal = useCallback(
     async (
       personaIdOverride?: string,
       _options?: { skipCatalogReload?: boolean } // catálogos tienen staleTime alto, no necesitan flag
@@ -247,7 +247,7 @@ export function usePortalData({
       setError(null);
       setSuccess(null);
 
-      const override = sanitizePersonaId(personaIdOverride);
+      const override = sanearIdDePersona(personaIdOverride);
       if (override) {
         setSelectedPersonaId(override);
         setManualPersonaId(override);
@@ -257,7 +257,7 @@ export function usePortalData({
 
       // Reload generalizado: auth, persona activa, catálogos.
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: queryKeys.auth.profile }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.auth.perfil }),
         activePersonaId
           ? queryClient.invalidateQueries({ queryKey: queryKeys.personas.full(activePersonaId) })
           : Promise.resolve(),
@@ -273,23 +273,23 @@ export function usePortalData({
   );
 
   return {
-    accountTypes: catalogs.tiposCuenta,
+    tiposDeCuenta: catalogs.tiposCuenta,
     activities,
-    authProfile: authProfileUser,
+    perfilAutenticado: usuarioDelPerfil,
     banks: catalogs.bancos,
-    loadPortal,
+    cargarPortal,
     loading,
     manualPersonaId,
-    needsProfileCompletion,
+    necesitaCompletarPerfil,
     personas: personasQuery.data ?? [],
-    profile,
-    refreshDestinatarios,
-    refreshPersonaData,
+    perfil,
+    refrescarDestinatarios,
+    refrescarDatosDePersona,
     roles: catalogs.roles,
     selectedPersonaId,
     setManualPersonaId,
     setSelectedPersonaId,
-    transactionTypes: catalogs.tiposTransaccion,
+    tiposDeTransaccion: catalogs.tiposTransaccion,
     warning,
   };
 }

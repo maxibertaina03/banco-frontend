@@ -1,19 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  getAuthenticatedUserProfile,
-  getPersonaFull,
-  getUserAudit,
-  listPersonas,
-  updateAuthenticatedUserProfile,
+  obtenerPerfilDeUsuarioAutenticado,
+  obtenerPersonaCompleta,
+  obtenerAuditoriaDeUsuario,
+  listarPersonas,
+  actualizarPerfilDeUsuarioAutenticado,
 } from "../../features/personas/api/personas.api";
 import { queryKeys } from "./keys";
 
 // Perfil del usuario autenticado en Clerk + sus datos en BD.
 // Es la query "raíz": casi todas las otras dependen de saber qué persona somos.
-export function useAuthProfile(options: { enabled?: boolean } = {}) {
+export function usePerfilAutenticado(options: { enabled?: boolean } = {}) {
   return useQuery({
-    queryKey: queryKeys.auth.profile,
-    queryFn: () => getAuthenticatedUserProfile(),
+    queryKey: queryKeys.auth.perfil,
+    queryFn: () => obtenerPerfilDeUsuarioAutenticado(),
     enabled: options.enabled ?? true,
   });
 }
@@ -22,7 +22,7 @@ export function useAuthProfile(options: { enabled?: boolean } = {}) {
 export function usePersonaFull(personaId: string | null | undefined) {
   return useQuery({
     queryKey: personaId ? queryKeys.personas.full(personaId) : ["personas", "full", "disabled"],
-    queryFn: () => getPersonaFull(personaId as string),
+    queryFn: () => obtenerPersonaCompleta(personaId as string),
     enabled: Boolean(personaId),
   });
 }
@@ -32,14 +32,14 @@ export function usePersonaFull(personaId: string | null | undefined) {
 export function usePersonas(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: queryKeys.personas.list(),
-    queryFn: () => listPersonas(),
+    queryFn: () => listarPersonas(),
     enabled: options.enabled ?? true,
   });
 }
 
 // Mutation para edición parcial del perfil. Al completarse invalida auth
-// profile y persona full (para que se reflejen los cambios en toda la UI).
-export function useUpdateProfile(personaId: string | null | undefined) {
+// perfil y persona full (para que se reflejen los cambios en toda la UI).
+export function useActualizarPerfil(personaId: string | null | undefined) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (payload: Partial<{
@@ -47,9 +47,9 @@ export function useUpdateProfile(personaId: string | null | undefined) {
       apellido: string;
       telefono: string;
       email: string;
-    }>) => updateAuthenticatedUserProfile(payload),
+    }>) => actualizarPerfilDeUsuarioAutenticado(payload),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.auth.profile });
+      qc.invalidateQueries({ queryKey: queryKeys.auth.perfil });
       if (personaId) {
         qc.invalidateQueries({ queryKey: queryKeys.personas.full(personaId) });
       }
@@ -58,10 +58,10 @@ export function useUpdateProfile(personaId: string | null | undefined) {
 }
 
 // Auditoría de un usuario. Requiere usuarioId (no personaId).
-export function useUserAudit(usuarioId: string | null | undefined) {
+export function useAuditoriaDeUsuario(usuarioId: string | null | undefined) {
   return useQuery({
     queryKey: usuarioId ? queryKeys.personas.audit(usuarioId) : ["personas", "audit", "disabled"],
-    queryFn: () => getUserAudit(usuarioId as string),
+    queryFn: () => obtenerAuditoriaDeUsuario(usuarioId as string),
     enabled: Boolean(usuarioId),
   });
 }

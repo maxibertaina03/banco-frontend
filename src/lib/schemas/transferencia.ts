@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // El campo `cbuDestino` se completa por el lookup en Brocoly (no es input
 // directo del usuario), pero igual lo validamos al enviar.
-export const transferSchema = z.object({
+export const transferenciaSchema = z.object({
   cuentaOrigenId: z.string().min(1, "Seleccioná una cuenta origen"),
   cbuDestino: z
     .string()
@@ -17,4 +17,4 @@ export const transferSchema = z.object({
   descripcion: z.string().trim().max(140, "Máximo 140 caracteres").optional().default(""),
 });
 
-export type TransferFormValues = z.infer<typeof transferSchema>;
+export type FormularioTransferencia = z.infer<typeof transferenciaSchema>;

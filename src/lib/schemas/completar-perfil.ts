@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-// Mismas reglas que `completeProfileSchema` en banco-backend `auth-router.js`.
-export const completeProfileSchema = z.object({
+// Mismas reglas que `completarPerfilSchema` en banco-backend `auth-router.js`.
+export const completarPerfilSchema = z.object({
   nombre: z.string().trim().min(1, "Requerido"),
   apellido: z.string().trim().min(1, "Requerido"),
   dni: z
@@ -21,4 +21,4 @@ export const completeProfileSchema = z.object({
     }, "Fecha inválida o futura"),
 });
 
-export type CompleteProfileFormValues = z.infer<typeof completeProfileSchema>;
+export type FormularioCompletarPerfil = z.infer<typeof completarPerfilSchema>;

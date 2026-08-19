@@ -10,13 +10,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { EditProfileDialog } from "./EditProfileDialog";
+import { DialogoEditarPerfil } from "./DialogoEditarPerfil";
 import type { NotificationItem } from "../hooks/useNotifications";
-import type { AuthenticatedUserProfile } from "../features/personas/types/personas.types";
+import type { PerfilUsuarioAutenticado } from "../features/personas/types/personas.types";
 
 interface HeaderProps {
   displayName?: string;
-  authProfile: AuthenticatedUserProfile | null;
+  perfilAutenticado: PerfilUsuarioAutenticado | null;
   personaId: string | null | undefined;
   notifications: NotificationItem[];
   unreadCount: number;
@@ -24,10 +24,10 @@ interface HeaderProps {
   onMarkAllAsRead: () => void;
 }
 
-function getInitials(profile: AuthenticatedUserProfile | null, fallback: string): string {
-  if (profile) {
-    const first = profile.nombre?.[0] ?? "";
-    const second = profile.apellido?.[0] ?? "";
+function getInitials(perfil: PerfilUsuarioAutenticado | null, fallback: string): string {
+  if (perfil) {
+    const first = perfil.nombre?.[0] ?? "";
+    const second = perfil.apellido?.[0] ?? "";
     const combined = (first + second).trim();
     if (combined) return combined.toUpperCase();
   }
@@ -39,7 +39,7 @@ function getInitials(profile: AuthenticatedUserProfile | null, fallback: string)
 
 export function Header({
   displayName = "Mi cuenta",
-  authProfile,
+  perfilAutenticado,
   personaId,
   notifications,
   unreadCount,
@@ -49,9 +49,9 @@ export function Header({
   const { signOut } = useClerk();
   const [editOpen, setEditOpen] = useState(false);
 
-  const initials = getInitials(authProfile, displayName);
-  const fullName = authProfile
-    ? `${authProfile.nombre ?? ""} ${authProfile.apellido ?? ""}`.trim() || displayName
+  const initials = getInitials(perfilAutenticado, displayName);
+  const fullName = perfilAutenticado
+    ? `${perfilAutenticado.nombre ?? ""} ${perfilAutenticado.apellido ?? ""}`.trim() || displayName
     : displayName;
 
   return (
@@ -122,7 +122,7 @@ export function Header({
                             </span>
                             <span className="text-sm font-medium text-emerald-300">{n.amountLabel}</span>
                           </div>
-                          <p className="text-xs text-muted-foreground truncate">{n.recipient}</p>
+                          <p className="text-xs text-muted-foreground truncate">{n.destinatario}</p>
                           <p className="text-[10px] text-muted-foreground/80">{n.date}</p>
                         </button>
                       ))}
@@ -146,8 +146,8 @@ export function Header({
                   <DropdownMenuLabel>
                     <div className="flex flex-col">
                       <span className="text-sm">{fullName}</span>
-                      {authProfile?.email && (
-                        <span className="text-xs text-muted-foreground truncate">{authProfile.email}</span>
+                      {perfilAutenticado?.email && (
+                        <span className="text-xs text-muted-foreground truncate">{perfilAutenticado.email}</span>
                       )}
                     </div>
                   </DropdownMenuLabel>
@@ -173,10 +173,10 @@ export function Header({
         </div>
       </header>
 
-      <EditProfileDialog
+      <DialogoEditarPerfil
         open={editOpen}
         onOpenChange={setEditOpen}
-        profile={authProfile}
+        perfil={perfilAutenticado}
         personaId={personaId}
       />
     </>

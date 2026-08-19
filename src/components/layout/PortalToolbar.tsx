@@ -2,14 +2,14 @@ import { Building2, RefreshCcw, ShieldCheck } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { memo } from "react";
-import type { PersonaOption } from "../../features/personas/types/personas.types";
+import type { OpcionDePersona } from "../../features/personas/types/personas.types";
 
 interface PortalToolbarProps {
   loading: boolean;
   manualPersonaId: string;
   onLoadPersona: (personaId?: string) => void;
   onManualPersonaChange: (value: string) => void;
-  personas: PersonaOption[];
+  personas: OpcionDePersona[];
   scope: "user" | "admin";
   selectedPersonaId: string;
   submitting: boolean;

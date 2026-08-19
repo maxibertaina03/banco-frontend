@@ -1,24 +1,24 @@
 import { ArrowUpRight, ArrowDownLeft, Repeat, Phone, Zap } from 'lucide-react';
 
 interface QuickActionsProps {
-  onTransfer?: () => void;
+  onTransferir?: () => void;
   onIncome?: () => void;
-  onAccounts?: () => void;
+  onCuentas?: () => void;
   onContacts?: () => void;
   onActivity?: () => void;
 }
 
 export function QuickActions({
-  onTransfer,
+  onTransferir,
   onIncome,
-  onAccounts,
+  onCuentas,
   onContacts,
   onActivity,
 }: QuickActionsProps) {
   const actions = [
-    { icon: ArrowUpRight, label: 'Transferir', color: 'from-[#A855F7] to-[#9333EA]', onClick: onTransfer },
+    { icon: ArrowUpRight, label: 'Transferir', color: 'from-[#A855F7] to-[#9333EA]', onClick: onTransferir },
     { icon: ArrowDownLeft, label: 'Recargar', color: 'from-[#9333EA] to-[#7C3AED]', onClick: onIncome },
-    { icon: Repeat, label: 'Cuentas', color: 'from-[#A855F7] to-[#7C3AED]', onClick: onAccounts },
+    { icon: Repeat, label: 'Cuentas', color: 'from-[#A855F7] to-[#7C3AED]', onClick: onCuentas },
     { icon: Phone, label: 'Contactos', color: 'from-[#9333EA] to-[#A855F7]', onClick: onContacts },
     { icon: Zap, label: 'Movimientos', color: 'from-[#7C3AED] to-[#9333EA]', onClick: onActivity },
   ];

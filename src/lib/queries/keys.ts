@@ -5,7 +5,7 @@
 
 export const queryKeys = {
   auth: {
-    profile: ["auth", "profile"] as const,
+    perfil: ["auth", "perfil"] as const,
   },
   personas: {
     all: ["personas"] as const,

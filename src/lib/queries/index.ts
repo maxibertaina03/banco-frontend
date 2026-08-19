@@ -1,5 +1,5 @@
 // Barrel export para consumir desde componentes y hooks:
-// `import { usePersonaFull, useCreateTransfer } from "../lib/queries";`
+// `import { usePersonaFull, useCrearTransferencia } from "../lib/queries";`
 
 export { queryKeys } from "./keys";
 export * from "./personas";

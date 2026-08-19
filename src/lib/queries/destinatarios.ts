@@ -1,11 +1,11 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createDestinatario, deleteDestinatario } from "../../features/destinatarios/api/destinatarios.api";
+import { crearDestinatario, eliminarDestinatario } from "../../features/destinatarios/api/destinatarios.api";
 import { queryKeys } from "./keys";
 
-// La lista de destinatarios viene dentro de `getPersonaFull` (no hay endpoint
+// La lista de destinatarios viene dentro de `obtenerPersonaCompleta` (no hay endpoint
 // dedicado), así que invalidar el perfil completo es suficiente para refrescar.
 
-export function useCreateDestinatario(personaId: string | null | undefined) {
+export function useCrearDestinatario(personaId: string | null | undefined) {
   const qc = useQueryClient();
 
   return useMutation({
@@ -14,7 +14,7 @@ export function useCreateDestinatario(personaId: string | null | undefined) {
       alias?: string | null;
       cbu_externo: string;
       banco_externo?: string | null;
-    }) => createDestinatario(payload),
+    }) => crearDestinatario(payload),
     onSuccess: () => {
       if (!personaId) return;
       qc.invalidateQueries({ queryKey: queryKeys.personas.full(personaId) });
@@ -22,11 +22,11 @@ export function useCreateDestinatario(personaId: string | null | undefined) {
   });
 }
 
-export function useDeleteDestinatario(personaId: string | null | undefined) {
+export function useEliminarDestinatario(personaId: string | null | undefined) {
   const qc = useQueryClient();
 
   return useMutation({
-    mutationFn: (destinatarioId: string) => deleteDestinatario(destinatarioId),
+    mutationFn: (destinatarioId: string) => eliminarDestinatario(destinatarioId),
     onSuccess: () => {
       if (!personaId) return;
       qc.invalidateQueries({ queryKey: queryKeys.personas.full(personaId) });

@@ -1,4 +1,4 @@
-export interface TransactionRecord {
+export interface Transaccion {
   id: string;
   tipo_transaccion_id: string;
   cuenta_origen_id?: string | null;
@@ -8,7 +8,7 @@ export interface TransactionRecord {
   cbu_origen?: string | null;
   cbu_destino?: string | null;
   canal?: "local" | "interbancaria_saliente" | "interbancaria_entrante" | null;
-  monto: string | number;
+  monto: number;
   descripcion?: string | null;
   estado: "pendiente" | "completada" | "rechazada";
   created_at: string;
@@ -21,11 +21,11 @@ export interface TipoTransaccionRecord {
   descripcion?: string | null;
 }
 
-export interface UserActivity {
+export interface ActividadDeUsuario {
   id: string;
-  type: "in" | "out" | "transfer" | "service";
+  type: "in" | "out" | "transferencia" | "service";
   title: string;
-  recipient: string;
+  destinatario: string;
   amount: string;
   date: string;
   time: string;

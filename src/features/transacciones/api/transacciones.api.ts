@@ -1,50 +1,50 @@
 import { request } from "../../../lib/api/client";
-import type { AccountRecord } from "../../cuentas/types/cuentas.types";
+import type { Cuenta } from "../../cuentas/types/cuentas.types";
 import type {
   TipoTransaccionRecord,
-  TransactionRecord,
-  UserActivity,
+  Transaccion,
+  ActividadDeUsuario,
 } from "../types/transacciones.types";
 
 export type {
   TipoTransaccionRecord,
-  TransactionRecord,
-  UserActivity,
+  Transaccion,
+  ActividadDeUsuario,
 } from "../types/transacciones.types";
 
 interface ListResponse<T> {
   data: T[];
 }
 
-export async function listTiposTransaccion() {
+export async function listarTiposDeTransaccion() {
   const response = await request<ListResponse<TipoTransaccionRecord>>("/tipos-transaccion?limit=50");
   return response.data;
 }
 
-export function getAccountTransactions(accountId: string) {
-  return request<TransactionRecord[]>(`/cuentas/${accountId}/transacciones`);
+export function obtenerTransaccionesDeCuenta(idCuenta: string) {
+  return request<Transaccion[]>(`/cuentas/${idCuenta}/transacciones`);
 }
 
-export function getPersonaTransactionsById(personaId: string) {
-  return request<TransactionRecord[]>(`/personas/${personaId}/transacciones`);
+export function obtenerTransaccionesDePersonaPorId(personaId: string) {
+  return request<Transaccion[]>(`/personas/${personaId}/transacciones`);
 }
 
-export async function getPersonaTransactions(accounts: AccountRecord[]) {
-  const transactionGroups = await Promise.all(accounts.map((account) => getAccountTransactions(account.id)));
-  const uniqueTransactions = new Map<string, TransactionRecord>();
+export async function obtenerTransaccionesDePersona(cuentas: Cuenta[]) {
+  const transactionGroups = await Promise.all(cuentas.map((cuenta) => obtenerTransaccionesDeCuenta(cuenta.id)));
+  const transaccionesUnicas = new Map<string, Transaccion>();
 
   for (const group of transactionGroups) {
-    for (const transaction of group) {
-      uniqueTransactions.set(transaction.id, transaction);
+    for (const transaccion of group) {
+      transaccionesUnicas.set(transaccion.id, transaccion);
     }
   }
 
-  return Array.from(uniqueTransactions.values()).sort(
+  return Array.from(transaccionesUnicas.values()).sort(
     (left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime()
   );
 }
 
-export function createTransfer(
+export function crearTransferencia(
   payload: {
     cbuOrigen: string;
     cbuDestino: string;
@@ -53,25 +53,25 @@ export function createTransfer(
   },
   options?: { idempotencyKey?: string }
 ) {
-  return request<TransactionRecord>("/transacciones", {
+  return request<Transaccion>("/transacciones", {
     method: "POST",
     body: JSON.stringify(payload),
     idempotencyKey: options?.idempotencyKey,
   });
 }
 
-export interface ResolvedRecipient {
+export interface DestinatarioResuelto {
   alias: string | null;
   cbu: string | null;
   titular: string | null;
   banco: string | null;
 }
 
-export function resolveRecipient(params: { alias?: string; cbu?: string }) {
+export function resolverDestinatario(params: { alias?: string; cbu?: string }) {
   const query = params.alias
     ? `alias=${encodeURIComponent(params.alias)}`
     : `cbu=${encodeURIComponent(params.cbu ?? "")}`;
-  return request<ResolvedRecipient>(`/transacciones/destinatario/resolver?${query}`);
+  return request<DestinatarioResuelto>(`/transacciones/destinatario/resolver?${query}`);
 }
 
 export interface SyncIncomingResult {
@@ -81,6 +81,6 @@ export interface SyncIncomingResult {
   errors: number;
 }
 
-export function syncIncomingTransactions() {
+export function sincronizarTransaccionesEntrantes() {
   return request<SyncIncomingResult>("/transacciones/sync-incoming", { method: "POST" });
 }

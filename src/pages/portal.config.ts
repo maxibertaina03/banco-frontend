@@ -1,8 +1,8 @@
-import type { PortalRole } from "../features/personas/types/personas.types";
+import type { RolDePortal } from "../features/personas/types/personas.types";
 
-export type Section = "dashboard" | "accounts" | "transactions" | "recipients" | "admin";
+export type Section = "dashboard" | "cuentas" | "transacciones" | "destinatarios" | "admin";
 
-export const roleLabels: Record<PortalRole, string> = {
+export const roleLabels: Record<RolDePortal, string> = {
   admin: "Admin",
   auditor: "Auditor",
   cliente: "Cliente",
@@ -13,9 +13,9 @@ export const roleLabels: Record<PortalRole, string> = {
 export function getSectionItems(scope: "user" | "admin") {
   return [
     { key: "dashboard" as const, label: "Resumen" },
-    { key: "accounts" as const, label: "Cuentas" },
-    { key: "transactions" as const, label: "Movimientos" },
-    { key: "recipients" as const, label: "Destinatarios" },
+    { key: "cuentas" as const, label: "Cuentas" },
+    { key: "transacciones" as const, label: "Movimientos" },
+    { key: "destinatarios" as const, label: "Destinatarios" },
     ...(scope === "admin" ? [{ key: "admin" as const, label: "Admin" }] : []),
   ];
 }

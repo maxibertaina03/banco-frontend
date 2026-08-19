@@ -1,46 +1,46 @@
 import { useAuth } from "@clerk/clerk-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PREFERRED_PERSONA_ID } from "../lib/constants/portal";
-import { sanitizePersonaId } from "../features/personas/api/personas.api";
-import type { PortalRole } from "../features/personas/types/personas.types";
-import type { TransactionRecord } from "../features/transacciones/types/transacciones.types";
+import { sanearIdDePersona } from "../features/personas/api/personas.api";
+import type { RolDePortal } from "../features/personas/types/personas.types";
+import type { Transaccion } from "../features/transacciones/types/transacciones.types";
 import type { Section } from "../pages/portal.config";
 import { useNotifications } from "./useNotifications";
-import { usePersonaTransactions } from "../lib/queries";
+import { useTransaccionesDePersona } from "../lib/queries";
 import { usePortalActions } from "./usePortalActions";
 import { usePortalData } from "./usePortalData";
 import { usePortalForms } from "./usePortalForms";
-import { getRoleOptions, getRoleScope } from "../features/personas/api/personas.api";
+import { obtenerOpcionesDeRol, obtenerAlcanceDeRol } from "../features/personas/api/personas.api";
 import { formatCurrency } from "../lib/utils/currency";
 
 export function usePortalPage() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
-  const initialPersonaId = sanitizePersonaId(PREFERRED_PERSONA_ID);
+  const initialPersonaId = sanearIdDePersona(PREFERRED_PERSONA_ID);
 
-  const [activeRole, setActiveRole] = useState<PortalRole>("cliente");
+  const [rolActivo, setRolActivo] = useState<RolDePortal>("cliente");
   const [section, setSection] = useState<Section>("dashboard");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   const {
-    accountTypes,
+    tiposDeCuenta,
     activities,
-    authProfile,
+    perfilAutenticado,
     banks,
-    loadPortal,
+    cargarPortal,
     loading,
     manualPersonaId,
-    needsProfileCompletion,
+    necesitaCompletarPerfil,
     personas,
-    profile,
-    refreshDestinatarios,
-    refreshPersonaData,
+    perfil,
+    refrescarDestinatarios,
+    refrescarDatosDePersona,
     roles,
     selectedPersonaId,
     setManualPersonaId,
     setSelectedPersonaId,
-    transactionTypes,
+    tiposDeTransaccion,
     warning,
   } = usePortalData({
     getToken,
@@ -54,53 +54,53 @@ export function usePortalPage() {
 
   const {
     createClientForm,
-    selectedAccountForAlias,
+    cuentaSeleccionadaParaAlias,
     setCreateClientForm,
-    setSelectedAccountForAlias,
+    setCuentaSeleccionadaParaAlias,
   } = usePortalForms();
 
-  const roleOptions = useMemo<PortalRole[]>(() => (profile ? getRoleOptions(profile) : ["cliente"]), [profile]);
-  const scope = getRoleScope(activeRole);
+  const roleOptions = useMemo<RolDePortal[]>(() => (perfil ? obtenerOpcionesDeRol(perfil) : ["cliente"]), [perfil]);
+  const scope = obtenerAlcanceDeRol(rolActivo);
   const totalBalance = useMemo(
-    () => profile?.cuentas.reduce((sum, account) => sum + Number(account.saldo || 0), 0) || 0,
-    [profile]
+    () => perfil?.cuentas.reduce((sum, cuenta) => sum + Number(cuenta.saldo || 0), 0) || 0,
+    [perfil]
   );
 
-  const personaTransactionsQuery = usePersonaTransactions(profile?.persona.id);
+  const queryTransaccionesDePersona = useTransaccionesDePersona(perfil?.persona.id);
   const {
     notifications,
     unreadCount,
     markAsRead,
     markAllAsRead,
   } = useNotifications({
-    personaId: profile?.persona.id,
-    transactions: personaTransactionsQuery.data ?? [],
-    accounts: profile?.cuentas ?? [],
+    personaId: perfil?.persona.id,
+    transacciones: queryTransaccionesDePersona.data ?? [],
+    cuentas: perfil?.cuentas ?? [],
   });
 
   const {
     bulkSyncing,
     handleBulkSync,
-    handleCompleteProfile,
+    manejarCompletarPerfil,
     handleCreateClient,
-    handleRecipientCreate,
-    handleRecipientDelete,
-    handleSyncAccount,
+    manejarCrearDestinatario,
+    manejarEliminarDestinatario,
+    manejarSincronizarCuenta,
     handleSyncIncoming,
-    handleTransfer,
+    manejarTransferir,
     lastSyncResult,
-    recipientResetSignal,
-    syncingAccountId,
+    contadorResetDestinatario,
+    idCuentaSincronizando,
     syncingIncoming,
-    transferResetSignal,
-    transferReceipt,
-    setTransferReceipt,
+    contadorResetTransferencia,
+    comprobanteTransferencia,
+    setComprobanteTransferencia,
   } = usePortalActions({
     createClientForm,
-    loadPortal,
-    profile,
-    refreshDestinatarios,
-    refreshPersonaData,
+    cargarPortal,
+    perfil,
+    refrescarDestinatarios,
+    refrescarDatosDePersona,
     setCreateClientForm,
     setError,
     setSubmitting,
@@ -109,13 +109,13 @@ export function usePortalPage() {
 
   // Detalle de un movimiento: al tocar uno en la lista, lo buscamos en las
   // transacciones que ya tenemos cargadas (mismas que alimentan notificaciones).
-  const [selectedTransaction, setSelectedTransaction] = useState<TransactionRecord | null>(null);
-  const openTransactionDetail = useCallback(
-    (transactionId: string) => {
-      const found = (personaTransactionsQuery.data ?? []).find((tx) => tx.id === transactionId);
-      if (found) setSelectedTransaction(found);
+  const [transaccionSeleccionada, setTransaccionSeleccionada] = useState<Transaccion | null>(null);
+  const abrirDetalleDeTransaccion = useCallback(
+    (idTransaccion: string) => {
+      const found = (queryTransaccionesDePersona.data ?? []).find((tx) => tx.id === idTransaccion);
+      if (found) setTransaccionSeleccionada(found);
     },
-    [personaTransactionsQuery.data],
+    [queryTransaccionesDePersona.data],
   );
 
   useEffect(() => {
@@ -124,47 +124,47 @@ export function usePortalPage() {
     }
   }, [scope, section]);
 
-  const handleGoToAccounts = useCallback(() => setSection("accounts"), []);
-  const handleGoToActivity = useCallback(() => setSection("transactions"), []);
-  const handleGoToContacts = useCallback(() => setSection("recipients"), []);
-  const handleGoToTransactions = useCallback(() => setSection("transactions"), []);
-  const handleLoadPersona = useCallback((personaId?: string) => void loadPortal(personaId), [loadPortal]);
+  const manejarIrACuentas = useCallback(() => setSection("cuentas"), []);
+  const handleGoToActivity = useCallback(() => setSection("transacciones"), []);
+  const handleGoToContacts = useCallback(() => setSection("destinatarios"), []);
+  const manejarIrATransacciones = useCallback(() => setSection("transacciones"), []);
+  const handleLoadPersona = useCallback((personaId?: string) => void cargarPortal(personaId), [cargarPortal]);
   const handleCopyCbu = useCallback(() => {
-    const cbu = profile?.cuentas[0]?.cbu;
+    const cbu = perfil?.cuentas[0]?.cbu;
     if (cbu) {
       void navigator.clipboard.writeText(cbu);
       setSuccess("CBU copiado al portapapeles.");
     }
-  }, [profile?.cuentas]);
+  }, [perfil?.cuentas]);
   const handleCopyAlias = useCallback(() => {
-    const alias = profile?.cuentas[0]?.alias;
+    const alias = perfil?.cuentas[0]?.alias;
     if (alias) {
       void navigator.clipboard.writeText(alias);
       setSuccess("Alias copiado al portapapeles.");
     }
-  }, [profile?.cuentas]);
-  const handleIncome = useCallback(() => void loadPortal(profile?.persona.id), [loadPortal, profile?.persona.id]);
+  }, [perfil?.cuentas]);
+  const handleIncome = useCallback(() => void cargarPortal(perfil?.persona.id), [cargarPortal, perfil?.persona.id]);
   const handleAliasUpdated = useCallback(() => {
     setSuccess("Alias actualizado correctamente.");
-    setSelectedAccountForAlias(null);
-    void loadPortal(profile?.persona.id);
-  }, [loadPortal, profile?.persona.id, setSelectedAccountForAlias]);
-  const handleSyncAccountCb = useCallback((accountId: string) => void handleSyncAccount(accountId), [handleSyncAccount]);
+    setCuentaSeleccionadaParaAlias(null);
+    void cargarPortal(perfil?.persona.id);
+  }, [cargarPortal, perfil?.persona.id, setCuentaSeleccionadaParaAlias]);
+  const manejarSincronizarCuentaCb = useCallback((idCuenta: string) => void manejarSincronizarCuenta(idCuenta), [manejarSincronizarCuenta]);
   const handleBulkSyncCb = useCallback(() => void handleBulkSync(), [handleBulkSync]);
   const handleSyncIncomingCb = useCallback(() => void handleSyncIncoming(), [handleSyncIncoming]);
-  const handleRecipientDeleteCb = useCallback(
-    (recipient: { id: string }) => void handleRecipientDelete(recipient.id),
-    [handleRecipientDelete],
+  const manejarEliminarDestinatarioCb = useCallback(
+    (destinatario: { id: string }) => void manejarEliminarDestinatario(destinatario.id),
+    [manejarEliminarDestinatario],
   );
-  const handleAccountSynced = useCallback(
-    async () => { await loadPortal(profile?.persona.id, { skipCatalogReload: true }); },
-    [loadPortal, profile?.persona.id],
+  const manejarCuentaSincronizada = useCallback(
+    async () => { await cargarPortal(perfil?.persona.id, { skipCatalogReload: true }); },
+    [cargarPortal, perfil?.persona.id],
   );
 
   return {
     // State
-    activeRole,
-    setActiveRole,
+    rolActivo,
+    setRolActivo,
     section,
     setSection,
     submitting,
@@ -174,18 +174,18 @@ export function usePortalPage() {
     setSuccess,
 
     // Portal data
-    accountTypes,
+    tiposDeCuenta,
     activities,
-    authProfile,
+    perfilAutenticado,
     banks,
     loading,
     manualPersonaId,
-    needsProfileCompletion,
+    necesitaCompletarPerfil,
     personas,
-    profile,
+    perfil,
     roles,
     selectedPersonaId,
-    transactionTypes,
+    tiposDeTransaccion,
     warning,
 
     // Computed
@@ -202,50 +202,50 @@ export function usePortalPage() {
     // Forms
     createClientForm,
     setCreateClientForm,
-    selectedAccountForAlias,
-    setSelectedAccountForAlias,
+    cuentaSeleccionadaParaAlias,
+    setCuentaSeleccionadaParaAlias,
 
     // Actions
     bulkSyncing,
     lastSyncResult,
-    recipientResetSignal,
-    syncingAccountId,
+    contadorResetDestinatario,
+    idCuentaSincronizando,
     syncingIncoming,
-    transferResetSignal,
+    contadorResetTransferencia,
 
     // Comprobante de transferencia + detalle de movimiento
-    transferReceipt,
-    setTransferReceipt,
-    selectedTransaction,
-    setSelectedTransaction,
-    openTransactionDetail,
+    comprobanteTransferencia,
+    setComprobanteTransferencia,
+    transaccionSeleccionada,
+    setTransaccionSeleccionada,
+    abrirDetalleDeTransaccion,
 
     // Handlers
-    handleGoToAccounts,
+    manejarIrACuentas,
     handleGoToActivity,
     handleGoToContacts,
-    handleGoToTransactions,
+    manejarIrATransacciones,
     handleLoadPersona,
     handleCopyCbu,
     handleCopyAlias,
     handleIncome,
     handleAliasUpdated,
-    handleSyncAccountCb,
+    manejarSincronizarCuentaCb,
     handleBulkSyncCb,
     handleSyncIncomingCb,
-    handleRecipientDeleteCb,
-    handleAccountSynced,
-    handleCompleteProfile,
+    manejarEliminarDestinatarioCb,
+    manejarCuentaSincronizada,
+    manejarCompletarPerfil,
     handleCreateClient,
-    handleRecipientCreate,
-    handleRecipientDelete,
-    handleTransfer,
+    manejarCrearDestinatario,
+    manejarEliminarDestinatario,
+    manejarTransferir,
 
     // Utilities
     setManualPersonaId,
     setSelectedPersonaId,
-    refreshDestinatarios,
-    refreshPersonaData,
-    loadPortal,
+    refrescarDestinatarios,
+    refrescarDatosDePersona,
+    cargarPortal,
   };
 }

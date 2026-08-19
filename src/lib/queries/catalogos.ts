@@ -1,25 +1,25 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { listTiposCuenta } from "../../features/cuentas/api/cuentas.api";
-import { listCentralBanks, listRoles } from "../../features/personas/api/personas.api";
-import { listTiposTransaccion } from "../../features/transacciones/api/transacciones.api";
+import { listarTiposDeCuenta } from "../../features/cuentas/api/cuentas.api";
+import { listCentralBanks, listarRoles } from "../../features/personas/api/personas.api";
+import { listarTiposDeTransaccion } from "../../features/transacciones/api/transacciones.api";
 import { queryKeys } from "./keys";
 
 // Catálogos: datos que cambian muy raramente. Stale time alto.
 const CATALOG_STALE_TIME = 15 * 60_000; // 15 min
 
-export function useTiposCuenta(options: { enabled?: boolean } = {}) {
+export function useTiposDeCuenta(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: queryKeys.catalogos.tiposCuenta(),
-    queryFn: () => listTiposCuenta(),
+    queryFn: () => listarTiposDeCuenta(),
     enabled: options.enabled ?? true,
     staleTime: CATALOG_STALE_TIME,
   });
 }
 
-export function useTiposTransaccion(options: { enabled?: boolean } = {}) {
+export function useTiposDeTransaccion(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: queryKeys.catalogos.tiposTransaccion(),
-    queryFn: () => listTiposTransaccion(),
+    queryFn: () => listarTiposDeTransaccion(),
     enabled: options.enabled ?? true,
     staleTime: CATALOG_STALE_TIME,
   });
@@ -28,7 +28,7 @@ export function useTiposTransaccion(options: { enabled?: boolean } = {}) {
 export function useRoles(options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: queryKeys.catalogos.roles(),
-    queryFn: () => listRoles(),
+    queryFn: () => listarRoles(),
     enabled: options.enabled ?? true,
     staleTime: CATALOG_STALE_TIME,
   });
@@ -45,7 +45,7 @@ export function useCentralBanks(environment: string, options: { enabled?: boolea
 
 // Composición: trae los 4 catálogos en paralelo. Útil para el panel admin
 // donde se necesitan todos juntos.
-export function useInternalCatalogs(options: { enabled?: boolean; bankEnvironment?: string } = {}) {
+export function useCatalogosInternos(options: { enabled?: boolean; bankEnvironment?: string } = {}) {
   const enabled = options.enabled ?? true;
   const env = options.bankEnvironment ?? "test";
 
@@ -53,19 +53,19 @@ export function useInternalCatalogs(options: { enabled?: boolean; bankEnvironmen
     queries: [
       {
         queryKey: queryKeys.catalogos.roles(),
-        queryFn: () => listRoles(),
+        queryFn: () => listarRoles(),
         enabled,
         staleTime: CATALOG_STALE_TIME,
       },
       {
         queryKey: queryKeys.catalogos.tiposCuenta(),
-        queryFn: () => listTiposCuenta(),
+        queryFn: () => listarTiposDeCuenta(),
         enabled,
         staleTime: CATALOG_STALE_TIME,
       },
       {
         queryKey: queryKeys.catalogos.tiposTransaccion(),
-        queryFn: () => listTiposTransaccion(),
+        queryFn: () => listarTiposDeTransaccion(),
         enabled,
         staleTime: CATALOG_STALE_TIME,
       },

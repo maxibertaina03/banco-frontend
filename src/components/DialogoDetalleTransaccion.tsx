@@ -2,15 +2,15 @@ import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
 import { formatCurrency } from "../lib/utils/currency";
-import type { TransactionRecord } from "../features/transacciones/types/transacciones.types";
-import type { PersonaFullResponse } from "../features/personas/types/personas.types";
+import type { Transaccion } from "../features/transacciones/types/transacciones.types";
+import type { PersonaCompleta } from "../features/personas/types/personas.types";
 
-interface TransactionDetailDialogProps {
+interface DialogoDetalleTransaccionProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  transaction: TransactionRecord | null;
+  transaccion: Transaccion | null;
   /** Perfil del usuario logueado (para resolver nombres de origen/destino). */
-  profile: PersonaFullResponse | null;
+  perfil: PersonaCompleta | null;
 }
 
 const ESTADO_STYLE: Record<string, string> = {
@@ -66,37 +66,37 @@ function Row({
 }
 
 /** Detalle completo de un movimiento, al tocar sobre él en la lista. */
-export function TransactionDetailDialog({
+export function DialogoDetalleTransaccion({
   open,
   onOpenChange,
-  transaction,
-  profile,
-}: TransactionDetailDialogProps) {
-  if (!transaction) return null;
+  transaccion,
+  perfil,
+}: DialogoDetalleTransaccionProps) {
+  if (!transaccion) return null;
 
-  const accounts = profile?.cuentas ?? [];
-  const accountIds = new Set(accounts.map((a) => a.id));
+  const cuentas = perfil?.cuentas ?? [];
+  const idsCuenta = new Set(cuentas.map((a) => a.id));
   const userName =
-    `${profile?.persona.nombre ?? ""} ${profile?.persona.apellido ?? ""}`.trim() || null;
+    `${perfil?.persona.nombre ?? ""} ${perfil?.persona.apellido ?? ""}`.trim() || null;
 
   const incoming =
-    transaction.canal === "interbancaria_entrante" ||
-    (Boolean(transaction.cuenta_destino_id) &&
-      accountIds.has(transaction.cuenta_destino_id as string) &&
-      !accountIds.has(transaction.cuenta_origen_id as string));
+    transaccion.canal === "interbancaria_entrante" ||
+    (Boolean(transaccion.cuenta_destino_id) &&
+      idsCuenta.has(transaccion.cuenta_destino_id as string) &&
+      !idsCuenta.has(transaccion.cuenta_origen_id as string));
 
-  const amount = Number(transaction.monto || 0);
-  const estado = transaction.estado || "completada";
+  const amount = Number(transaccion.monto || 0);
+  const estado = transaccion.estado || "completada";
 
   // Referencia técnica (número de cuenta / CBU) de cada lado.
-  const origenRef = transaction.cuenta_origen_numero || transaction.cbu_origen || null;
-  const destinoRef = transaction.cuenta_destino_numero || transaction.cbu_destino || null;
+  const origenRef = transaccion.cuenta_origen_numero || transaccion.cbu_origen || null;
+  const destinoRef = transaccion.cuenta_destino_numero || transaccion.cbu_destino || null;
 
   // Nombre de cada lado: si la cuenta es del usuario logueado → su nombre;
   // si el destino coincide con un destinatario guardado → su alias; si no, null.
-  const originIsUser = Boolean(transaction.cuenta_origen_id && accountIds.has(transaction.cuenta_origen_id));
-  const destIsUser = Boolean(transaction.cuenta_destino_id && accountIds.has(transaction.cuenta_destino_id));
-  const savedDest = profile?.destinatarios?.find((d) => d.cbu_externo === transaction.cbu_destino);
+  const originIsUser = Boolean(transaccion.cuenta_origen_id && idsCuenta.has(transaccion.cuenta_origen_id));
+  const destIsUser = Boolean(transaccion.cuenta_destino_id && idsCuenta.has(transaccion.cuenta_destino_id));
+  const savedDest = perfil?.destinatarios?.find((d) => d.cbu_externo === transaccion.cbu_destino);
 
   const origenName = originIsUser ? userName : null;
   const destinoName = destIsUser ? userName : savedDest?.alias ?? null;
@@ -127,9 +127,9 @@ export function TransactionDetailDialog({
         </div>
 
         <div className="divide-y divide-primary/10 rounded-2xl border border-primary/15 bg-[#2D1548]/40 px-4">
-          <Row label="Tipo" value={transaction.tipo_transaccion_nombre || "Movimiento"} />
-          {transaction.canal && (
-            <Row label="Canal" value={CANAL_LABEL[transaction.canal] || transaction.canal} />
+          <Row label="Tipo" value={transaccion.tipo_transaccion_nombre || "Movimiento"} />
+          {transaccion.canal && (
+            <Row label="Canal" value={CANAL_LABEL[transaccion.canal] || transaccion.canal} />
           )}
           <Row
             label="Origen"
@@ -143,9 +143,9 @@ export function TransactionDetailDialog({
             sub={destinoName ? destinoRef : null}
             mono={!destinoName && Boolean(destinoRef)}
           />
-          {transaction.descripcion && <Row label="Descripción" value={transaction.descripcion} />}
-          <Row label="Fecha y hora" value={formatDateTime(transaction.created_at)} />
-          <Row label="N° de operación" value={transaction.id} mono />
+          {transaccion.descripcion && <Row label="Descripción" value={transaccion.descripcion} />}
+          <Row label="Fecha y hora" value={formatDateTime(transaccion.created_at)} />
+          <Row label="N° de operación" value={transaccion.id} mono />
         </div>
 
         <DialogFooter className="mt-2">

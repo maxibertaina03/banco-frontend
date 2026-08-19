@@ -1,33 +1,33 @@
 import { useState, type FormEvent } from "react";
 import {
-  bulkSyncAccounts,
-  completeAuthenticatedUserProfile,
-  registerPersonFromAdmin,
-  syncCentralBankAccount,
+  sincronizarCuentasEnLote,
+  completarPerfilDeUsuarioAutenticado,
+  registrarPersonaDesdeAdmin,
+  sincronizarCuentaConCentral,
 } from "../features/personas/api/personas.api";
-import type { PersonaFullResponse } from "../features/personas/types/personas.types";
+import type { PersonaCompleta } from "../features/personas/types/personas.types";
 import type { SyncIncomingResult } from "../features/transacciones/api/transacciones.api";
-import type { TransactionRecord } from "../features/transacciones/types/transacciones.types";
+import type { Transaccion } from "../features/transacciones/types/transacciones.types";
 import { ApiError } from "../lib/api/client";
 import {
-  useCreateDestinatario,
-  useCreateTransfer,
-  useDeleteDestinatario,
+  useCrearDestinatario,
+  useCrearTransferencia,
+  useEliminarDestinatario,
   useSyncIncoming,
 } from "../lib/queries";
 import type {
-  CompleteProfileFormValues,
-  RecipientFormValues,
-  TransferFormValues,
+  FormularioCompletarPerfil,
+  FormularioDestinatario,
+  FormularioTransferencia,
 } from "../lib/schemas";
 import type { CreateClientFormState } from "../features/admin/sections/AdminSection";
 
 interface UsePortalActionsParams {
   createClientForm: CreateClientFormState;
-  loadPortal: (personaIdOverride?: string) => Promise<void>;
-  profile: PersonaFullResponse | null;
-  refreshDestinatarios: (personaId: string) => Promise<void>;
-  refreshPersonaData: (personaId: string) => Promise<void>;
+  cargarPortal: (personaIdOverride?: string) => Promise<void>;
+  perfil: PersonaCompleta | null;
+  refrescarDestinatarios: (personaId: string) => Promise<void>;
+  refrescarDatosDePersona: (personaId: string) => Promise<void>;
   setCreateClientForm: React.Dispatch<React.SetStateAction<CreateClientFormState>>;
   setError: (value: string | null) => void;
   setSubmitting: (value: boolean) => void;
@@ -35,49 +35,49 @@ interface UsePortalActionsParams {
 }
 
 export interface SyncState {
-  syncingAccountId: string | null;
+  idCuentaSincronizando: string | null;
   bulkSyncing: boolean;
 }
 
 export function usePortalActions({
   createClientForm,
-  loadPortal,
-  profile,
-  refreshPersonaData,
+  cargarPortal,
+  perfil,
+  refrescarDatosDePersona,
   setCreateClientForm,
   setError,
   setSubmitting,
   setSuccess,
 }: UsePortalActionsParams) {
-  const [syncingAccountId, setSyncingAccountId] = useState<string | null>(null);
+  const [idCuentaSincronizando, setIdCuentaSincronizando] = useState<string | null>(null);
   const [bulkSyncing, setBulkSyncing] = useState(false);
   const [lastSyncResult, setLastSyncResult] = useState<SyncIncomingResult | null>(null);
   // Comprobante de la última transferencia exitosa (alimenta el modal estilo banco).
-  const [transferReceipt, setTransferReceipt] = useState<TransactionRecord | null>(null);
+  const [comprobanteTransferencia, setComprobanteTransferencia] = useState<Transaccion | null>(null);
 
   // Counter que se incrementa después de cada submit exitoso. Las sections lo
   // observan vía prop `resetSignal` para limpiar el form RHF interno. Tener
   // un signal único por section asegura que un submit a "destinatario" no
   // resetea el form de "transferir".
-  const [recipientResetSignal, setRecipientResetSignal] = useState(0);
-  const [transferResetSignal, setTransferResetSignal] = useState(0);
+  const [contadorResetDestinatario, setContadorResetDestinatario] = useState(0);
+  const [contadorResetTransferencia, setContadorResetTransferencia] = useState(0);
 
   // Mutations: encapsulan loading, error, invalidación automática de queries.
-  const personaId = profile?.persona.id ?? null;
-  const createTransferMutation = useCreateTransfer(personaId);
-  const createDestinatarioMutation = useCreateDestinatario(personaId);
-  const deleteDestinatarioMutation = useDeleteDestinatario(personaId);
+  const personaId = perfil?.persona.id ?? null;
+  const mutationCrearTransferencia = useCrearTransferencia(personaId);
+  const createDestinatarioMutation = useCrearDestinatario(personaId);
+  const deleteDestinatarioMutation = useEliminarDestinatario(personaId);
   const syncIncomingMutation = useSyncIncoming(personaId);
 
   const syncingIncoming = syncIncomingMutation.isPending;
 
-  async function handleCompleteProfile(values: CompleteProfileFormValues) {
+  async function manejarCompletarPerfil(values: FormularioCompletarPerfil) {
     setSubmitting(true);
     setError(null);
     setSuccess(null);
 
     try {
-      const result = await completeAuthenticatedUserProfile({
+      const result = await completarPerfilDeUsuarioAutenticado({
         nombre: values.nombre,
         apellido: values.apellido,
         dni: values.dni,
@@ -90,7 +90,7 @@ export function usePortalActions({
         ? ` Te asignamos el CBU ${result.centralBank.cbu}${result.centralBank.alias ? ` (alias: ${result.centralBank.alias})` : ""}.`
         : "";
       setSuccess(`Perfil completado correctamente.${cbuMsg}`);
-      await loadPortal();
+      await cargarPortal();
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "No se pudo completar el perfil.");
     } finally {
@@ -98,8 +98,8 @@ export function usePortalActions({
     }
   }
 
-  async function handleRecipientCreate(values: RecipientFormValues) {
-    if (!profile) return;
+  async function manejarCrearDestinatario(values: FormularioDestinatario) {
+    if (!perfil) return;
 
     setSubmitting(true);
     setError(null);
@@ -107,12 +107,12 @@ export function usePortalActions({
 
     try {
       await createDestinatarioMutation.mutateAsync({
-        persona_id: profile.persona.id,
+        persona_id: perfil.persona.id,
         alias: values.alias?.trim() ? values.alias.trim() : null,
         cbu_externo: values.cbu,
         banco_externo: values.banco?.trim() ? values.banco.trim() : null,
       });
-      setRecipientResetSignal((n) => n + 1);
+      setContadorResetDestinatario((n) => n + 1);
       setSuccess("Destinatario agregado.");
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "No se pudo crear el destinatario.");
@@ -121,20 +121,20 @@ export function usePortalActions({
     }
   }
 
-  async function handleTransfer(values: TransferFormValues) {
-    if (!profile) {
+  async function manejarTransferir(values: FormularioTransferencia) {
+    if (!perfil) {
       setError("No pude resolver el perfil actual para transferir.");
       return;
     }
 
-    const originAccount = profile.cuentas.find((account) => account.id === values.cuentaOrigenId);
+    const cuentaOrigen = perfil.cuentas.find((cuenta) => cuenta.id === values.cuentaOrigenId);
 
-    if (!originAccount?.cbu) {
+    if (!cuentaOrigen?.cbu) {
       setError("No pude resolver el CBU de la cuenta origen.");
       return;
     }
 
-    if (originAccount.banco_central_registrada === false) {
+    if (cuentaOrigen.banco_central_registrada === false) {
       setError(
         "La cuenta origen todavía no está habilitada para transferencias a otros bancos. Comunicate con el banco para activarla."
       );
@@ -153,17 +153,17 @@ export function usePortalActions({
     const idempotencyKey = crypto.randomUUID();
 
     try {
-      const created = await createTransferMutation.mutateAsync({
-        cbuOrigen: originAccount.cbu,
+      const created = await mutationCrearTransferencia.mutateAsync({
+        cbuOrigen: cuentaOrigen.cbu,
         cbuDestino: values.cbuDestino,
         importe,
-        saldoOrigen: Number(originAccount.saldo || 0),
+        saldoOrigen: Number(cuentaOrigen.saldo || 0),
         idempotencyKey,
       });
 
-      setTransferResetSignal((n) => n + 1);
+      setContadorResetTransferencia((n) => n + 1);
       // En vez del banner verde, mostramos un comprobante estilo banco.
-      setTransferReceipt(created);
+      setComprobanteTransferencia(created);
     } catch (nextError) {
       // No reseteamos el form completo: el usuario probablemente quiera ajustar el monto.
       if (nextError instanceof ApiError) {
@@ -186,14 +186,14 @@ export function usePortalActions({
     }
   }
 
-  async function handleRecipientDelete(recipientId: string) {
-    if (!profile) return;
+  async function manejarEliminarDestinatario(destinatarioId: string) {
+    if (!perfil) return;
 
     setSubmitting(true);
     setError(null);
 
     try {
-      await deleteDestinatarioMutation.mutateAsync(recipientId);
+      await deleteDestinatarioMutation.mutateAsync(destinatarioId);
       setSuccess("Destinatario eliminado.");
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "No se pudo eliminar.");
@@ -210,7 +210,7 @@ export function usePortalActions({
     setSuccess(null);
 
     try {
-      const result = await registerPersonFromAdmin({
+      const result = await registrarPersonaDesdeAdmin({
         nombre: createClientForm.nombre,
         apellido: createClientForm.apellido,
         dni: createClientForm.dni,
@@ -231,7 +231,7 @@ export function usePortalActions({
       setSuccess(
         `${result.message} CBU: ${cbuAsignado}${result.cuenta.alias ? ` · Alias: ${result.cuenta.alias}` : ""}`
       );
-      await loadPortal(result.persona.id);
+      await cargarPortal(result.persona.id);
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "No se pudo crear el cliente.");
     } finally {
@@ -240,7 +240,7 @@ export function usePortalActions({
   }
 
   async function handleSyncIncoming() {
-    if (!profile || syncingIncoming) return;
+    if (!perfil || syncingIncoming) return;
 
     setLastSyncResult(null);
 
@@ -255,38 +255,38 @@ export function usePortalActions({
     }
   }
 
-  async function handleSyncAccount(accountId: string) {
-    if (!profile || syncingAccountId) return;
+  async function manejarSincronizarCuenta(idCuenta: string) {
+    if (!perfil || idCuentaSincronizando) return;
 
-    setSyncingAccountId(accountId);
+    setIdCuentaSincronizando(idCuenta);
     setError(null);
     setSuccess(null);
 
     try {
-      const result = await syncCentralBankAccount(accountId, "test");
+      const result = await sincronizarCuentaConCentral(idCuenta, "test");
       const warnings = result.warnings?.join(" ") || "";
-      setSuccess(`Cuenta habilitada para transferencias interbancarias. CBU: ${result.account.cbu}${warnings ? ` — ${warnings}` : ""}`);
-      await refreshPersonaData(profile.persona.id);
+      setSuccess(`Cuenta habilitada para transferencias interbancarias. CBU: ${result.cuenta.cbu}${warnings ? ` — ${warnings}` : ""}`);
+      await refrescarDatosDePersona(perfil.persona.id);
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "No se pudo sincronizar la cuenta.");
     } finally {
-      setSyncingAccountId(null);
+      setIdCuentaSincronizando(null);
     }
   }
 
   async function handleBulkSync() {
-    if (!profile || bulkSyncing) return;
+    if (!perfil || bulkSyncing) return;
 
     setBulkSyncing(true);
     setError(null);
     setSuccess(null);
 
     try {
-      const result = await bulkSyncAccounts({ environment: "test" });
+      const result = await sincronizarCuentasEnLote({ environment: "test" });
       setSuccess(
         `Sincronización completada: ${result.successCount} exitosas, ${result.errorCount} con error.`
       );
-      await refreshPersonaData(profile.persona.id);
+      await refrescarDatosDePersona(perfil.persona.id);
     } catch (nextError) {
       setError(nextError instanceof Error ? nextError.message : "No se pudo ejecutar la sincronización masiva.");
     } finally {
@@ -296,20 +296,20 @@ export function usePortalActions({
 
   return {
     bulkSyncing,
-    handleCompleteProfile,
+    manejarCompletarPerfil,
     handleCreateClient,
-    handleRecipientCreate,
-    handleRecipientDelete,
-    handleSyncAccount,
+    manejarCrearDestinatario,
+    manejarEliminarDestinatario,
+    manejarSincronizarCuenta,
     handleBulkSync,
     handleSyncIncoming,
-    handleTransfer,
+    manejarTransferir,
     lastSyncResult,
-    recipientResetSignal,
-    syncingAccountId,
+    contadorResetDestinatario,
+    idCuentaSincronizando,
     syncingIncoming,
-    transferResetSignal,
-    transferReceipt,
-    setTransferReceipt,
+    contadorResetTransferencia,
+    comprobanteTransferencia,
+    setComprobanteTransferencia,
   };
 }

@@ -1,7 +1,7 @@
 import { CheckCircle, Eye, EyeOff, RefreshCw, TrendingUp, XCircle } from 'lucide-react';
 import { memo, useState } from 'react';
 
-interface AccountCardProps {
+interface TarjetaCuentaProps {
   tipo: string;
   saldo: string;
   cbu?: string;
@@ -13,7 +13,7 @@ interface AccountCardProps {
   onSync?: () => void;
 }
 
-export const AccountCard = memo(function AccountCard({
+export const TarjetaCuenta = memo(function TarjetaCuenta({
   tipo,
   saldo,
   cbu,
@@ -23,7 +23,7 @@ export const AccountCard = memo(function AccountCard({
   bancoCentralRegistrada,
   syncing = false,
   onSync,
-}: AccountCardProps) {
+}: TarjetaCuentaProps) {
   const [showBalance, setShowBalance] = useState(true);
 
   const formatSaldo = (amount: string) => {

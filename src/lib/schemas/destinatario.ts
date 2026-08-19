@@ -4,7 +4,7 @@ import { z } from "zod";
 // backend (banco-backend `central-bank-router.js`).
 const aliasRegex = /^[A-Za-z0-9.\-]+$/;
 
-export const recipientSchema = z.object({
+export const destinatarioSchema = z.object({
   alias: z
     .string()
     .trim()
@@ -21,4 +21,4 @@ export const recipientSchema = z.object({
   banco: z.string().trim().max(100, "Máximo 100 caracteres").optional().default(""),
 });
 
-export type RecipientFormValues = z.infer<typeof recipientSchema>;
+export type FormularioDestinatario = z.infer<typeof destinatarioSchema>;

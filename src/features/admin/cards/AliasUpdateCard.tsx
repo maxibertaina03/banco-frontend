@@ -3,7 +3,7 @@ import { PencilLine } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
-import { updateAlias } from "../../cuentas/api/cuentas.api";
+import { actualizarAlias } from "../../cuentas/api/cuentas.api";
 
 interface AliasUpdateCardProps {
   environment: "test" | "prod";
@@ -20,7 +20,7 @@ export const AliasUpdateCard = memo(function AliasUpdateCard(_: AliasUpdateCardP
     if (!cbu.trim()) { setError("Ingresa un CBU."); setSuccess(null); return; }
     if (!alias.trim()) { setError("Ingresa un alias."); setSuccess(null); return; }
     setLoading(true); setError(null); setSuccess(null);
-    try { await updateAlias(cbu.trim(), alias.trim()); setSuccess(`Alias actualizado para ${cbu.trim()}: ${alias.trim()}`); setAlias(""); }
+    try { await actualizarAlias(cbu.trim(), alias.trim()); setSuccess(`Alias actualizado para ${cbu.trim()}: ${alias.trim()}`); setAlias(""); }
     catch (err) { setError(err instanceof Error ? err.message : "No se pudo actualizar el alias."); }
     finally { setLoading(false); }
   }

@@ -13,40 +13,40 @@ import {
   TableHeader,
   TableRow,
 } from "../../../components/ui/table";
-import type { PersonaFullResponse, RecipientRecord } from "../../../lib/api";
-import { recipientSchema, type RecipientFormValues } from "../../../lib/schemas";
+import type { PersonaCompleta, Destinatario } from "../../../lib/api";
+import { destinatarioSchema, type FormularioDestinatario } from "../../../lib/schemas";
 
 // Mantenido para retrocompatibilidad con consumidores que aún lo importan
 // (usePortalForms.ts antes lo usaba). Se quitará al final de la migración.
-export interface RecipientFormState {
+export interface EstadoFormularioDestinatario {
   alias: string;
   cbu: string;
   banco: string;
 }
 
-interface RecipientsSectionProps {
-  onDelete: (recipient: RecipientRecord) => void;
-  onSubmit: (values: RecipientFormValues) => Promise<void> | void;
-  profile: PersonaFullResponse;
+interface SeccionDestinatariosProps {
+  onDelete: (destinatario: Destinatario) => void;
+  onSubmit: (values: FormularioDestinatario) => Promise<void> | void;
+  perfil: PersonaCompleta;
   submitting: boolean;
   // Permite que el padre indique "el último submit fue exitoso" para resetear el form.
   resetSignal?: number;
 }
 
-export const RecipientsSection = memo(function RecipientsSection({
+export const SeccionDestinatarios = memo(function SeccionDestinatarios({
   onDelete,
   onSubmit,
-  profile,
+  perfil,
   submitting,
   resetSignal,
-}: RecipientsSectionProps) {
+}: SeccionDestinatariosProps) {
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isValid },
-  } = useForm<RecipientFormValues>({
-    resolver: zodResolver(recipientSchema),
+  } = useForm<FormularioDestinatario>({
+    resolver: zodResolver(destinatarioSchema),
     mode: "onTouched",
     defaultValues: { alias: "", cbu: "", banco: "" },
   });
@@ -130,17 +130,17 @@ export const RecipientsSection = memo(function RecipientsSection({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {profile.destinatarios.map((recipient) => (
-                <TableRow key={recipient.id}>
-                  <TableCell>{recipient.alias || "Sin alias"}</TableCell>
-                  <TableCell>{recipient.cbu_externo}</TableCell>
-                  <TableCell>{recipient.banco_externo || "No informado"}</TableCell>
+              {perfil.destinatarios.map((destinatario) => (
+                <TableRow key={destinatario.id}>
+                  <TableCell>{destinatario.alias || "Sin alias"}</TableCell>
+                  <TableCell>{destinatario.cbu_externo}</TableCell>
+                  <TableCell>{destinatario.banco_externo || "No informado"}</TableCell>
                   <TableCell>
                     <Button
                       size="sm"
                       variant="destructive"
                       type="button"
-                      onClick={() => onDelete(recipient)}
+                      onClick={() => onDelete(destinatario)}
                     >
                       Eliminar
                     </Button>

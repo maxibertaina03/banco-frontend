@@ -6,30 +6,30 @@ import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { editProfileSchema, type EditProfileFormValues } from "../lib/schemas";
-import { useUpdateProfile } from "../lib/queries";
+import { editarPerfilSchema, type FormularioEditarPerfil } from "../lib/schemas";
+import { useActualizarPerfil } from "../lib/queries";
 import { ApiError } from "../lib/api/client";
-import type { AuthenticatedUserProfile } from "../features/personas/types/personas.types";
+import type { PerfilUsuarioAutenticado } from "../features/personas/types/personas.types";
 
-interface EditProfileDialogProps {
+interface DialogoEditarPerfilProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  profile: AuthenticatedUserProfile | null;
+  perfil: PerfilUsuarioAutenticado | null;
   personaId: string | null | undefined;
 }
 
-export function EditProfileDialog({ open, onOpenChange, profile, personaId }: EditProfileDialogProps) {
-  const updateMutation = useUpdateProfile(personaId);
+export function DialogoEditarPerfil({ open, onOpenChange, perfil, personaId }: DialogoEditarPerfilProps) {
+  const updateMutation = useActualizarPerfil(personaId);
   const [feedback, setFeedback] = useState<{ kind: "success" | "error"; text: string } | null>(null);
 
-  const { register, handleSubmit, reset, formState: { errors, isDirty } } = useForm<EditProfileFormValues>({
-    resolver: zodResolver(editProfileSchema),
+  const { register, handleSubmit, reset, formState: { errors, isDirty } } = useForm<FormularioEditarPerfil>({
+    resolver: zodResolver(editarPerfilSchema),
     mode: "onTouched",
     defaultValues: {
-      nombre: profile?.nombre ?? "",
-      apellido: profile?.apellido ?? "",
-      telefono: profile?.telefono ?? "",
-      email: profile?.email ?? "",
+      nombre: perfil?.nombre ?? "",
+      apellido: perfil?.apellido ?? "",
+      telefono: perfil?.telefono ?? "",
+      email: perfil?.email ?? "",
     },
   });
 
@@ -37,23 +37,23 @@ export function EditProfileDialog({ open, onOpenChange, profile, personaId }: Ed
   useEffect(() => {
     if (open) {
       reset({
-        nombre: profile?.nombre ?? "",
-        apellido: profile?.apellido ?? "",
-        telefono: profile?.telefono ?? "",
-        email: profile?.email ?? "",
+        nombre: perfil?.nombre ?? "",
+        apellido: perfil?.apellido ?? "",
+        telefono: perfil?.telefono ?? "",
+        email: perfil?.email ?? "",
       });
       setFeedback(null);
     }
-  }, [open, profile, reset]);
+  }, [open, perfil, reset]);
 
-  async function onSubmit(values: EditProfileFormValues) {
+  async function onSubmit(values: FormularioEditarPerfil) {
     setFeedback(null);
     // Solo enviar los campos que efectivamente cambiaron.
-    const payload: Partial<EditProfileFormValues> = {};
-    if (values.nombre && values.nombre !== profile?.nombre) payload.nombre = values.nombre;
-    if (values.apellido && values.apellido !== profile?.apellido) payload.apellido = values.apellido;
-    if (values.telefono && values.telefono !== profile?.telefono) payload.telefono = values.telefono;
-    if (values.email && values.email !== profile?.email) payload.email = values.email;
+    const payload: Partial<FormularioEditarPerfil> = {};
+    if (values.nombre && values.nombre !== perfil?.nombre) payload.nombre = values.nombre;
+    if (values.apellido && values.apellido !== perfil?.apellido) payload.apellido = values.apellido;
+    if (values.telefono && values.telefono !== perfil?.telefono) payload.telefono = values.telefono;
+    if (values.email && values.email !== perfil?.email) payload.email = values.email;
 
     if (Object.keys(payload).length === 0) {
       setFeedback({ kind: "error", text: "Modificá al menos un campo antes de guardar." });

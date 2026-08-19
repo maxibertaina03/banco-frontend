@@ -7,26 +7,26 @@ import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
 import { Textarea } from "../../../components/ui/textarea";
-import type { PersonaFullResponse, UserActivity } from "../../../lib/api";
-import { transferSchema, type TransferFormValues } from "../../../lib/schemas";
-import { type ResolvedRecipient, resolveRecipient } from "../api/transacciones.api";
+import type { PersonaCompleta, ActividadDeUsuario } from "../../../lib/api";
+import { transferenciaSchema, type FormularioTransferencia } from "../../../lib/schemas";
+import { type DestinatarioResuelto, resolverDestinatario } from "../api/transacciones.api";
 import type { SyncIncomingResult } from "../api/transacciones.api";
 
 // Mantenido por compatibilidad con consumidores que aún lo importan.
-export interface TransferFormState {
+export interface EstadoFormularioTransferencia {
   cuentaOrigenId: string;
   cbuDestino: string;
   monto: string;
   descripcion: string;
 }
 
-interface TransactionsSectionProps {
-  activities: UserActivity[];
+interface SeccionTransaccionesProps {
+  activities: ActividadDeUsuario[];
   lastSyncResult: SyncIncomingResult | null;
   loading: boolean;
-  onSubmit: (values: TransferFormValues) => Promise<void> | void;
+  onSubmit: (values: FormularioTransferencia) => Promise<void> | void;
   onSyncIncoming: () => void;
-  profile: PersonaFullResponse;
+  perfil: PersonaCompleta;
   submitting: boolean;
   syncingIncoming: boolean;
   // El padre incrementa este número tras un submit OK para limpiar el form.
@@ -36,18 +36,18 @@ interface TransactionsSectionProps {
 
 type LookupState = "idle" | "loading" | "found" | "not_found";
 
-export const TransactionsSection = memo(function TransactionsSection({
+export const SeccionTransacciones = memo(function SeccionTransacciones({
   activities,
   lastSyncResult,
   loading,
   onSubmit,
   onSyncIncoming,
-  profile,
+  perfil,
   submitting,
   syncingIncoming,
   resetSignal,
   onSelectActivity,
-}: TransactionsSectionProps) {
+}: SeccionTransaccionesProps) {
   const {
     register,
     handleSubmit,
@@ -55,11 +55,11 @@ export const TransactionsSection = memo(function TransactionsSection({
     reset,
     watch,
     formState: { errors },
-  } = useForm<TransferFormValues>({
-    resolver: zodResolver(transferSchema),
+  } = useForm<FormularioTransferencia>({
+    resolver: zodResolver(transferenciaSchema),
     mode: "onTouched",
     defaultValues: {
-      cuentaOrigenId: profile.cuentas[0]?.id || "",
+      cuentaOrigenId: perfil.cuentas[0]?.id || "",
       cbuDestino: "",
       monto: "",
       descripcion: "",
@@ -72,7 +72,7 @@ export const TransactionsSection = memo(function TransactionsSection({
 
   // ── Lookup en Banco Central (alias o CBU) ────────────────────────────────────────
   const [lookupState, setLookupState] = useState<LookupState>("idle");
-  const [resolvedRecipient, setResolvedRecipient] = useState<ResolvedRecipient | null>(null);
+  const [destinatarioResuelto, setDestinatarioResuelto] = useState<DestinatarioResuelto | null>(null);
   const [lookupInput, setLookupInput] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -90,20 +90,20 @@ export const TransactionsSection = memo(function TransactionsSection({
     const trimmed = value.trim();
     if (!trimmed) {
       setLookupState("idle");
-      setResolvedRecipient(null);
+      setDestinatarioResuelto(null);
       return;
     }
 
     setLookupState("loading");
-    setResolvedRecipient(null);
+    setDestinatarioResuelto(null);
 
     try {
       const isCbu = /^\d{10,22}$/.test(trimmed);
-      const result = await resolveRecipient(isCbu ? { cbu: trimmed } : { alias: trimmed });
+      const result = await resolverDestinatario(isCbu ? { cbu: trimmed } : { alias: trimmed });
       const cbu = result.cbu;
 
       if (cbu) {
-        setResolvedRecipient(result);
+        setDestinatarioResuelto(result);
         setLookupState("found");
         setValue("cbuDestino", cbu, { shouldValidate: true, shouldDirty: true });
       } else {
@@ -127,24 +127,24 @@ export const TransactionsSection = memo(function TransactionsSection({
   useEffect(() => {
     if (resetSignal === undefined) return;
     reset({
-      cuentaOrigenId: profile.cuentas[0]?.id || "",
+      cuentaOrigenId: perfil.cuentas[0]?.id || "",
       cbuDestino: "",
       monto: "",
       descripcion: "",
     });
     setLookupInput("");
     setLookupState("idle");
-    setResolvedRecipient(null);
+    setDestinatarioResuelto(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resetSignal]);
 
-  function handleSelectRecipient(cbu: string, alias?: string | null) {
+  function manejarSeleccionarDestinatario(cbu: string, alias?: string | null) {
     const displayValue = alias || cbu;
     setLookupInput(displayValue);
     setValue("cbuDestino", cbu, { shouldValidate: true, shouldDirty: true });
   }
 
-  const selectedOrigin = profile.cuentas.find((account) => account.id === cuentaOrigenId);
+  const selectedOrigin = perfil.cuentas.find((cuenta) => cuenta.id === cuentaOrigenId);
   const originNotRegistered = selectedOrigin && selectedOrigin.banco_central_registrada === false;
 
   return (
@@ -164,10 +164,10 @@ export const TransactionsSection = memo(function TransactionsSection({
                 {...register("cuentaOrigenId")}
                 className="h-11 rounded-xl border border-primary/20 bg-[#2D1548]/60 px-4 text-sm outline-none"
               >
-                {profile.cuentas.map((account) => (
-                  <option key={account.id} value={account.id}>
-                    {account.tipo_cuenta_nombre || "Cuenta"} — {account.numero_cuenta}
-                    {account.banco_central_registrada ? "" : " ⚠"}
+                {perfil.cuentas.map((cuenta) => (
+                  <option key={cuenta.id} value={cuenta.id}>
+                    {cuenta.tipo_cuenta_nombre || "Cuenta"} — {cuenta.numero_cuenta}
+                    {cuenta.banco_central_registrada ? "" : " ⚠"}
                   </option>
                 ))}
               </select>
@@ -185,15 +185,15 @@ export const TransactionsSection = memo(function TransactionsSection({
               )}
             </div>
 
-            {profile.destinatarios.length > 0 && (
+            {perfil.destinatarios.length > 0 && (
               <div className="grid gap-1">
                 <label className="text-xs text-muted-foreground">Contactos guardados</label>
                 <div className="flex flex-wrap gap-2">
-                  {profile.destinatarios.map((dest) => (
+                  {perfil.destinatarios.map((dest) => (
                     <button
                       key={dest.id}
                       type="button"
-                      onClick={() => handleSelectRecipient(dest.cbu_externo, dest.alias)}
+                      onClick={() => manejarSeleccionarDestinatario(dest.cbu_externo, dest.alias)}
                       className="rounded-lg border border-primary/20 bg-[#2D1548]/50 px-3 py-1.5 text-left text-xs transition hover:bg-[#2D1548]/80"
                     >
                       <span className="block font-medium">{dest.alias || dest.cbu_externo}</span>
@@ -215,7 +215,7 @@ export const TransactionsSection = memo(function TransactionsSection({
                     setLookupInput(event.target.value);
                     if (!event.target.value.trim()) {
                       setValue("cbuDestino", "", { shouldValidate: true });
-                      setResolvedRecipient(null);
+                      setDestinatarioResuelto(null);
                       setLookupState("idle");
                     }
                   }}
@@ -230,14 +230,14 @@ export const TransactionsSection = memo(function TransactionsSection({
                 </span>
               </div>
 
-              {lookupState === "found" && resolvedRecipient && (
+              {lookupState === "found" && destinatarioResuelto && (
                 <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-xs">
                   <p className="font-medium text-emerald-300">
-                    {resolvedRecipient.titular || "Titular verificado"}
+                    {destinatarioResuelto.titular || "Titular verificado"}
                   </p>
-                  <p className="font-mono text-muted-foreground">{resolvedRecipient.cbu}</p>
-                  {resolvedRecipient.banco && (
-                    <p className="text-muted-foreground">{resolvedRecipient.banco}</p>
+                  <p className="font-mono text-muted-foreground">{destinatarioResuelto.cbu}</p>
+                  {destinatarioResuelto.banco && (
+                    <p className="text-muted-foreground">{destinatarioResuelto.banco}</p>
                   )}
                 </div>
               )}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Tag } from 'lucide-react';
-import { updateAlias } from "../features/cuentas/api/cuentas.api";
+import { actualizarAlias } from "../features/cuentas/api/cuentas.api";
 
 interface UpdateAliasFormProps {
   cbu: string;
@@ -33,7 +33,7 @@ export function UpdateAliasForm({ cbu, currentAlias, onSuccess }: UpdateAliasFor
     setSuccess(false);
 
     try {
-      await updateAlias(cbu, alias.trim());
+      await actualizarAlias(cbu, alias.trim());
       setSuccess(true);
       onSuccess?.(alias.trim());
       setTimeout(() => setSuccess(false), 3000);

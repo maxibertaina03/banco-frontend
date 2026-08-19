@@ -2,7 +2,7 @@ import { memo } from "react";
 import { Copy } from "lucide-react";
 
 interface PortalSummaryProps {
-  activeAccountsCount: number;
+  cantidadCuentasActivas: number;
   totalBalanceLabel: string;
   cbu?: string | null;
   alias?: string | null;
@@ -11,7 +11,7 @@ interface PortalSummaryProps {
 }
 
 export const PortalSummary = memo(function PortalSummary({
-  activeAccountsCount,
+  cantidadCuentasActivas,
   totalBalanceLabel,
   cbu,
   alias,
@@ -28,7 +28,7 @@ export const PortalSummary = memo(function PortalSummary({
         </div>
         <div className="flex items-center justify-between rounded-2xl bg-[#2D1548]/60 p-4">
           <span>Cuentas activas</span>
-          <span className="text-xl text-primary">{activeAccountsCount}</span>
+          <span className="text-xl text-primary">{cantidadCuentasActivas}</span>
         </div>
 
         {/* CBU del cliente logueado, con botón para copiarlo */}

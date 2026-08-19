@@ -7,50 +7,50 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import {
-  completeProfileSchema,
-  type CompleteProfileFormValues,
+  completarPerfilSchema,
+  type FormularioCompletarPerfil,
 } from "../../../lib/schemas";
-import type { AuthenticatedUserProfile } from "../types/personas.types";
+import type { PerfilUsuarioAutenticado } from "../types/personas.types";
 
-interface CompleteProfileSectionProps {
-  authProfile: AuthenticatedUserProfile | null;
+interface SeccionCompletarPerfilProps {
+  perfilAutenticado: PerfilUsuarioAutenticado | null;
   submitting: boolean;
-  onSubmit: (values: CompleteProfileFormValues) => Promise<void> | void;
+  onSubmit: (values: FormularioCompletarPerfil) => Promise<void> | void;
 }
 
-function buildDefaults(authProfile: AuthenticatedUserProfile | null): CompleteProfileFormValues {
+function buildDefaults(perfilAutenticado: PerfilUsuarioAutenticado | null): FormularioCompletarPerfil {
   return {
-    nombre: authProfile?.nombre || "",
-    apellido: authProfile?.apellido || "",
-    dni: authProfile?.dni || "",
-    email: authProfile?.email || "",
-    telefono: authProfile?.telefono || "",
-    fechaNacimiento: authProfile?.fecha_nacimiento || "",
+    nombre: perfilAutenticado?.nombre || "",
+    apellido: perfilAutenticado?.apellido || "",
+    dni: perfilAutenticado?.dni || "",
+    email: perfilAutenticado?.email || "",
+    telefono: perfilAutenticado?.telefono || "",
+    fechaNacimiento: perfilAutenticado?.fecha_nacimiento || "",
   };
 }
 
-export const CompleteProfileSection = memo(function CompleteProfileSection({
-  authProfile,
+export const SeccionCompletarPerfil = memo(function SeccionCompletarPerfil({
+  perfilAutenticado,
   submitting,
   onSubmit,
-}: CompleteProfileSectionProps) {
+}: SeccionCompletarPerfilProps) {
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isValid },
-  } = useForm<CompleteProfileFormValues>({
-    resolver: zodResolver(completeProfileSchema),
+  } = useForm<FormularioCompletarPerfil>({
+    resolver: zodResolver(completarPerfilSchema),
     mode: "onTouched",
-    defaultValues: buildDefaults(authProfile),
+    defaultValues: buildDefaults(perfilAutenticado),
   });
 
-  // Cuando `authProfile` llega tarde (auth query resuelve después del render
+  // Cuando `perfilAutenticado` llega tarde (auth query resuelve después del render
   // inicial), rellenamos los defaults sin sobrescribir cambios del usuario:
   // si el form sigue pristine (sin tocar), reseteamos a los nuevos valores.
   useEffect(() => {
-    reset(buildDefaults(authProfile));
-  }, [authProfile, reset]);
+    reset(buildDefaults(perfilAutenticado));
+  }, [perfilAutenticado, reset]);
 
   return (
     <Card className="border-primary/20 bg-gradient-to-br from-[#1C0B2E] to-[#2D1548]">
@@ -67,9 +67,9 @@ export const CompleteProfileSection = memo(function CompleteProfileSection({
       <CardContent>
         <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className="grid gap-1">
-            <Label htmlFor="complete-profile-nombre">Nombre</Label>
+            <Label htmlFor="completar-perfil-nombre">Nombre</Label>
             <Input
-              id="complete-profile-nombre"
+              id="completar-perfil-nombre"
               {...register("nombre")}
               placeholder="Nombre"
               aria-invalid={errors.nombre ? "true" : "false"}
@@ -80,9 +80,9 @@ export const CompleteProfileSection = memo(function CompleteProfileSection({
           </div>
 
           <div className="grid gap-1">
-            <Label htmlFor="complete-profile-apellido">Apellido</Label>
+            <Label htmlFor="completar-perfil-apellido">Apellido</Label>
             <Input
-              id="complete-profile-apellido"
+              id="completar-perfil-apellido"
               {...register("apellido")}
               placeholder="Apellido"
               aria-invalid={errors.apellido ? "true" : "false"}
@@ -93,9 +93,9 @@ export const CompleteProfileSection = memo(function CompleteProfileSection({
           </div>
 
           <div className="grid gap-1">
-            <Label htmlFor="complete-profile-dni">DNI</Label>
+            <Label htmlFor="completar-perfil-dni">DNI</Label>
             <Input
-              id="complete-profile-dni"
+              id="completar-perfil-dni"
               {...register("dni")}
               placeholder="DNI"
               inputMode="numeric"
@@ -107,9 +107,9 @@ export const CompleteProfileSection = memo(function CompleteProfileSection({
           </div>
 
           <div className="grid gap-1">
-            <Label htmlFor="complete-profile-email">Email</Label>
+            <Label htmlFor="completar-perfil-email">Email</Label>
             <Input
-              id="complete-profile-email"
+              id="completar-perfil-email"
               type="email"
               {...register("email")}
               placeholder="Email"
@@ -121,9 +121,9 @@ export const CompleteProfileSection = memo(function CompleteProfileSection({
           </div>
 
           <div className="grid gap-1">
-            <Label htmlFor="complete-profile-telefono">Teléfono</Label>
+            <Label htmlFor="completar-perfil-telefono">Teléfono</Label>
             <Input
-              id="complete-profile-telefono"
+              id="completar-perfil-telefono"
               {...register("telefono")}
               placeholder="Teléfono"
               aria-invalid={errors.telefono ? "true" : "false"}
@@ -134,9 +134,9 @@ export const CompleteProfileSection = memo(function CompleteProfileSection({
           </div>
 
           <div className="grid gap-1">
-            <Label htmlFor="complete-profile-fecha-nacimiento">Fecha de nacimiento</Label>
+            <Label htmlFor="completar-perfil-fecha-nacimiento">Fecha de nacimiento</Label>
             <Input
-              id="complete-profile-fecha-nacimiento"
+              id="completar-perfil-fecha-nacimiento"
               type="date"
               {...register("fechaNacimiento")}
               aria-invalid={errors.fechaNacimiento ? "true" : "false"}

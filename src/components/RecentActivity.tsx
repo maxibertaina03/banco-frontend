@@ -1,9 +1,9 @@
 import { ArrowUpRight, ArrowDownLeft, ShoppingBag, Smartphone } from 'lucide-react';
 import { memo } from 'react';
-import type { UserActivity } from "../features/transacciones/types/transacciones.types";
+import type { ActividadDeUsuario } from "../features/transacciones/types/transacciones.types";
 
 interface RecentActivityProps {
-  activities: UserActivity[];
+  activities: ActividadDeUsuario[];
   loading?: boolean;
   /** Al tocar un movimiento, abre su detalle. */
   onSelect?: (activityId: string) => void;
@@ -12,7 +12,7 @@ interface RecentActivityProps {
 const iconMap = {
   out: ArrowUpRight,
   in: ArrowDownLeft,
-  transfer: ShoppingBag,
+  transferencia: ShoppingBag,
   service: Smartphone,
 } as const;
 
@@ -70,7 +70,7 @@ export const RecentActivity = memo(function RecentActivity({ activities, loading
 
               <div className="flex-1 min-w-0">
                 <p className="text-sm truncate">{activity.title}</p>
-                <p className="text-xs text-muted-foreground truncate">{activity.recipient}</p>
+                <p className="text-xs text-muted-foreground truncate">{activity.destinatario}</p>
               </div>
 
               <div className="text-right">

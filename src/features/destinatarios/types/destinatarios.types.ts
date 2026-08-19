@@ -1,4 +1,4 @@
-export interface RecipientRecord {
+export interface Destinatario {
   id: string;
   persona_id: string;
   alias?: string | null;

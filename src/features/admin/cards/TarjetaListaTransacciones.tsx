@@ -4,15 +4,15 @@ import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Input } from "../../../components/ui/input";
 import { listCentralBankTransactions } from "../../personas/api/personas.api";
-import type { CentralBankTransactionRecord } from "../../../lib/api";
+import type { TransaccionDelCentral } from "../../../lib/api";
 
-interface TransactionListCardProps {
+interface TarjetaListaTransaccionesProps {
   environment: "test" | "prod";
 }
 
-export const TransactionListCard = memo(function TransactionListCard({ environment }: TransactionListCardProps) {
+export const TarjetaListaTransacciones = memo(function TarjetaListaTransacciones({ environment }: TarjetaListaTransaccionesProps) {
   const [minutes, setMinutes] = useState("30");
-  const [transactions, setTransactions] = useState<CentralBankTransactionRecord[]>([]);
+  const [transacciones, setTransacciones] = useState<TransaccionDelCentral[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -20,15 +20,15 @@ export const TransactionListCard = memo(function TransactionListCard({ environme
     const mins = Number.parseInt(minutes.trim(), 10);
     if (!Number.isFinite(mins) || mins < 1 || mins > 1440) {
       setError("Ingresa una ventana válida entre 1 y 1440 minutos.");
-      setTransactions([]);
+      setTransacciones([]);
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      setTransactions(await listCentralBankTransactions(environment, mins));
+      setTransacciones(await listCentralBankTransactions(environment, mins));
     } catch (err) {
-      setTransactions([]);
+      setTransacciones([]);
       setError(err instanceof Error ? err.message : "No se pudieron obtener las transacciones.");
     } finally {
       setLoading(false);
@@ -57,9 +57,9 @@ export const TransactionListCard = memo(function TransactionListCard({ environme
           Recomendado: consultar cada 15 minutos con una ventana de 30 para no perder transferencias.
         </div>
         {error && <div className="rounded-2xl bg-[#2D1548]/60 p-4 text-sm text-destructive">{error}</div>}
-        {transactions.length > 0 && (
+        {transacciones.length > 0 && (
           <div className="grid gap-3">
-            {transactions.map((tx, i) => (
+            {transacciones.map((tx, i) => (
               <div
                 key={tx._id || `${tx.cbuOrigen}-${tx.cbuDestino}-${i}`}
                 className="rounded-2xl bg-[#2D1548]/60 p-4"
@@ -97,7 +97,7 @@ export const TransactionListCard = memo(function TransactionListCard({ environme
             ))}
           </div>
         )}
-        {!error && !loading && transactions.length === 0 && (
+        {!error && !loading && transacciones.length === 0 && (
           <div className="rounded-2xl bg-[#2D1548]/60 p-4 text-sm text-muted-foreground">
             Todavía no consultaste transacciones o no hubo movimientos en esa ventana.
           </div>

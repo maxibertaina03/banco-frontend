@@ -2,14 +2,14 @@ import { CheckCircle2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogFooter } from "./ui/dialog";
 import { formatCurrency } from "../lib/utils/currency";
-import type { TransactionRecord } from "../features/transacciones/types/transacciones.types";
+import type { Transaccion } from "../features/transacciones/types/transacciones.types";
 
-interface TransferReceiptDialogProps {
+interface DialogoComprobanteTransferenciaProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  transaction: TransactionRecord | null;
+  transaccion: Transaccion | null;
   /** Nombre del destinatario si lo conocemos (resuelto en el form). */
-  recipientName?: string | null;
+  nombreDestinatario?: string | null;
 }
 
 function formatDateTime(iso?: string): string {
@@ -33,18 +33,18 @@ function Row({ label, value, mono }: { label: string; value: string; mono?: bool
 }
 
 /** Comprobante de transferencia exitosa, al estilo de un banco real. */
-export function TransferReceiptDialog({
+export function DialogoComprobanteTransferencia({
   open,
   onOpenChange,
-  transaction,
-  recipientName,
-}: TransferReceiptDialogProps) {
-  if (!transaction) return null;
+  transaccion,
+  nombreDestinatario,
+}: DialogoComprobanteTransferenciaProps) {
+  if (!transaccion) return null;
 
-  const amount = Number(transaction.monto || 0);
+  const amount = Number(transaccion.monto || 0);
   const destino =
-    transaction.cuenta_destino_numero ||
-    (transaction.cbu_destino ? transaction.cbu_destino : "—");
+    transaccion.cuenta_destino_numero ||
+    (transaccion.cbu_destino ? transaccion.cbu_destino : "—");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -63,10 +63,10 @@ export function TransferReceiptDialog({
 
         {/* Detalle */}
         <div className="mt-4 divide-y divide-primary/10 rounded-2xl border border-primary/15 bg-[#2D1548]/40 px-4">
-          {recipientName && <Row label="Destinatario" value={recipientName} />}
+          {nombreDestinatario && <Row label="Destinatario" value={nombreDestinatario} />}
           <Row label="Destino" value={destino} mono={destino !== "—"} />
-          <Row label="Fecha y hora" value={formatDateTime(transaction.created_at)} />
-          <Row label="N° de operación" value={transaction.id} mono />
+          <Row label="Fecha y hora" value={formatDateTime(transaccion.created_at)} />
+          <Row label="N° de operación" value={transaccion.id} mono />
           <Row label="Estado" value="Completada" />
         </div>
 

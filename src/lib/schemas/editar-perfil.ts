@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // Edición de datos personales del perfil ya completo. Todos los campos son
 // opcionales pero al menos uno tiene que venir (refine al final).
-export const editProfileSchema = z
+export const editarPerfilSchema = z
   .object({
     nombre: z.string().trim().min(1, "Requerido").optional(),
     apellido: z.string().trim().min(1, "Requerido").optional(),
@@ -13,4 +13,4 @@ export const editProfileSchema = z
     message: "Modificá al menos un campo",
   });
 
-export type EditProfileFormValues = z.infer<typeof editProfileSchema>;
+export type FormularioEditarPerfil = z.infer<typeof editarPerfilSchema>;

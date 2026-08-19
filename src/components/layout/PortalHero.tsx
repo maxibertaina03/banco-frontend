@@ -1,15 +1,15 @@
 import { memo } from "react";
-import type { PortalRole } from "../../features/personas/types/personas.types";
+import type { RolDePortal } from "../../features/personas/types/personas.types";
 
 interface PortalHeroProps {
-  activeRole: PortalRole;
-  onRoleChange: (role: PortalRole) => void;
-  roleLabels: Record<PortalRole, string>;
-  roleOptions: PortalRole[];
+  rolActivo: RolDePortal;
+  onRoleChange: (role: RolDePortal) => void;
+  roleLabels: Record<RolDePortal, string>;
+  roleOptions: RolDePortal[];
 }
 
 export const PortalHero = memo(function PortalHero({
-  activeRole,
+  rolActivo,
   onRoleChange,
   roleLabels,
   roleOptions,
@@ -28,7 +28,7 @@ export const PortalHero = memo(function PortalHero({
             type="button"
             onClick={() => onRoleChange(role)}
             className={`rounded-full border px-4 py-2 text-sm transition ${
-              role === activeRole
+              role === rolActivo
                 ? "border-white bg-white text-[#6D28D9]"
                 : "border-white/30 bg-white/10 text-white hover:bg-white/15"
             }`}

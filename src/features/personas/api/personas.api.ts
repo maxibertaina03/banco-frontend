@@ -1,43 +1,43 @@
 import { request, requestAbsolute } from "../../../lib/api/client";
 import type {
-  AuditRecord,
+  RegistroDeAuditoria,
   AdminCentralRegistrationResult,
   CentralBankRecord,
-  CentralBankAccountSyncResult,
+  ResultadoSincronizacionCuenta,
   CentralBankRenameResult,
-  CentralBankTransactionRecord,
+  TransaccionDelCentral,
   CentralPersonLookupResult,
-  AuthenticatedUserProfile,
-  PersonaFullResponse,
-  PersonaOption,
-  PortalRole,
-  RoleRecord,
-  SyncAccountRecord,
-  UserRecord,
+  PerfilUsuarioAutenticado,
+  PersonaCompleta,
+  OpcionDePersona,
+  RolDePortal,
+  Rol,
+  CuentaParaSincronizar,
+  Usuario,
 } from "../types/personas.types";
 
 export type {
-  AuditRecord,
+  RegistroDeAuditoria,
   AdminCentralRegistrationResult,
   CentralBankRecord,
-  CentralBankAccountSyncResult,
+  ResultadoSincronizacionCuenta,
   CentralBankRenameResult,
-  CentralBankTransactionRecord,
+  TransaccionDelCentral,
   CentralPersonLookupResult,
-  AuthenticatedUserProfile,
-  PersonaFullResponse,
-  PersonaOption,
-  PortalRole,
-  RoleRecord,
-  SyncAccountRecord,
-  UserRecord,
+  PerfilUsuarioAutenticado,
+  PersonaCompleta,
+  OpcionDePersona,
+  RolDePortal,
+  Rol,
+  CuentaParaSincronizar,
+  Usuario,
 } from "../types/personas.types";
 
 interface ListResponse<T> {
   data: T[];
 }
 
-export function sanitizePersonaId(value?: string | null) {
+export function sanearIdDePersona(value?: string | null) {
   const normalized = String(value || "").trim();
 
   if (!normalized) {
@@ -51,7 +51,7 @@ export function sanitizePersonaId(value?: string | null) {
   return normalized;
 }
 
-function normalizeRole(roleName: string): PortalRole | null {
+function normalizeRole(roleName: string): RolDePortal | null {
   if (roleName === "cliente") {
     return "cliente";
   }
@@ -75,14 +75,14 @@ function normalizeRole(roleName: string): PortalRole | null {
   return null;
 }
 
-export function getRoleScope(role: PortalRole) {
+export function obtenerAlcanceDeRol(role: RolDePortal) {
   return role === "cliente" ? "user" : "admin";
 }
 
-export function getRoleOptions(full: PersonaFullResponse): PortalRole[] {
+export function obtenerOpcionesDeRol(full: PersonaCompleta): RolDePortal[] {
   const roles = full.roles
     .map((role) => normalizeRole(role.nombre.toLowerCase()))
-    .filter((role): role is PortalRole => Boolean(role));
+    .filter((role): role is RolDePortal => Boolean(role));
 
   if (roles.length > 0) {
     return Array.from(new Set(roles));
@@ -91,27 +91,27 @@ export function getRoleOptions(full: PersonaFullResponse): PortalRole[] {
   return ["cliente"];
 }
 
-export async function listPersonas() {
-  const response = await request<ListResponse<PersonaOption>>("/personas?limit=100");
+export async function listarPersonas() {
+  const response = await request<ListResponse<OpcionDePersona>>("/personas?limit=100");
   return response.data;
 }
 
-export async function listRoles() {
-  const response = await request<ListResponse<RoleRecord>>("/roles?limit=50");
+export async function listarRoles() {
+  const response = await request<ListResponse<Rol>>("/roles?limit=50");
   return response.data;
 }
 
-export function getAuthenticatedUserProfile() {
-  return requestAbsolute<{ message: string; user: AuthenticatedUserProfile }>("/auth/profile");
+export function obtenerPerfilDeUsuarioAutenticado() {
+  return requestAbsolute<{ message: string; user: PerfilUsuarioAutenticado }>("/auth/perfil");
 }
 
-export function loginAuthenticatedUser() {
-  return requestAbsolute<{ message: string; user: AuthenticatedUserProfile }>("/auth/login", {
+export function loguearUsuarioAutenticado() {
+  return requestAbsolute<{ message: string; user: PerfilUsuarioAutenticado }>("/auth/login", {
     method: "POST",
   });
 }
 
-export function completeAuthenticatedUserProfile(payload: {
+export function completarPerfilDeUsuarioAutenticado(payload: {
   nombre: string;
   apellido: string;
   dni: string;
@@ -121,9 +121,9 @@ export function completeAuthenticatedUserProfile(payload: {
 }) {
   return requestAbsolute<{
     message: string;
-    user: AuthenticatedUserProfile;
+    user: PerfilUsuarioAutenticado;
     centralBank: { status: number; message: string; cbu: string | null; alias: string | null } | null;
-  }>("/auth/profile", {
+  }>("/auth/perfil", {
     method: "PUT",
     body: JSON.stringify(payload),
   });
@@ -131,7 +131,7 @@ export function completeAuthenticatedUserProfile(payload: {
 
 // Edición parcial del perfil ya completo. Envia solo los campos que el
 // usuario quiere cambiar (al menos uno).
-export function updateAuthenticatedUserProfile(payload: Partial<{
+export function actualizarPerfilDeUsuarioAutenticado(payload: Partial<{
   nombre: string;
   apellido: string;
   telefono: string;
@@ -139,30 +139,30 @@ export function updateAuthenticatedUserProfile(payload: Partial<{
 }>) {
   return requestAbsolute<{
     message: string;
-    user: AuthenticatedUserProfile;
-  }>("/auth/profile", {
+    user: PerfilUsuarioAutenticado;
+  }>("/auth/perfil", {
     method: "PATCH",
     body: JSON.stringify(payload),
   });
 }
 
-export function listAccountsForSync(options?: { environment?: string; limit?: number }) {
+export function listarCuentasParaSincronizar(options?: { environment?: string; limit?: number }) {
   const params = new URLSearchParams();
   if (options?.environment) params.set("environment", options.environment);
   if (options?.limit) params.set("limit", String(options.limit));
   const query = params.toString() ? `?${params.toString()}` : "";
-  return request<{ accounts: SyncAccountRecord[] }>(`/central-bank/sync/accounts${query}`);
+  return request<{ cuentas: CuentaParaSincronizar[] }>(`/central-bank/sync/accounts${query}`);
 }
 
-export function getPersonaFull(personaId: string) {
-  return request<PersonaFullResponse>(`/personas/${personaId}/full`);
+export function obtenerPersonaCompleta(personaId: string) {
+  return request<PersonaCompleta>(`/personas/${personaId}/full`);
 }
 
-export function getUserAudit(usuarioId: string) {
-  return request<AuditRecord[]>(`/usuarios/${usuarioId}/auditoria`);
+export function obtenerAuditoriaDeUsuario(usuarioId: string) {
+  return request<RegistroDeAuditoria[]>(`/usuarios/${usuarioId}/auditoria`);
 }
 
-export function createPersona(payload: {
+export function crearPersona(payload: {
   nombre: string;
   apellido: string;
   dni: string;
@@ -170,13 +170,13 @@ export function createPersona(payload: {
   telefono?: string | null;
   fecha_nacimiento?: string | null;
 }) {
-  return request<PersonaOption>("/personas", {
+  return request<OpcionDePersona>("/personas", {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
-export function updatePersona(
+export function actualizarPersona(
   personaId: string,
   payload: Partial<{
     nombre: string;
@@ -186,44 +186,44 @@ export function updatePersona(
     fecha_nacimiento: string | null;
   }>
 ) {
-  return request<PersonaOption>(`/personas/${personaId}`, {
+  return request<OpcionDePersona>(`/personas/${personaId}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
 }
 
-export function createUsuario(payload: {
+export function crearUsuario(payload: {
   persona_id: string;
   clerk_id: string;
   activo?: boolean;
 }) {
-  return request<UserRecord>("/usuarios", {
+  return request<Usuario>("/usuarios", {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
-export function updateUsuario(
+export function actualizarUsuario(
   usuarioId: string,
   payload: Partial<{
     clerk_id: string;
     activo: boolean;
   }>
 ) {
-  return request<UserRecord>(`/usuarios/${usuarioId}`, {
+  return request<Usuario>(`/usuarios/${usuarioId}`, {
     method: "PUT",
     body: JSON.stringify(payload),
   });
 }
 
-export function assignPersonaRole(payload: { persona_id: string; rol_id: string }) {
+export function asignarRolDePersona(payload: { persona_id: string; rol_id: string }) {
   return request("/personas-roles", {
     method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
-export function registerPersonFromAdmin(payload: {
+export function registrarPersonaDesdeAdmin(payload: {
   nombre: string;
   apellido: string;
   dni: string;
@@ -267,31 +267,31 @@ export function listCentralBankTransactions(
   environment: "test" | "prod" = "test",
   minutes = 30
 ) {
-  return request<CentralBankTransactionRecord[]>(
+  return request<TransaccionDelCentral[]>(
     `/central-bank/transactions?environment=${environment}&minutes=${minutes}`
   );
 }
 
-export function syncCentralBankAccount(
-  accountId: string,
+export function sincronizarCuentaConCentral(
+  idCuenta: string,
   environment: "test" | "prod" = "test"
 ) {
-  return request<CentralBankAccountSyncResult>(`/central-bank/sync/accounts/${accountId}`, {
+  return request<ResultadoSincronizacionCuenta>(`/central-bank/sync/accounts/${idCuenta}`, {
     method: "POST",
     body: JSON.stringify({ environment }),
   });
 }
 
-export function bulkSyncAccounts(payload: {
+export function sincronizarCuentasEnLote(payload: {
   environment?: "test" | "prod";
   limit?: number;
-  accountIds?: string[];
+  idsCuenta?: string[];
 }) {
   return request<{
     processed: number;
     successCount: number;
     errorCount: number;
-    results: { accountId: string; status: "success" | "error"; error?: string }[];
+    results: { idCuenta: string; status: "success" | "error"; error?: string }[];
   }>("/central-bank/sync/accounts/bulk", {
     method: "POST",
     body: JSON.stringify(payload),

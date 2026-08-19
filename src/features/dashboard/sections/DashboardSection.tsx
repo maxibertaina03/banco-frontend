@@ -1,35 +1,35 @@
 import { memo } from "react";
 import { QuickActions } from "../../../components/QuickActions";
 import { RecentActivity } from "../../../components/RecentActivity";
-import type { UserActivity } from "../../../lib/api";
+import type { ActividadDeUsuario } from "../../../lib/api";
 
 interface DashboardSectionProps {
-  activities: UserActivity[];
+  activities: ActividadDeUsuario[];
   loading: boolean;
-  onAccounts: () => void;
+  onCuentas: () => void;
   onActivity: () => void;
   onContacts: () => void;
   onIncome: () => void;
-  onTransfer: () => void;
+  onTransferir: () => void;
   onSelectActivity?: (id: string) => void;
 }
 
 export const DashboardSection = memo(function DashboardSection({
   activities,
   loading,
-  onAccounts,
+  onCuentas,
   onActivity,
   onContacts,
   onIncome,
-  onTransfer,
+  onTransferir,
   onSelectActivity,
 }: DashboardSectionProps) {
   return (
     <>
       <div className="mb-8">
         <QuickActions
-          onTransfer={onTransfer}
-          onAccounts={onAccounts}
+          onTransferir={onTransferir}
+          onCuentas={onCuentas}
           onContacts={onContacts}
           onActivity={onActivity}
           onIncome={onIncome}

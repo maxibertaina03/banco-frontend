@@ -6,18 +6,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../..
 import { Input } from "../../../components/ui/input";
 import type {
   CentralBankRecord,
-  PersonaFullResponse,
-  RoleRecord,
+  PersonaCompleta,
+  Rol,
   TipoCuentaRecord,
 } from "../../../lib/api";
 import { InterbankMassSyncSection } from "./InterbankMassSyncSection";
-import { TransactionListCard } from "../cards/TransactionListCard";
+import { TarjetaListaTransacciones } from "../cards/TarjetaListaTransacciones";
 import { BankLookupCard } from "../cards/BankLookupCard";
 import { BankRenameCard } from "../cards/BankRenameCard";
 import { PersonCbuLookupCard } from "../cards/PersonCbuLookupCard";
 import { AliasUpdateCard } from "../cards/AliasUpdateCard";
 import { PersonAliasLookupCard } from "../cards/PersonAliasLookupCard";
-import { SingleAccountSyncCard } from "../cards/SingleAccountSyncCard";
+import { TarjetaSincronizarCuenta } from "../cards/TarjetaSincronizarCuenta";
 
 export interface CreateClientFormState {
   nombre: string;
@@ -29,14 +29,14 @@ export interface CreateClientFormState {
 }
 
 interface AdminSectionProps {
-  accountTypes: TipoCuentaRecord[];
+  tiposDeCuenta: TipoCuentaRecord[];
   banks: CentralBankRecord[];
   createClientForm: CreateClientFormState;
   onCreateClientFormChange: (next: CreateClientFormState) => void;
-  onAccountSynced: () => Promise<void> | void;
+  onCuentaSincronizada: () => Promise<void> | void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  profile: PersonaFullResponse;
-  roles: RoleRecord[];
+  perfil: PersonaCompleta;
+  roles: Rol[];
   submitting: boolean;
   totalBalance: string;
 }
@@ -48,9 +48,9 @@ export const AdminSection = memo(function AdminSection({
   banks,
   createClientForm,
   onCreateClientFormChange,
-  onAccountSynced,
+  onCuentaSincronizada,
   onSubmit,
-  profile,
+  perfil,
   submitting,
   totalBalance,
 }: AdminSectionProps) {
@@ -107,18 +107,18 @@ export const AdminSection = memo(function AdminSection({
           <div className="flex items-center justify-between rounded-2xl bg-[#2D1548]/60 p-4">
             <span>Roles</span>
             <div className="flex flex-wrap gap-2">
-              {profile.roles.map((role) => <Badge key={role.id}>{role.nombre}</Badge>)}
+              {perfil.roles.map((role) => <Badge key={role.id}>{role.nombre}</Badge>)}
             </div>
           </div>
           <div className="flex items-center justify-between rounded-2xl bg-[#2D1548]/60 p-4">
             <span>Usuario</span>
-            <Badge variant={profile.usuario?.activo ? "default" : "secondary"}>
-              {profile.usuario?.activo ? "Activo" : "Inactivo"}
+            <Badge variant={perfil.usuario?.activo ? "default" : "secondary"}>
+              {perfil.usuario?.activo ? "Activo" : "Inactivo"}
             </Badge>
           </div>
           <div className="flex items-center justify-between rounded-2xl bg-[#2D1548]/60 p-4">
             <span>Cuentas</span>
-            <span className="text-primary">{profile.cuentas.length}</span>
+            <span className="text-primary">{perfil.cuentas.length}</span>
           </div>
           <div className="flex items-center justify-between rounded-2xl bg-[#2D1548]/60 p-4">
             <span>Saldo total</span>
@@ -161,8 +161,8 @@ export const AdminSection = memo(function AdminSection({
 
       {/* Sub-components — each manages its own state */}
       <InterbankMassSyncSection environment={env} />
-      <SingleAccountSyncCard environment={env} profile={profile} onAccountSynced={onAccountSynced} />
-      <TransactionListCard environment={env} />
+      <TarjetaSincronizarCuenta environment={env} perfil={perfil} onCuentaSincronizada={onCuentaSincronizada} />
+      <TarjetaListaTransacciones environment={env} />
       <BankLookupCard environment={env} />
       <BankRenameCard environment={env} />
       <PersonCbuLookupCard environment={env} />

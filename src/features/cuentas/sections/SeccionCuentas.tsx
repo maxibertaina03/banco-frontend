@@ -1,31 +1,31 @@
 import { memo } from "react";
 import { RefreshCw } from "lucide-react";
-import { AccountCard } from "../../../components/AccountCard";
+import { TarjetaCuenta } from "../../../components/TarjetaCuenta";
 import { UpdateAliasForm } from "../../../components/UpdateAliasForm";
-import type { PersonaFullResponse } from "../../../lib/api";
+import type { PersonaCompleta } from "../../../lib/api";
 
-interface AccountsSectionProps {
+interface SeccionCuentasProps {
   onAliasEdit: (cbu: string) => void;
   onAliasUpdated: () => void;
-  profile: PersonaFullResponse;
-  selectedAccountForAlias: string | null;
-  onSyncAccount?: (accountId: string) => void;
+  perfil: PersonaCompleta;
+  cuentaSeleccionadaParaAlias: string | null;
+  onSincronizarCuenta?: (idCuenta: string) => void;
   onBulkSync?: () => void;
-  syncingAccountId?: string | null;
+  idCuentaSincronizando?: string | null;
   bulkSyncing?: boolean;
 }
 
-export const AccountsSection = memo(function AccountsSection({
+export const SeccionCuentas = memo(function SeccionCuentas({
   onAliasEdit,
   onAliasUpdated,
-  profile,
-  selectedAccountForAlias,
-  onSyncAccount,
+  perfil,
+  cuentaSeleccionadaParaAlias,
+  onSincronizarCuenta,
   onBulkSync,
-  syncingAccountId,
+  idCuentaSincronizando,
   bulkSyncing = false,
-}: AccountsSectionProps) {
-  const unsynced = profile.cuentas.filter((account) => !account.banco_central_registrada);
+}: SeccionCuentasProps) {
+  const unsynced = perfil.cuentas.filter((cuenta) => !cuenta.banco_central_registrada);
 
   return (
     <div className="grid gap-6">
@@ -51,41 +51,41 @@ export const AccountsSection = memo(function AccountsSection({
       )}
 
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        {profile.cuentas.map((account) => (
-          <AccountCard
-            key={account.id}
-            tipo={account.tipo_cuenta_nombre || "Cuenta bancaria"}
-            saldo={String(account.saldo || 0)}
-            cbu={account.cbu}
-            alias={account.alias || undefined}
-            activa={account.activa}
-            bancoCentralRegistrada={account.banco_central_registrada}
-            syncing={syncingAccountId === account.id}
-            onSync={onSyncAccount ? () => onSyncAccount(account.id) : undefined}
+        {perfil.cuentas.map((cuenta) => (
+          <TarjetaCuenta
+            key={cuenta.id}
+            tipo={cuenta.tipo_cuenta_nombre || "Cuenta bancaria"}
+            saldo={String(cuenta.saldo || 0)}
+            cbu={cuenta.cbu}
+            alias={cuenta.alias || undefined}
+            activa={cuenta.activa}
+            bancoCentralRegistrada={cuenta.banco_central_registrada}
+            syncing={idCuentaSincronizando === cuenta.id}
+            onSync={onSincronizarCuenta ? () => onSincronizarCuenta(cuenta.id) : undefined}
           />
         ))}
       </div>
 
-      {selectedAccountForAlias && (
-        <UpdateAliasForm cbu={selectedAccountForAlias} onSuccess={onAliasUpdated} />
+      {cuentaSeleccionadaParaAlias && (
+        <UpdateAliasForm cbu={cuentaSeleccionadaParaAlias} onSuccess={onAliasUpdated} />
       )}
 
-      {!selectedAccountForAlias && profile.cuentas.length > 0 && (
+      {!cuentaSeleccionadaParaAlias && perfil.cuentas.length > 0 && (
         <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-[#1C0B2E] to-[#2D1548] p-6">
           <h3 className="mb-4 text-lg font-semibold">Actualizar alias de cuenta</h3>
           <p className="mb-4 text-sm text-muted-foreground">
             Selecciona una cuenta para asignarle o cambiarle su alias
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
-            {profile.cuentas.map((account) => (
+            {perfil.cuentas.map((cuenta) => (
               <button
-                key={account.id}
+                key={cuenta.id}
                 type="button"
-                onClick={() => onAliasEdit(account.cbu)}
+                onClick={() => onAliasEdit(cuenta.cbu)}
                 className="rounded-xl border border-primary/20 bg-[#2D1548]/50 px-4 py-3 text-left transition hover:bg-[#2D1548]/70"
               >
-                <p className="font-mono text-sm">{account.cbu}</p>
-                <p className="text-xs text-muted-foreground">{account.tipo_cuenta_nombre || "Cuenta"}</p>
+                <p className="font-mono text-sm">{cuenta.cbu}</p>
+                <p className="text-xs text-muted-foreground">{cuenta.tipo_cuenta_nombre || "Cuenta"}</p>
               </button>
             ))}
           </div>
