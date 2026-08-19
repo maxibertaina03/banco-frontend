@@ -9,6 +9,14 @@ tesorería, auditor) usando los datos reales del backend.
 Forma parte del proyecto integrador de Práctica Profesionalizante I. El
 backend vive en un repo separado: [banco-backend](https://github.com/maxibertaina03/banco-backend).
 
+## Documentación compartida
+
+Lo que aplica a los dos repos vive en
+[`banco-backend/docs/`](https://github.com/maxibertaina03/banco-backend/tree/main/docs):
+
+- **[GLOSARIO.md](https://github.com/maxibertaina03/banco-backend/blob/main/docs/GLOSARIO.md)** — un nombre por concepto. Leer antes de escribir código.
+- **[PLAN.md](https://github.com/maxibertaina03/banco-backend/blob/main/docs/PLAN.md)** — plan por fases y reparto.
+
 ---
 
 ## 📚 Tabla de contenidos
