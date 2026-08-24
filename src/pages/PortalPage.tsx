@@ -342,6 +342,7 @@ export function PortalPage() {
             </section>
           )} */}
         </main>
+<<<<<<< Updated upstream
 
         {/* Comprobante de transferencia exitosa (estilo banco) */}
         <DialogoComprobanteTransferencia
@@ -357,7 +358,9 @@ export function PortalPage() {
           transaccion={transaccionSeleccionada}
           perfil={perfil}
         />
+=======
         <ChatbotWidget />
+>>>>>>> Stashed changes
       </div>
     </ProtectedRoute>
   );
