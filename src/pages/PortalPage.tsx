@@ -13,7 +13,7 @@ import { ErrorBoundary } from "../components/ErrorBoundary";
 import { DialogoComprobanteTransferencia } from "../components/DialogoComprobanteTransferencia";
 import { DialogoDetalleTransaccion } from "../components/DialogoDetalleTransaccion";
 import { usePortalPage } from "../hooks/usePortalPage";
-import { ChatbotWidget } from "../components/ChatbotWidget";
+import { ChatbotWidget } from "../features/chatbot/components/ChatbotWidget";
 
 // Sections cargadas perezosamente: cada una se descarga en su propio chunk
 // cuando el usuario navega a esa tab. Beneficio principal: el cliente normal
@@ -342,7 +342,6 @@ export function PortalPage() {
             </section>
           )} */}
         </main>
-<<<<<<< Updated upstream
 
         {/* Comprobante de transferencia exitosa (estilo banco) */}
         <DialogoComprobanteTransferencia
@@ -358,9 +357,8 @@ export function PortalPage() {
           transaccion={transaccionSeleccionada}
           perfil={perfil}
         />
-=======
-        <ChatbotWidget />
->>>>>>> Stashed changes
+
+        {!necesitaCompletarPerfil && <ChatbotWidget />}
       </div>
     </ProtectedRoute>
   );

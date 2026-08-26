@@ -12,6 +12,12 @@ interface AppProvidersProps {
 const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 const isDev = import.meta.env.DEV;
 
+if (!clerkPublishableKey) {
+  throw new Error(
+    "Falta VITE_CLERK_PUBLISHABLE_KEY. Configúrala en banco-frontend/.env.local y reinicia Vite.",
+  );
+}
+
 export function AppProviders({ children }: AppProvidersProps) {
   return (
     <ClerkProvider publishableKey={clerkPublishableKey}>
