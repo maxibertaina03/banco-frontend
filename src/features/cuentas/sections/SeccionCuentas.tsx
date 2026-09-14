@@ -3,6 +3,8 @@ import { RefreshCw } from "lucide-react";
 import { TarjetaCuenta } from "../../../components/TarjetaCuenta";
 import { UpdateAliasForm } from "../../../components/UpdateAliasForm";
 import type { PersonaCompleta } from "../../../lib/api";
+import { PanelAperturaUsd } from "../components/PanelAperturaUsd";
+import { PanelExtracto } from "../components/PanelExtracto";
 
 interface SeccionCuentasProps {
   onAliasEdit: (cbu: string) => void;
@@ -26,6 +28,7 @@ export const SeccionCuentas = memo(function SeccionCuentas({
   bulkSyncing = false,
 }: SeccionCuentasProps) {
   const unsynced = perfil.cuentas.filter((cuenta) => !cuenta.banco_central_registrada);
+  const tieneCajaEnDolares = perfil.cuentas.some((cuenta) => cuenta.moneda === "USD");
 
   return (
     <div className="grid gap-6">
@@ -54,8 +57,9 @@ export const SeccionCuentas = memo(function SeccionCuentas({
         {perfil.cuentas.map((cuenta) => (
           <TarjetaCuenta
             key={cuenta.id}
-            tipo={cuenta.tipo_cuenta_nombre || "Cuenta bancaria"}
+            tipo={`${cuenta.tipo_cuenta_nombre || "Caja de ahorro"} en ${cuenta.moneda === "USD" ? "dólares" : "pesos"}`}
             saldo={String(cuenta.saldo || 0)}
+            moneda={cuenta.moneda ?? "ARS"}
             cbu={cuenta.cbu}
             alias={cuenta.alias || undefined}
             activa={cuenta.activa}
@@ -65,6 +69,10 @@ export const SeccionCuentas = memo(function SeccionCuentas({
           />
         ))}
       </div>
+
+      {!tieneCajaEnDolares && <PanelAperturaUsd personaId={perfil.persona.id} />}
+
+      {perfil.cuentas.length > 0 && <PanelExtracto cuentas={perfil.cuentas} />}
 
       {cuentaSeleccionadaParaAlias && (
         <UpdateAliasForm cbu={cuentaSeleccionadaParaAlias} onSuccess={onAliasUpdated} />
@@ -85,7 +93,9 @@ export const SeccionCuentas = memo(function SeccionCuentas({
                 className="rounded-xl border border-primary/20 bg-[#2D1548]/50 px-4 py-3 text-left transition hover:bg-[#2D1548]/70"
               >
                 <p className="font-mono text-sm">{cuenta.cbu}</p>
-                <p className="text-xs text-muted-foreground">{cuenta.tipo_cuenta_nombre || "Cuenta"}</p>
+                <p className="text-xs text-muted-foreground">
+                  {cuenta.tipo_cuenta_nombre || "Cuenta"} · {cuenta.moneda ?? "ARS"}
+                </p>
               </button>
             ))}
           </div>

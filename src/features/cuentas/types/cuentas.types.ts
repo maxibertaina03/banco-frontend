@@ -5,6 +5,9 @@ export interface Cuenta {
   numero_cuenta: string;
   cbu: string;
   saldo: number;
+  moneda?: "ARS" | "USD";
+  // La caja en pesos que nació con la persona. Hay exactamente una.
+  principal?: boolean;
   activa: boolean;
   tipo_cuenta_nombre?: string;
   banco_central_registrada?: boolean;

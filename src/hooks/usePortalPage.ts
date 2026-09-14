@@ -11,7 +11,7 @@ import { usePortalActions } from "./usePortalActions";
 import { usePortalData } from "./usePortalData";
 import { usePortalForms } from "./usePortalForms";
 import { obtenerOpcionesDeRol, obtenerAlcanceDeRol } from "../features/personas/api/personas.api";
-import { formatCurrency } from "../lib/utils/currency";
+import { totalesPorMoneda } from "../lib/utils/currency";
 
 export function usePortalPage() {
   const { getToken, isLoaded, isSignedIn } = useAuth();
@@ -61,8 +61,19 @@ export function usePortalPage() {
 
   const roleOptions = useMemo<RolDePortal[]>(() => (perfil ? obtenerOpcionesDeRol(perfil) : ["cliente"]), [perfil]);
   const scope = obtenerAlcanceDeRol(rolActivo);
-  const totalBalance = useMemo(
-    () => perfil?.cuentas.reduce((sum, cuenta) => sum + Number(cuenta.saldo || 0), 0) || 0,
+  // Por moneda: con cajas en USD, sumar todos los saldos mezcla pesos con dólares.
+  const totales = useMemo(() => totalesPorMoneda(perfil?.cuentas ?? []), [perfil]);
+  const totalBalance = totales.ARS;
+  const tieneCajaEnDolares = Boolean(perfil?.cuentas.some((cuenta) => cuenta.moneda === "USD"));
+
+  // La caja en pesos que nació con la persona. Con cajas en USD, `cuentas[0]`
+  // podía ser la de dólares, y el resumen mostraba y copiaba ese CBU como el principal.
+  const cuentaPrincipal = useMemo(
+    () =>
+      perfil?.cuentas.find((cuenta) => cuenta.principal) ??
+      perfil?.cuentas.find((cuenta) => (cuenta.moneda ?? "ARS") === "ARS") ??
+      perfil?.cuentas[0] ??
+      null,
     [perfil]
   );
 
@@ -130,19 +141,19 @@ export function usePortalPage() {
   const manejarIrATransacciones = useCallback(() => setSection("transacciones"), []);
   const handleLoadPersona = useCallback((personaId?: string) => void cargarPortal(personaId), [cargarPortal]);
   const handleCopyCbu = useCallback(() => {
-    const cbu = perfil?.cuentas[0]?.cbu;
+    const cbu = cuentaPrincipal?.cbu;
     if (cbu) {
       void navigator.clipboard.writeText(cbu);
       setSuccess("CBU copiado al portapapeles.");
     }
-  }, [perfil?.cuentas]);
+  }, [cuentaPrincipal]);
   const handleCopyAlias = useCallback(() => {
-    const alias = perfil?.cuentas[0]?.alias;
+    const alias = cuentaPrincipal?.alias;
     if (alias) {
       void navigator.clipboard.writeText(alias);
       setSuccess("Alias copiado al portapapeles.");
     }
-  }, [perfil?.cuentas]);
+  }, [cuentaPrincipal]);
   const handleIncome = useCallback(() => void cargarPortal(perfil?.persona.id), [cargarPortal, perfil?.persona.id]);
   const handleAliasUpdated = useCallback(() => {
     setSuccess("Alias actualizado correctamente.");
@@ -192,6 +203,8 @@ export function usePortalPage() {
     roleOptions,
     scope,
     totalBalance,
+    totalUsd: tieneCajaEnDolares ? totales.USD : null,
+    cuentaPrincipal,
 
     // Notifications
     notifications,

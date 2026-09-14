@@ -7,7 +7,7 @@ import { PortalTabs } from "../components/layout/PortalTabs";
 import { PortalToolbar } from "../components/layout/PortalToolbar";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { SectionLoader } from "../components/SectionLoader";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Card, CardContent } from "../components/ui/card";
 import { formatCurrency } from "../lib/utils/currency";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { DialogoComprobanteTransferencia } from "../components/DialogoComprobanteTransferencia";
@@ -39,6 +39,21 @@ const SeccionDestinatarios = lazy(() =>
     default: m.SeccionDestinatarios,
   }))
 );
+const SeccionCambio = lazy(() =>
+  import("../features/cambio/sections/SeccionCambio").then((m) => ({ default: m.SeccionCambio }))
+);
+const SeccionTarjetas = lazy(() =>
+  import("../features/tarjetas/sections/SeccionTarjetas").then((m) => ({ default: m.SeccionTarjetas }))
+);
+const SeccionPrestamos = lazy(() =>
+  import("../features/prestamos/sections/SeccionPrestamos").then((m) => ({ default: m.SeccionPrestamos }))
+);
+const SeccionInversiones = lazy(() =>
+  import("../features/inversiones/sections/SeccionInversiones").then((m) => ({ default: m.SeccionInversiones }))
+);
+const SeccionPagos = lazy(() =>
+  import("../features/pagos/sections/SeccionPagos").then((m) => ({ default: m.SeccionPagos }))
+);
 const SeccionTransacciones = lazy(() =>
   import("../features/transacciones/sections/SeccionTransacciones").then((m) => ({
     default: m.SeccionTransacciones,
@@ -62,6 +77,7 @@ export function PortalPage() {
     warning,
     scope,
     totalBalance,
+    totalUsd,
     notifications,
     unreadCount,
     markAsRead,
@@ -112,6 +128,7 @@ export function PortalPage() {
     transaccionSeleccionada,
     setTransaccionSeleccionada,
     abrirDetalleDeTransaccion,
+    cuentaPrincipal,
   } = usePortalPage();
 
   return (
@@ -145,8 +162,9 @@ export function PortalPage() {
               <PortalSummary
                 cantidadCuentasActivas={perfil?.cuentas.filter((cuenta) => cuenta.activa).length || 0}
                 totalBalanceLabel={formatCurrency(totalBalance)}
-                cbu={perfil?.cuentas[0]?.cbu}
-                alias={perfil?.cuentas[0]?.alias}
+                totalUsdLabel={totalUsd !== null ? formatCurrency(totalUsd, "USD") : null}
+                cbu={cuentaPrincipal?.cbu}
+                alias={cuentaPrincipal?.alias}
                 onCopyCbu={handleCopyCbu}
                 onCopyAlias={handleCopyAlias}
               />
@@ -251,6 +269,36 @@ export function PortalPage() {
                     </ErrorBoundary>
                   )}
 
+                  {section === "pagos" && (
+                    <ErrorBoundary>
+                      <SeccionPagos perfil={perfil} />
+                    </ErrorBoundary>
+                  )}
+
+                  {section === "cambio" && (
+                    <ErrorBoundary>
+                      <SeccionCambio perfil={perfil} onIrACuentas={manejarIrACuentas} />
+                    </ErrorBoundary>
+                  )}
+
+                  {section === "tarjetas" && (
+                    <ErrorBoundary>
+                      <SeccionTarjetas perfil={perfil} />
+                    </ErrorBoundary>
+                  )}
+
+                  {section === "prestamos" && (
+                    <ErrorBoundary>
+                      <SeccionPrestamos perfil={perfil} />
+                    </ErrorBoundary>
+                  )}
+
+                  {section === "inversiones" && (
+                    <ErrorBoundary>
+                      <SeccionInversiones perfil={perfil} />
+                    </ErrorBoundary>
+                  )}
+
                   {section === "destinatarios" && (
                     <ErrorBoundary>
                       <SeccionDestinatarios
@@ -284,63 +332,6 @@ export function PortalPage() {
             </>
           )}
 
-          {/*
-            Bloque oculto temporalmente — placeholder para futuras features:
-              - Tarjeta Orbital: pendiente de wirear con `tarjetas_credito` y consumos.
-              - Mapa de integración: documentación inline (movida a CHANGELOG.md).
-            No eliminar: cuando se implemente el módulo de tarjetas, descomentar
-            la Card de "Tarjeta Orbital" y conectarla al endpoint correspondiente.
-          */}
-          {/* {!necesitaCompletarPerfil && (
-            <section className="mt-10 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-              <Card className="border-primary/20 bg-gradient-to-br from-[#1C0B2E] to-[#2D1548]">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5 text-primary" />
-                    Tarjeta Orbital
-                  </CardTitle>
-                  <CardDescription>Preparada para conectarse con `tarjetas_credito` y consumos.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="rounded-3xl bg-gradient-to-br from-[#111827] via-[#1F2937] to-[#312E81] p-6 text-white">
-                    <p className="text-sm text-white/70">Orbital Infinite</p>
-                    <p className="mt-6 font-mono text-2xl tracking-[0.3em]">**** **** **** 2048</p>
-                    <div className="mt-6 flex items-end justify-between">
-                      <div>
-                        <p className="text-xs text-white/60">Titular</p>
-                        <p>{perfil?.persona.nombre || "Orbital User"}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-white/60">Vence</p>
-                        <p>12/29</p>
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    El siguiente paso natural es conectar esta sección con los endpoints de tarjetas y consumos para mostrar límite, disponible y últimos movimientos.
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="border-primary/20 bg-gradient-to-br from-[#1C0B2E] to-[#2D1548]">
-                <CardHeader>
-                  <CardTitle>Mapa de integración</CardTitle>
-                  <CardDescription>Qué quedó desacoplado y listo para crecer.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm text-muted-foreground">
-                  <div className="rounded-2xl bg-[#2D1548]/60 p-4">
-                    `src/pages/PortalPage.tsx`: pantalla principal del portal.
-                  </div>
-                  <div className="rounded-2xl bg-[#2D1548]/60 p-4">
-                    `hooks/usePortal*.ts`: datos, formularios y acciones.
-                  </div>
-                  <div className="rounded-2xl bg-[#2D1548]/60 p-4">
-                    `features/*`: API, tipos y secciones de cada dominio.
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
-          )} */}
         </main>
 
         {/* Comprobante de transferencia exitosa (estilo banco) */}

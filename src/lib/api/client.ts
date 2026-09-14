@@ -8,13 +8,17 @@ export class ApiError extends Error {
   status: number;
   details: unknown;
   code?: string;
+  // Body crudo de la respuesta. Hace falta cuando un status de error trae un
+  // resultado de negocio y no un `{ error }`: la autorización rechazada con 422.
+  payload: unknown;
 
-  constructor(message: string, options: { status: number; details?: unknown; code?: string }) {
+  constructor(message: string, options: { status: number; details?: unknown; code?: string; payload?: unknown }) {
     super(message);
     this.name = "ApiError";
     this.status = options.status;
     this.details = options.details ?? null;
     this.code = options.code;
+    this.payload = options.payload ?? null;
   }
 }
 
@@ -63,6 +67,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
       status: response.status,
       details,
       code,
+      payload,
     });
   }
 
@@ -82,6 +87,32 @@ export async function request<T>(path: string, init?: RequestOptions): Promise<T
   const headers = await buildHeaders(init);
   const response = await fetch(`${API_BASE_URL}${path}`, toFetchInit(headers, init));
   return handleResponse<T>(response);
+}
+
+// Para respuestas que no son JSON (el CSV de movimientos). No se puede usar un
+// `<a href>` directo porque la descarga necesita el header Authorization.
+export async function requestArchivo(path: string): Promise<{ blob: Blob; nombre: string | null }> {
+  const headers = await buildHeaders();
+  const response = await fetch(`${API_BASE_URL}${path}`, { headers });
+  if (!response.ok) {
+    await handleResponse<never>(response);
+  }
+  const disposicion = response.headers.get("Content-Disposition") || "";
+  const nombre = /filename="([^"]+)"/.exec(disposicion)?.[1] ?? null;
+  return { blob: await response.blob(), nombre };
+}
+
+// Una clave por intento de operación. Se genera al abrir el formulario y se
+// reutiliza si el usuario reintenta, así un doble click no mueve plata dos veces.
+export function nuevaClaveIdempotencia() {
+  // `randomUUID` sólo existe en contexto seguro (https o localhost): abriendo el
+  // portal por la IP de la red desde un celular no está, y la pantalla rompía.
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40; // versión 4
+  bytes[8] = (bytes[8] & 0x3f) | 0x80; // variante RFC 4122
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
 export async function requestAbsolute<T>(path: string, init?: RequestOptions): Promise<T> {

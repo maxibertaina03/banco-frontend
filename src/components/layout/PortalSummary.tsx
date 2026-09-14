@@ -4,6 +4,8 @@ import { Copy } from "lucide-react";
 interface PortalSummaryProps {
   cantidadCuentasActivas: number;
   totalBalanceLabel: string;
+  // Saldo en dólares, aparte: sumarlo a los pesos daría un número sin sentido.
+  totalUsdLabel?: string | null;
   cbu?: string | null;
   alias?: string | null;
   onCopyCbu?: () => void;
@@ -13,6 +15,7 @@ interface PortalSummaryProps {
 export const PortalSummary = memo(function PortalSummary({
   cantidadCuentasActivas,
   totalBalanceLabel,
+  totalUsdLabel,
   cbu,
   alias,
   onCopyCbu,
@@ -23,9 +26,15 @@ export const PortalSummary = memo(function PortalSummary({
       <p className="text-sm text-muted-foreground">Resumen</p>
       <div className="mt-4 space-y-4">
         <div className="flex items-center justify-between rounded-2xl bg-[#2D1548]/60 p-4">
-          <span>Saldo total</span>
+          <span>{totalUsdLabel ? "Saldo en pesos" : "Saldo total"}</span>
           <span className="text-xl text-primary">{totalBalanceLabel}</span>
         </div>
+        {totalUsdLabel && (
+          <div className="flex items-center justify-between rounded-2xl bg-[#2D1548]/60 p-4">
+            <span>Saldo en dólares</span>
+            <span className="text-xl text-emerald-300">{totalUsdLabel}</span>
+          </div>
+        )}
         <div className="flex items-center justify-between rounded-2xl bg-[#2D1548]/60 p-4">
           <span>Cuentas activas</span>
           <span className="text-xl text-primary">{cantidadCuentasActivas}</span>

@@ -6,3 +6,4 @@ export * from "./personas";
 export * from "./transacciones";
 export * from "./destinatarios";
 export * from "./catalogos";
+export * from "./operaciones";

@@ -8,7 +8,7 @@ import {
 import type { PersonaCompleta } from "../features/personas/types/personas.types";
 import type { SyncIncomingResult } from "../features/transacciones/api/transacciones.api";
 import type { Transaccion } from "../features/transacciones/types/transacciones.types";
-import { ApiError } from "../lib/api/client";
+import { ApiError, nuevaClaveIdempotencia } from "../lib/api/client";
 import {
   useCrearDestinatario,
   useCrearTransferencia,
@@ -150,7 +150,7 @@ export function usePortalActions({
     // y el usuario reintenta MIENTRAS el form está bloqueado, no hay riesgo.
     // Si el frontend nunca recibe la respuesta y el usuario navega a otro
     // lado, el siguiente intento generará un UUID nuevo — aceptable trade-off.
-    const idempotencyKey = crypto.randomUUID();
+    const idempotencyKey = nuevaClaveIdempotencia();
 
     try {
       const created = await mutationCrearTransferencia.mutateAsync({
