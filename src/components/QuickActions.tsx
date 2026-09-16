@@ -1,45 +1,43 @@
-import { ArrowUpRight, ArrowDownLeft, Repeat, Phone, Zap } from 'lucide-react';
+import { ArrowUpRight, CreditCard, DollarSign, Landmark, PiggyBank, Receipt, Users, Wallet } from "lucide-react";
+import { memo } from "react";
+import type { Section } from "../pages/portal.config";
 
 interface QuickActionsProps {
-  onTransferir?: () => void;
-  onIncome?: () => void;
-  onCuentas?: () => void;
-  onContacts?: () => void;
-  onActivity?: () => void;
+  onIr: (section: Section) => void;
 }
 
-export function QuickActions({
-  onTransferir,
-  onIncome,
-  onCuentas,
-  onContacts,
-  onActivity,
-}: QuickActionsProps) {
-  const actions = [
-    { icon: ArrowUpRight, label: 'Transferir', color: 'from-[#A855F7] to-[#9333EA]', onClick: onTransferir },
-    { icon: ArrowDownLeft, label: 'Recargar', color: 'from-[#9333EA] to-[#7C3AED]', onClick: onIncome },
-    { icon: Repeat, label: 'Cuentas', color: 'from-[#A855F7] to-[#7C3AED]', onClick: onCuentas },
-    { icon: Phone, label: 'Contactos', color: 'from-[#9333EA] to-[#A855F7]', onClick: onContacts },
-    { icon: Zap, label: 'Movimientos', color: 'from-[#7C3AED] to-[#9333EA]', onClick: onActivity },
-  ];
+// Los accesos del dashboard son atajos a las secciones, no acciones propias:
+// así no hay dos caminos distintos que hagan lo mismo de maneras distintas.
+const ACCIONES: Array<{ seccion: Section; label: string; icon: typeof ArrowUpRight; color: string }> = [
+  { seccion: "transacciones", label: "Transferir", icon: ArrowUpRight, color: "from-[#A855F7] to-[#9333EA]" },
+  { seccion: "pagos", label: "Pagos", icon: Receipt, color: "from-[#9333EA] to-[#7C3AED]" },
+  { seccion: "cambio", label: "Dólares", icon: DollarSign, color: "from-[#7C3AED] to-[#A855F7]" },
+  { seccion: "tarjetas", label: "Tarjetas", icon: CreditCard, color: "from-[#A855F7] to-[#7C3AED]" },
+  { seccion: "prestamos", label: "Préstamos", icon: Landmark, color: "from-[#9333EA] to-[#A855F7]" },
+  { seccion: "inversiones", label: "Inversiones", icon: PiggyBank, color: "from-[#7C3AED] to-[#9333EA]" },
+  { seccion: "cuentas", label: "Cuentas", icon: Wallet, color: "from-[#A855F7] to-[#9333EA]" },
+  { seccion: "destinatarios", label: "Contactos", icon: Users, color: "from-[#9333EA] to-[#7C3AED]" },
+];
 
+export const QuickActions = memo(function QuickActions({ onIr }: QuickActionsProps) {
   return (
-    <div className="bg-gradient-to-br from-[#1C0B2E] to-[#2D1548] rounded-2xl p-6 border border-primary/20">
+    <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-[#1C0B2E] to-[#2D1548] p-6">
       <h3 className="mb-4">Acciones rápidas</h3>
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
-        {actions.map((action, index) => (
+      <div className="grid grid-cols-4 gap-4 md:grid-cols-8">
+        {ACCIONES.map((accion) => (
           <button
-            key={index}
-            onClick={action.onClick}
-            className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-[#2D1548]/70 transition-all group"
+            key={accion.seccion}
+            type="button"
+            onClick={() => onIr(accion.seccion)}
+            className="group flex flex-col items-center gap-2 rounded-xl p-3 transition-all hover:bg-[#2D1548]/70"
           >
-            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${action.color} flex items-center justify-center group-hover:scale-110 transition-transform`}>
-              <action.icon className="w-6 h-6 text-white" />
+            <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${accion.color} transition-transform group-hover:scale-110`}>
+              <accion.icon className="h-6 w-6 text-white" />
             </div>
-            <span className="text-xs text-center">{action.label}</span>
+            <span className="text-center text-xs">{accion.label}</span>
           </button>
         ))}
       </div>
     </div>
   );
-}
+});

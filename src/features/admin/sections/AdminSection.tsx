@@ -11,6 +11,7 @@ import type {
   TipoCuentaRecord,
 } from "../../../lib/api";
 import { InterbankMassSyncSection } from "./InterbankMassSyncSection";
+import { PanelProcesosInternos } from "../cards/PanelProcesosInternos";
 import { TarjetaListaTransacciones } from "../cards/TarjetaListaTransacciones";
 import { BankLookupCard } from "../cards/BankLookupCard";
 import { BankRenameCard } from "../cards/BankRenameCard";
@@ -121,7 +122,7 @@ export const AdminSection = memo(function AdminSection({
             <span className="text-primary">{perfil.cuentas.length}</span>
           </div>
           <div className="flex items-center justify-between rounded-2xl bg-[#2D1548]/60 p-4">
-            <span>Saldo total</span>
+            <span>Saldo en pesos</span>
             <span className="text-primary">{totalBalance}</span>
           </div>
           <div className="flex items-center gap-3 rounded-2xl bg-[#2D1548]/60 p-4 text-sm text-muted-foreground">
@@ -160,6 +161,9 @@ export const AdminSection = memo(function AdminSection({
       </Card>
 
       {/* Sub-components — each manages its own state */}
+      <div className="xl:col-span-2">
+        <PanelProcesosInternos />
+      </div>
       <InterbankMassSyncSection environment={env} />
       <TarjetaSincronizarCuenta environment={env} perfil={perfil} onCuentaSincronizada={onCuentaSincronizada} />
       <TarjetaListaTransacciones environment={env} />

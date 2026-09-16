@@ -136,9 +136,6 @@ export function usePortalPage() {
   }, [scope, section]);
 
   const manejarIrACuentas = useCallback(() => setSection("cuentas"), []);
-  const handleGoToActivity = useCallback(() => setSection("transacciones"), []);
-  const handleGoToContacts = useCallback(() => setSection("destinatarios"), []);
-  const manejarIrATransacciones = useCallback(() => setSection("transacciones"), []);
   const handleLoadPersona = useCallback((personaId?: string) => void cargarPortal(personaId), [cargarPortal]);
   const handleCopyCbu = useCallback(() => {
     const cbu = cuentaPrincipal?.cbu;
@@ -154,7 +151,6 @@ export function usePortalPage() {
       setSuccess("Alias copiado al portapapeles.");
     }
   }, [cuentaPrincipal]);
-  const handleIncome = useCallback(() => void cargarPortal(perfil?.persona.id), [cargarPortal, perfil?.persona.id]);
   const handleAliasUpdated = useCallback(() => {
     setSuccess("Alias actualizado correctamente.");
     setCuentaSeleccionadaParaAlias(null);
@@ -235,13 +231,9 @@ export function usePortalPage() {
 
     // Handlers
     manejarIrACuentas,
-    handleGoToActivity,
-    handleGoToContacts,
-    manejarIrATransacciones,
     handleLoadPersona,
     handleCopyCbu,
     handleCopyAlias,
-    handleIncome,
     handleAliasUpdated,
     manejarSincronizarCuentaCb,
     handleBulkSyncCb,

@@ -20,6 +20,7 @@ import {
   obtenerResumenTarjeta,
 } from "../../features/tarjetas/api/tarjetas.api";
 import {
+  actualizarMora,
   listarPrestamos,
   obtenerPrestamo,
   pagarCuota,
@@ -30,6 +31,7 @@ import {
   acreditarPlazoFijo,
   constituirPlazoFijo,
   listarPlazosFijos,
+  marcarPlazosFijosVencidos,
 } from "../../features/inversiones/api/inversiones.api";
 import {
   consultarDeuda,
@@ -228,6 +230,26 @@ export function useAcreditarPlazoFijo(personaId: string | null | undefined) {
       void qc.invalidateQueries({ queryKey: queryKeys.plazosFijos.all });
       refrescarSaldos(qc, personaId);
     },
+  });
+}
+
+// ── Procesos internos ──────────────────────────────────────────────────────
+// Los dispara un rol interno a mano. El barrido de mora además informa al Banco
+// Central, así que invalida préstamos para que el listado muestre los estados nuevos.
+
+export function useActualizarMora() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: actualizarMora,
+    onSuccess: () => void qc.invalidateQueries({ queryKey: queryKeys.prestamos.all }),
+  });
+}
+
+export function useMarcarPlazosFijosVencidos() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: marcarPlazosFijosVencidos,
+    onSuccess: () => void qc.invalidateQueries({ queryKey: queryKeys.plazosFijos.all }),
   });
 }
 

@@ -104,13 +104,9 @@ export function PortalPage() {
     syncingIncoming,
     contadorResetTransferencia,
     manejarIrACuentas,
-    handleGoToActivity,
-    handleGoToContacts,
-    manejarIrATransacciones,
     handleLoadPersona,
     handleCopyCbu,
     handleCopyAlias,
-    handleIncome,
     handleAliasUpdated,
     manejarSincronizarCuentaCb,
     handleBulkSyncCb,
@@ -227,11 +223,7 @@ export function PortalPage() {
                       <DashboardSection
                         activities={activities}
                         loading={loading}
-                        onCuentas={manejarIrACuentas}
-                        onActivity={handleGoToActivity}
-                        onContacts={handleGoToContacts}
-                        onIncome={handleIncome}
-                        onTransferir={manejarIrATransacciones}
+                        onIr={setSection}
                         onSelectActivity={abrirDetalleDeTransaccion}
                       />
                     </ErrorBoundary>
