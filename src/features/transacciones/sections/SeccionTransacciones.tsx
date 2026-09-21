@@ -10,6 +10,7 @@ import { Textarea } from "../../../components/ui/textarea";
 import type { PersonaCompleta, ActividadDeUsuario } from "../../../lib/api";
 import { transferenciaSchema, type FormularioTransferencia } from "../../../lib/schemas";
 import { parsearMonto } from "../../../lib/utils/currency";
+import { etiquetaDeCuenta } from "../../../components/operaciones/ui";
 import { type DestinatarioResuelto, resolverDestinatario } from "../api/transacciones.api";
 import type { SyncIncomingResult } from "../api/transacciones.api";
 
@@ -159,14 +160,23 @@ export const SeccionTransacciones = memo(function SeccionTransacciones({
                 className="h-11 rounded-xl border border-primary/20 bg-[#2D1548]/60 px-4 text-sm outline-none"
               >
                 {perfil.cuentas.map((cuenta) => (
+                  // Antes mostraba sólo "Caja de Ahorro — número": con una caja en
+                  // pesos y otra en dólares no había forma de saber cuál era cuál.
                   <option key={cuenta.id} value={cuenta.id}>
-                    {cuenta.tipo_cuenta_nombre || "Cuenta"} — {cuenta.numero_cuenta}
+                    {etiquetaDeCuenta(cuenta)}
                     {cuenta.banco_central_registrada ? "" : " ⚠"}
                   </option>
                 ))}
               </select>
               {errors.cuentaOrigenId && (
                 <span className="text-xs text-destructive">{errors.cuentaOrigenId.message}</span>
+              )}
+
+              {selectedOrigin?.moneda === "USD" && (
+                <p className="text-xs text-muted-foreground">
+                  Desde tu caja en dólares sólo podés transferir a cuentas en dólares. Para pasar a pesos, usá la
+                  sección Dólares.
+                </p>
               )}
 
               {originNotRegistered && (

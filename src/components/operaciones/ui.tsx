@@ -111,9 +111,10 @@ export function Vacio({ children }: { children: ReactNode }) {
   return <p className="rounded-2xl border border-dashed border-primary/20 p-6 text-center text-sm text-muted-foreground">{children}</p>;
 }
 
+/** "Caja de ahorro en pesos · 000116822777 · $ 1.000.000,00": moneda, número y saldo. */
 export function etiquetaDeCuenta(cuenta: Cuenta) {
   const moneda = cuenta.moneda ?? "ARS";
-  return `${moneda === "USD" ? "Caja de ahorro USD" : "Caja de ahorro $"} · ${cuenta.numero_cuenta} · ${formatCurrency(Number(cuenta.saldo), moneda)}`;
+  return `Caja de ahorro en ${moneda === "USD" ? "dólares" : "pesos"} · ${cuenta.numero_cuenta} · ${formatCurrency(Number(cuenta.saldo), moneda)}`;
 }
 
 /**
