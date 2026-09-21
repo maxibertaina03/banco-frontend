@@ -18,6 +18,11 @@ interface DialogoEditarPerfilProps {
   personaId: string | null | undefined;
 }
 
+/** 44673782 → 44.673.782, como figura en el documento. */
+function formatearDni(dni: string) {
+  return /^\d+$/.test(dni) ? Number(dni).toLocaleString("es-AR") : dni;
+}
+
 export function DialogoEditarPerfil({ open, onOpenChange, perfil, personaId }: DialogoEditarPerfilProps) {
   const updateMutation = useActualizarPerfil(personaId);
   const [feedback, setFeedback] = useState<{ kind: "success" | "error"; text: string } | null>(null);
@@ -83,6 +88,19 @@ export function DialogoEditarPerfil({ open, onOpenChange, perfil, personaId }: D
           <DialogTitle>Mis datos</DialogTitle>
           <DialogDescription>Actualizá tu información personal.</DialogDescription>
         </DialogHeader>
+
+        {/* Fuera del formulario: se muestra pero no se edita. Es la clave con la
+            que el Banco Central identifica a la persona y va dentro del CBU, y
+            el backend rechaza cambiarlo una vez completado el perfil. */}
+        {perfil?.dni && (
+          <div className="rounded-xl border border-primary/15 bg-[#2D1548]/40 px-4 py-3">
+            <p className="text-xs text-muted-foreground">DNI</p>
+            <p className="mt-0.5 font-mono text-base tracking-wide">{formatearDni(perfil.dni)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              No se puede modificar desde acá. Si tiene un error, comunicate con el banco.
+            </p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 py-2" noValidate>
           <div className="grid gap-1">
