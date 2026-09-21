@@ -7,7 +7,8 @@ import {
 } from "../features/personas/api/personas.api";
 import type { PersonaCompleta } from "../features/personas/types/personas.types";
 import type { SyncIncomingResult } from "../features/transacciones/api/transacciones.api";
-import type { Transaccion } from "../features/transacciones/types/transacciones.types";
+import type { RespuestaTransferencia } from "../features/transacciones/types/transacciones.types";
+import { parsearMonto } from "../lib/utils/currency";
 import { ApiError, nuevaClaveIdempotencia } from "../lib/api/client";
 import {
   useCrearDestinatario,
@@ -53,7 +54,7 @@ export function usePortalActions({
   const [bulkSyncing, setBulkSyncing] = useState(false);
   const [lastSyncResult, setLastSyncResult] = useState<SyncIncomingResult | null>(null);
   // Comprobante de la última transferencia exitosa (alimenta el modal estilo banco).
-  const [comprobanteTransferencia, setComprobanteTransferencia] = useState<Transaccion | null>(null);
+  const [comprobanteTransferencia, setComprobanteTransferencia] = useState<RespuestaTransferencia | null>(null);
 
   // Counter que se incrementa después de cada submit exitoso. Las sections lo
   // observan vía prop `resetSignal` para limpiar el form RHF interno. Tener
@@ -145,7 +146,13 @@ export function usePortalActions({
     setError(null);
     setSuccess(null);
 
-    const importe = Number(values.monto);
+    // Convención argentina: "1.500" son mil quinientos (con Number() eran 1,5).
+    const importe = parsearMonto(values.monto);
+    if (importe === null) {
+      setSubmitting(false);
+      setError("El monto no es válido.");
+      return;
+    }
     // UUID por intento de transferencia: si el request termina mal (red, etc)
     // y el usuario reintenta MIENTRAS el form está bloqueado, no hay riesgo.
     // Si el frontend nunca recibe la respuesta y el usuario navega a otro
@@ -158,6 +165,7 @@ export function usePortalActions({
         cbuDestino: values.cbuDestino,
         importe,
         saldoOrigen: Number(cuentaOrigen.saldo || 0),
+        descripcion: values.descripcion?.trim() || null,
         idempotencyKey,
       });
 

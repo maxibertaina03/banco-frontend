@@ -132,34 +132,6 @@ export function periodoActual() {
   return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`;
 }
 
-/**
- * Convierte lo que escribe el usuario a número, con la convención argentina:
- * el punto separa miles y la coma, decimales. "1.500" son mil quinientos, no
- * uno con cincuenta. Como mucha gente escribe "1500.50", un punto seguido de
- * uno o dos dígitos también se acepta como decimal.
- *
- * Devuelve `null` si no es un monto válido, incluido más de dos decimales: con
- * plata es mejor rechazar que redondear en silencio.
- */
-export function parsearMonto(texto: string): number | null {
-  const limpio = texto.trim().replace(/\s/g, "");
-  if (!limpio) return null;
-
-  let normalizado: string;
-  if (limpio.includes(",")) {
-    // 1.500,50 → coma decimal, puntos de miles (deben ir en grupos de a 3).
-    if (!/^\d{1,3}(\.\d{3})*,\d{1,2}$|^\d+,\d{1,2}$/.test(limpio)) return null;
-    normalizado = limpio.replace(/\./g, "").replace(",", ".");
-  } else if (/^\d{1,3}(\.\d{3})+$/.test(limpio)) {
-    // 1.500 o 1.000.000 → puntos de miles.
-    normalizado = limpio.replace(/\./g, "");
-  } else if (/^\d+(\.\d{1,2})?$/.test(limpio)) {
-    // 1500 o 1500.50 → punto decimal.
-    normalizado = limpio;
-  } else {
-    return null;
-  }
-
-  const valor = Number(normalizado);
-  return Number.isFinite(valor) && valor > 0 ? valor : null;
-}
+// Vive en lib/utils/currency: lo usan también los schemas, que no deberían
+// depender de componentes de UI.
+export { parsearMonto } from "../../lib/utils/currency";

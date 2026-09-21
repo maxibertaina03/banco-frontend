@@ -1,77 +1,101 @@
-import { CheckCircle2 } from "lucide-react";
+import { Check, Download } from "lucide-react";
 import { Button } from "./ui/button";
-import { Dialog, DialogContent, DialogFooter } from "./ui/dialog";
-import { formatCurrency } from "../lib/utils/currency";
-import type { Transaccion } from "../features/transacciones/types/transacciones.types";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogTitle,
+} from "./ui/dialog";
+import logo from "../imports/image-3.png";
+import type { RespuestaTransferencia } from "../features/transacciones/types/transacciones.types";
+import {
+  filasDelComprobante,
+  imprimirComprobante,
+  montoDelComprobante,
+} from "../features/transacciones/comprobante/comprobante";
 
 interface DialogoComprobanteTransferenciaProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  transaccion: Transaccion | null;
-  /** Nombre del destinatario si lo conocemos (resuelto en el form). */
-  nombreDestinatario?: string | null;
+  comprobante: RespuestaTransferencia | null;
 }
 
-function formatDateTime(iso?: string): string {
-  if (!iso) return "—";
-  return new Intl.DateTimeFormat("es-AR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(iso));
-}
-
-function Row({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-2.5">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <span className={`text-right text-sm ${mono ? "font-mono" : ""}`}>{value}</span>
-    </div>
-  );
-}
-
-/** Comprobante de transferencia exitosa, al estilo de un banco real. */
+/** Comprobante de una transferencia recién hecha, con opción de guardarlo en PDF. */
 export function DialogoComprobanteTransferencia({
   open,
   onOpenChange,
-  transaccion,
-  nombreDestinatario,
+  comprobante,
 }: DialogoComprobanteTransferenciaProps) {
-  if (!transaccion) return null;
-
-  const amount = Number(transaccion.monto || 0);
-  const destino =
-    transaccion.cuenta_destino_numero ||
-    (transaccion.cbu_destino ? transaccion.cbu_destino : "—");
+  if (!comprobante) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#1C0B2E] border-primary/20 sm:max-w-md">
-        {/* Encabezado de éxito */}
-        <div className="flex flex-col items-center gap-3 pt-2 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15">
-            <CheckCircle2 className="h-10 w-10 text-emerald-400" />
+      {/* Columna: el detalle scrollea en su zona y los botones quedan fuera del
+          scroll. En el celular el comprobante es más alto que la pantalla, y
+          si los botones iban adentro quedaban escondidos al final. */}
+      <DialogContent className="flex max-h-[92vh] flex-col gap-0 overflow-hidden border-primary/20 bg-[#1C0B2E] p-0 sm:max-w-md">
+        <div className="overflow-y-auto px-6 pb-5 pt-6">
+          <div className="flex flex-col items-center pt-2 text-center">
+            <img
+              src={logo}
+              alt="Orbital"
+              className="h-7 object-contain opacity-90"
+            />
+
+            <div className="mt-4 flex h-14 w-14 items-center sm:mt-6 sm:h-16 sm:w-16 justify-center rounded-full bg-gradient-to-br from-[#A855F7] to-[#7C3AED] shadow-lg shadow-purple-700/40">
+              <Check
+                className="h-7 w-7 text-white sm:h-8 sm:w-8"
+                strokeWidth={3}
+              />
+            </div>
+
+            <DialogTitle className="mt-4 text-xl font-semibold">
+              ¡Transferencia exitosa!
+            </DialogTitle>
+            <DialogDescription className="mt-1 text-sm text-muted-foreground">
+              Comprobante de la operación
+            </DialogDescription>
+
+            <p className="mt-4 bg-gradient-to-r from-[#E9D5FF] to-[#A855F7] bg-clip-text text-3xl font-bold text-transparent sm:mt-5 sm:text-4xl">
+              {montoDelComprobante(comprobante)}
+            </p>
           </div>
-          <div>
-            <h2 className="text-lg font-semibold text-emerald-200">¡Transferencia exitosa!</h2>
-            <p className="text-xs text-muted-foreground">Tu comprobante quedó registrado.</p>
-          </div>
-          <p className="mt-1 text-3xl font-semibold text-primary">{formatCurrency(Math.abs(amount))}</p>
+
+          <dl className="mt-4 divide-y divide-primary/10 rounded-2xl border border-dashed border-primary/30 bg-[#2D1548]/30 px-4">
+            {filasDelComprobante(comprobante).map((fila) => (
+              <div
+                key={fila.etiqueta}
+                className="flex items-start justify-between gap-4 py-2.5"
+              >
+                <dt className="shrink-0 text-xs text-muted-foreground">
+                  {fila.etiqueta}
+                </dt>
+                <dd
+                  className={`break-all text-right font-medium ${fila.mono ? "font-mono text-xs sm:text-[13px]" : "text-sm"}`}
+                >
+                  {fila.valor}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
 
-        {/* Detalle */}
-        <div className="mt-4 divide-y divide-primary/10 rounded-2xl border border-primary/15 bg-[#2D1548]/40 px-4">
-          {nombreDestinatario && <Row label="Destinatario" value={nombreDestinatario} />}
-          <Row label="Destino" value={destino} mono={destino !== "—"} />
-          <Row label="Fecha y hora" value={formatDateTime(transaccion.created_at)} />
-          <Row label="N° de operación" value={transaccion.id} mono />
-          <Row label="Estado" value="Completada" />
-        </div>
-
-        <DialogFooter className="mt-2">
-          <Button type="button" className="w-full" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="gap-2 border-t border-primary/10 px-6 py-4 sm:flex-row">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full sm:flex-1"
+            onClick={() => imprimirComprobante(comprobante)}
+          >
+            <Download className="h-4 w-4" />
+            Guardar PDF
+          </Button>
+          <Button
+            type="button"
+            className="w-full sm:flex-1"
+            onClick={() => onOpenChange(false)}
+          >
             Listo
           </Button>
         </DialogFooter>

@@ -9,6 +9,7 @@ import { Input } from "../../../components/ui/input";
 import { Textarea } from "../../../components/ui/textarea";
 import type { PersonaCompleta, ActividadDeUsuario } from "../../../lib/api";
 import { transferenciaSchema, type FormularioTransferencia } from "../../../lib/schemas";
+import { parsearMonto } from "../../../lib/utils/currency";
 import { type DestinatarioResuelto, resolverDestinatario } from "../api/transacciones.api";
 import type { SyncIncomingResult } from "../api/transacciones.api";
 
@@ -247,12 +248,14 @@ export const SeccionTransacciones = memo(function SeccionTransacciones({
 
             <div className="grid gap-1">
               <label className="text-xs text-muted-foreground">Monto</label>
+              {/* Texto con teclado decimal y no type="number": ese tipo no deja
+                  escribir la coma decimal, y "1.500" se leía como 1,5. Se valida
+                  con la convención argentina, igual que el resto del portal. */}
               <Input
                 {...register("monto")}
-                placeholder="0.00"
-                type="number"
-                min="0.01"
-                step="0.01"
+                placeholder="0,00"
+                inputMode="decimal"
+                autoComplete="off"
                 aria-invalid={errors.monto ? "true" : "false"}
               />
               {errors.monto && (
@@ -276,8 +279,7 @@ export const SeccionTransacciones = memo(function SeccionTransacciones({
                 !cbuDestino ||
                 lookupState === "loading" ||
                 lookupState === "not_found" ||
-                !monto ||
-                Number(monto) <= 0
+                parsearMonto(monto ?? "") === null
               }
             >
               {submitting ? (

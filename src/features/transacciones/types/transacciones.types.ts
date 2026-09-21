@@ -30,6 +30,27 @@ export interface Transaccion {
   tipo_transaccion_nombre?: string;
 }
 
+/**
+ * Lo que devuelve POST /transacciones. No es una `Transaccion`: el comprobante
+ * la trataba como tal, leía `monto`, `id` y `created_at`, que no vienen, y
+ * mostraba "$ 0,00" sin fecha ni número de operación.
+ */
+export interface RespuestaTransferencia {
+  message: string;
+  /** El id del Banco Central si pasó por él; si no, el nuestro. */
+  idTransaccion: string;
+  estado: "aprobada" | "rechazada";
+  cbuOrigen: string;
+  cbuDestino: string;
+  importe: number;
+  nombreOrigen: string | null;
+  nombreDestino: string | null;
+  fecha: string;
+  descripcion: string | null;
+  moneda: "ARS" | "USD";
+  bancoDestino: string | null;
+}
+
 export interface TipoTransaccionRecord {
   id: string;
   nombre: string;

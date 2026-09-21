@@ -36,6 +36,7 @@ export function useCrearTransferencia(personaId: string | null | undefined) {
       cbuDestino: string;
       importe: number;
       saldoOrigen: number;
+      descripcion?: string | null;
       idempotencyKey?: string;
     }) => crearTransferencia(payload, { idempotencyKey }),
     onSuccess: () => {

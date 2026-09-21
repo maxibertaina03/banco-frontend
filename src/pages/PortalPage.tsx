@@ -330,7 +330,7 @@ export function PortalPage() {
         <DialogoComprobanteTransferencia
           open={comprobanteTransferencia !== null}
           onOpenChange={(o) => { if (!o) setComprobanteTransferencia(null); }}
-          transaccion={comprobanteTransferencia}
+          comprobante={comprobanteTransferencia}
         />
 
         {/* Detalle de un movimiento al tocarlo en la lista */}

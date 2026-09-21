@@ -4,12 +4,14 @@ import type {
   TipoTransaccionRecord,
   Transaccion,
   ActividadDeUsuario,
+  RespuestaTransferencia,
 } from "../types/transacciones.types";
 
 export type {
   TipoTransaccionRecord,
   Transaccion,
   ActividadDeUsuario,
+  RespuestaTransferencia,
 } from "../types/transacciones.types";
 
 interface ListResponse<T> {
@@ -50,10 +52,11 @@ export function crearTransferencia(
     cbuDestino: string;
     importe: number;
     saldoOrigen: number;
+    descripcion?: string | null;
   },
   options?: { idempotencyKey?: string }
 ) {
-  return request<Transaccion>("/transacciones", {
+  return request<RespuestaTransferencia>("/transacciones", {
     method: "POST",
     body: JSON.stringify(payload),
     idempotencyKey: options?.idempotencyKey,
