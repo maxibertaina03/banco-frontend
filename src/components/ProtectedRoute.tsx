@@ -1,5 +1,5 @@
 import { useUser } from "@clerk/clerk-react";
-import { LoginPage } from "./LoginPage";
+import { Navigate } from "react-router";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -19,8 +19,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
+  // Ruta propia en vez de renderizar el login acá: así el ingreso y el
+  // registro tienen URL, y Clerk puede ir y volver entre los dos.
   if (!isSignedIn) {
-    return <LoginPage />;
+    return <Navigate to="/ingresar" replace />;
   }
 
   return <>{children}</>;
