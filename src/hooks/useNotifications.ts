@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Cuenta } from "../features/cuentas/types/cuentas.types";
 import type { Transaccion } from "../features/transacciones/types/transacciones.types";
+import { formatCurrency } from "../lib/utils/currency";
 
 // Sistema de notificaciones bancarias.
 //
@@ -24,6 +25,8 @@ export interface NotificationItem {
   date: string;
   isoDate: string;
   read: boolean;
+  /** Llegó pero no se acreditó (monedas distintas): se muestra, pero sin "+". */
+  rechazada: boolean;
 }
 
 const STORAGE_KEY_PREFIX = "orbital:notifications:read:";
@@ -52,12 +55,19 @@ function writeStored(personaId: string, ids: Set<string>) {
   }
 }
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    minimumFractionDigits: 2,
-  }).format(amount);
+/** Qué fue el ingreso. Antes todo lo que no era un depósito decía "Transferencia recibida". */
+function tituloDe(tx: Transaccion): string {
+  if (tx.estado === "rechazada") return "Transferencia no acreditada";
+  switch (tx.canal) {
+    case "deposito_efectivo":
+      return "Depósito acreditado";
+    case "prestamo_acreditado":
+      return "Préstamo acreditado";
+    case "plazo_fijo_acreditacion":
+      return "Plazo fijo acreditado";
+    default:
+      return "Transferencia recibida";
+  }
 }
 
 function formatDate(iso: string): string {
@@ -112,24 +122,31 @@ export function useNotifications({ personaId, transacciones, cuentas }: UseNotif
   }, [transacciones, cuentas]);
 
   const notifications = useMemo<NotificationItem[]>(() => {
+    // El movimiento no trae la moneda: es la de la cuenta que lo recibió. Sin
+    // esto, una transferencia en dólares se mostraba como pesos.
+    const monedaDeCuenta = new Map(cuentas.map((c) => [c.id, c.moneda ?? "ARS"]));
+
     return incoming.slice(0, 30).map((tx) => {
       const amount = Number(tx.monto || 0);
+      const moneda = monedaDeCuenta.get(tx.cuenta_destino_id as string) ?? "ARS";
+      const rechazada = tx.estado === "rechazada";
       const destinatario =
         tx.descripcion ||
         tx.cuenta_origen_numero ||
         (tx.cbu_origen ? `CBU ...${tx.cbu_origen.slice(-6)}` : "Transferencia recibida");
       return {
         id: tx.id,
-        title: tx.canal === "deposito_efectivo" ? "Depósito acreditado" : "Transferencia recibida",
+        title: tituloDe(tx),
         amount,
-        amountLabel: `+${formatCurrency(Math.abs(amount))}`,
+        amountLabel: `${rechazada ? "" : "+"}${formatCurrency(Math.abs(amount), moneda)}`,
         destinatario,
         date: formatDate(tx.created_at),
         isoDate: tx.created_at,
         read: readIds.has(tx.id),
+        rechazada,
       };
     });
-  }, [incoming, readIds]);
+  }, [incoming, readIds, cuentas]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 

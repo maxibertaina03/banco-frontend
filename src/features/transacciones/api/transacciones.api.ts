@@ -78,6 +78,8 @@ export interface SyncIncomingResult {
   processed: number;
   synced: number;
   already_recorded: number;
+  /** Llegaron pero no se acreditaron: monedas distintas entre origen y destino. */
+  rechazadas?: number;
   errors: number;
 }
 

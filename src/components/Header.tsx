@@ -120,7 +120,9 @@ export function Header({
                               {!n.read && <span className="h-1.5 w-1.5 rounded-full bg-[#A855F7]" />}
                               {n.title}
                             </span>
-                            <span className="text-sm font-medium text-emerald-300">{n.amountLabel}</span>
+                            <span className={`text-sm font-medium ${n.rechazada ? "text-amber-300" : "text-emerald-300"}`}>
+                              {n.amountLabel}
+                            </span>
                           </div>
                           <p className="text-xs text-muted-foreground truncate">{n.destinatario}</p>
                           <p className="text-[10px] text-muted-foreground/80">{n.date}</p>

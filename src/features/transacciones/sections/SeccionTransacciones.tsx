@@ -76,15 +76,8 @@ export const SeccionTransacciones = memo(function SeccionTransacciones({
   const [lookupInput, setLookupInput] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Auto-sync de transferencias entrantes al montar (best-effort).
-  const syncCalledRef = useRef(false);
-  useEffect(() => {
-    if (!syncCalledRef.current) {
-      syncCalledRef.current = true;
-      onSyncIncoming();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // La sincronización de entrantes ya no se dispara acá: corre sola en todo el
+  // portal (useSincronizacionAutomatica). El botón "Actualizar" queda para forzarla.
 
   async function runLookup(value: string) {
     const trimmed = value.trim();

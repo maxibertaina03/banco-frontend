@@ -6,7 +6,7 @@ import type { RolDePortal } from "../features/personas/types/personas.types";
 import type { Transaccion } from "../features/transacciones/types/transacciones.types";
 import type { Section } from "../pages/portal.config";
 import { useNotifications } from "./useNotifications";
-import { useTransaccionesDePersona } from "../lib/queries";
+import { useSincronizacionAutomatica, useTransaccionesDePersona } from "../lib/queries";
 import { usePortalActions } from "./usePortalActions";
 import { usePortalData } from "./usePortalData";
 import { usePortalForms } from "./usePortalForms";
@@ -78,6 +78,10 @@ export function usePortalPage() {
   );
 
   const queryTransaccionesDePersona = useTransaccionesDePersona(perfil?.persona.id);
+
+  // Las transferencias de otros bancos se traen solas, en cualquier pestaña del
+  // portal. Con el usuario autenticado, que es de quien sincroniza el backend.
+  useSincronizacionAutomatica(perfilAutenticado?.persona_id);
   const {
     notifications,
     unreadCount,
