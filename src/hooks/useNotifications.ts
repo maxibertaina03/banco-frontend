@@ -65,6 +65,8 @@ function tituloDe(tx: Transaccion): string {
       return "Préstamo acreditado";
     case "plazo_fijo_acreditacion":
       return "Plazo fijo acreditado";
+    case "bonificacion":
+      return "Bonificación acreditada";
     default:
       return "Transferencia recibida";
   }

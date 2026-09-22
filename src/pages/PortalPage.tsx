@@ -14,6 +14,8 @@ import { DialogoComprobanteTransferencia } from "../components/DialogoComprobant
 import { DialogoDetalleTransaccion } from "../components/DialogoDetalleTransaccion";
 import { usePortalPage } from "../hooks/usePortalPage";
 import { ChatbotWidget } from "../features/chatbot/components/ChatbotWidget";
+import { DialogoOrbitaSecreta } from "../features/bonificaciones/DialogoOrbitaSecreta";
+import { useOrbitaSecreta } from "../features/bonificaciones/useOrbitaSecreta";
 
 // Sections cargadas perezosamente: cada una se descarga en su propio chunk
 // cuando el usuario navega a esa tab. Beneficio principal: el cliente normal
@@ -126,6 +128,10 @@ export function PortalPage() {
     abrirDetalleDeTransaccion,
     cuentaPrincipal,
   } = usePortalPage();
+
+  // Si encontró la órbita secreta en el login, se cobra acá. Espera al perfil
+  // completo: sin DNI no se le puede abrir la caja en dólares.
+  const orbitaSecreta = useOrbitaSecreta(Boolean(perfil) && !necesitaCompletarPerfil && !loading);
 
   return (
     <ProtectedRoute>
@@ -340,6 +346,8 @@ export function PortalPage() {
           transaccion={transaccionSeleccionada}
           perfil={perfil}
         />
+
+        <DialogoOrbitaSecreta estado={orbitaSecreta.estado} onCerrar={orbitaSecreta.cerrar} />
 
         {!necesitaCompletarPerfil && <ChatbotWidget />}
       </div>

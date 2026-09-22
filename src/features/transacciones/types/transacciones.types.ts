@@ -11,7 +11,8 @@ export type CanalTransaccion =
   | "plazo_fijo_acreditacion"
   | "consumo_tarjeta"
   | "pago_servicio"
-  | "recarga_celular";
+  | "recarga_celular"
+  | "bonificacion";
 
 export interface Transaccion {
   id: string;

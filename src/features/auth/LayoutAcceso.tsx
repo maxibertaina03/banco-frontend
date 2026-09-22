@@ -1,10 +1,12 @@
 // Marco común del ingreso y el registro: la marca a la izquierda y el
 // formulario de Clerk a la derecha. En pantallas chicas se apila.
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { ArrowLeftRight, Landmark, Wallet } from "lucide-react";
 import logo from "../../imports/image-3.png";
 import { IsotipoOrbital } from "../../components/marca/IsotipoOrbital";
+import { DialogoOrbitaSecreta } from "../bonificaciones/DialogoOrbitaSecreta";
+import { festejar, marcarPendiente } from "../bonificaciones/orbita-secreta";
 
 const BENEFICIOS = [
   { icono: Wallet, texto: "Cuentas en pesos y en dólares" },
@@ -19,6 +21,14 @@ interface LayoutAccesoProps {
 }
 
 export function LayoutAcceso({ titulo, bajada, children }: LayoutAccesoProps) {
+  const [descubierta, setDescubierta] = useState(false);
+
+  function descubrir() {
+    marcarPendiente();
+    festejar();
+    setDescubierta(true);
+  }
+
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#0A0118] text-white">
       <Orbitas />
@@ -51,13 +61,43 @@ export function LayoutAcceso({ titulo, bajada, children }: LayoutAccesoProps) {
       <footer className="relative pb-6 text-center text-xs text-purple-300/50">
         © {new Date().getFullYear()} Banco Orbital
       </footer>
+
+      <OrbitaSecreta onDescubrir={descubrir} />
+      <DialogoOrbitaSecreta estado={descubierta ? { tipo: "descubierta" } : null} onCerrar={() => setDescubierta(false)} />
     </div>
   );
 }
 
 /**
- * Anillos concéntricos de fondo, con el isotipo girando en uno. Es decoración:
- * `aria-hidden` y la animación se apaga si el sistema pide menos movimiento.
+ * El isotipo que orbita, y que se puede tocar: la órbita secreta.
+ *
+ * Va en su propia capa, arriba del contenido: en la de fondo los clicks los
+ * tapaba el contenido. Y se recorta a la mitad izquierda para que, al girar,
+ * nunca pase por encima del formulario y se robe el click de "Continuar".
+ * Sin foco de teclado: es un easter egg, no una función.
+ */
+function OrbitaSecreta({ onDescubrir }: { onDescubrir: () => void }) {
+  return (
+    <div className="pointer-events-none absolute inset-y-0 left-0 z-20 hidden w-1/2 overflow-hidden lg:block">
+      <div className="absolute left-[-8rem] top-1/2 h-[50rem] w-[50rem] -translate-y-1/2 motion-safe:animate-[spin_60s_linear_infinite]">
+        <button
+          type="button"
+          tabIndex={-1}
+          aria-hidden
+          onClick={onDescubrir}
+          className="pointer-events-auto absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 cursor-pointer rounded-full p-1 opacity-80 transition hover:scale-125 hover:opacity-100 hover:drop-shadow-[0_0_14px_rgba(168,85,247,0.9)]"
+        >
+          <IsotipoOrbital size={36} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Anillos concéntricos de fondo. Es decoración: `aria-hidden`. El isotipo que
+ * gira en uno de ellos vive aparte, en OrbitaSecreta, porque se puede tocar.
+ * En el celular no está: quedaba pegado al logo y se veía repetido.
  */
 function Orbitas() {
   return (
@@ -70,12 +110,6 @@ function Orbitas() {
           style={{ width: `${tamano}rem`, height: `${tamano}rem` }}
         />
       ))}
-      {/* En el celular queda pegado al logo y se ve repetido: sólo en pantallas grandes. */}
-      <div
-        className="absolute left-[-8rem] top-1/2 hidden h-[50rem] w-[50rem] -translate-y-1/2 motion-safe:animate-[spin_60s_linear_infinite] lg:block"
-      >
-        <IsotipoOrbital size={36} className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 opacity-80" />
-      </div>
     </div>
   );
 }

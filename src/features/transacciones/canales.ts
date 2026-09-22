@@ -15,6 +15,7 @@ export const ETIQUETA_DE_CANAL: Record<CanalTransaccion, string> = {
   consumo_tarjeta: "Consumo con tarjeta de débito",
   pago_servicio: "Pago de servicio",
   recarga_celular: "Recarga de celular",
+  bonificacion: "Bonificación",
 };
 
 export function etiquetaDeCanal(canal: string | null | undefined, respaldo = "Movimiento") {
