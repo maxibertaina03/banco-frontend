@@ -22,27 +22,27 @@ export const PortalSummary = memo(function PortalSummary({
   onCopyAlias,
 }: PortalSummaryProps) {
   return (
-    <div className="rounded-3xl border border-primary/20 bg-gradient-to-br from-[#1C0B2E] to-[#2D1548] p-6">
+    <div className="rounded-3xl border border-primary/20 bg-gradient-to-br from-[#1C0B2E] to-[#2D1548] p-4 sm:p-6">
       <p className="text-sm text-muted-foreground">Resumen</p>
-      <div className="mt-4 space-y-4">
-        <div className="flex items-center justify-between rounded-2xl bg-[#2D1548]/60 p-4">
+      <div className="mt-3 space-y-2 sm:mt-4 sm:space-y-4">
+        <div className="flex items-center justify-between rounded-2xl bg-[#2D1548]/60 p-3 sm:p-4">
           <span>{totalUsdLabel ? "Saldo en pesos" : "Saldo total"}</span>
-          <span className="text-xl text-primary">{totalBalanceLabel}</span>
+          <span className="text-lg text-primary sm:text-xl">{totalBalanceLabel}</span>
         </div>
         {totalUsdLabel && (
-          <div className="flex items-center justify-between rounded-2xl bg-[#2D1548]/60 p-4">
+          <div className="flex items-center justify-between rounded-2xl bg-[#2D1548]/60 p-3 sm:p-4">
             <span>Saldo en dólares</span>
-            <span className="text-xl text-emerald-300">{totalUsdLabel}</span>
+            <span className="text-lg text-emerald-300 sm:text-xl">{totalUsdLabel}</span>
           </div>
         )}
-        <div className="flex items-center justify-between rounded-2xl bg-[#2D1548]/60 p-4">
+        <div className="flex items-center justify-between rounded-2xl bg-[#2D1548]/60 p-3 sm:p-4">
           <span>Cuentas activas</span>
-          <span className="text-xl text-primary">{cantidadCuentasActivas}</span>
+          <span className="text-lg text-primary sm:text-xl">{cantidadCuentasActivas}</span>
         </div>
 
         {/* CBU del cliente logueado, con botón para copiarlo */}
         {cbu && (
-          <div className="rounded-2xl bg-[#2D1548]/60 p-4">
+          <div className="rounded-2xl bg-[#2D1548]/60 p-3 sm:p-4">
             <div className="flex items-center justify-between gap-2">
               <span>CBU</span>
               <button
@@ -60,7 +60,7 @@ export const PortalSummary = memo(function PortalSummary({
 
         {/* Alias del cliente logueado, con botón para copiarlo */}
         {cbu && (
-          <div className="flex items-center justify-between gap-2 rounded-2xl bg-[#2D1548]/60 p-4">
+          <div className="flex items-center justify-between gap-2 rounded-2xl bg-[#2D1548]/60 p-3 sm:p-4">
             <span>Alias</span>
             <div className="flex items-center gap-2">
               <span className="text-sm text-primary">{alias || "Sin alias"}</span>

@@ -157,7 +157,9 @@ function FilaFactura({ factura, numeroCliente, cuentas, personaId }: { factura: 
 
   return (
     <div className="grid gap-3 rounded-2xl border border-primary/15 bg-[#2D1548]/40 p-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      {/* En el celular el monto siempre abajo: con `flex-wrap`, según el largo de
+          la fecha, a veces quedaba al costado y a veces no. */}
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
         <div>
           <p className="font-medium">Período {factura.periodo}</p>
           <p className={`text-xs ${factura.estado === "vencida" ? "text-destructive" : "text-muted-foreground"}`}>

@@ -154,7 +154,11 @@ export function PortalPage() {
 
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           {!necesitaCompletarPerfil && (
-            <section className="mb-8 grid gap-6 lg:grid-cols-[1.45fr_0.55fr]">
+            <section className="mb-8 grid gap-6 lg:grid-cols-2 lg:items-start xl:grid-cols-[1.3fr_0.7fr]">
+              {/* Mitad y mitad en tablet horizontal: con la proporción de escritorio,
+                  a 1024px el resumen quedaba en 260px y partía "Saldo en pesos" en
+                  tres renglones. `items-start` evita que el banner se estire vacío
+                  hasta la altura del resumen. */}
               <PortalHero
                 rolActivo={rolActivo}
                 onRoleChange={setRolActivo}

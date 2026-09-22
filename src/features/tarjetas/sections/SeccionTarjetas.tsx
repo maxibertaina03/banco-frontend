@@ -80,7 +80,9 @@ function Plastico({ tarjeta, titular, activa, onClick }: { tarjeta: Tarjeta; tit
           <CreditCard className="h-5 w-5 text-white/70" />
         )}
       </div>
-      <p className="mt-6 font-mono text-lg tracking-[0.2em] sm:text-xl">{tarjeta.numero_enmascarado}</p>
+      {/* Más chico en pantallas angostas: a 360px el número no entraba, el
+          "8281" bajaba de renglón y quedaba encima de "Titular". */}
+      <p className="mt-6 whitespace-nowrap font-mono text-base tracking-[0.12em] sm:text-xl sm:tracking-[0.2em]">{tarjeta.numero_enmascarado}</p>
       <div className="absolute inset-x-5 bottom-4 flex items-end justify-between text-xs">
         <div>
           <p className="text-white/60">Titular</p>

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ApiError, setAccessTokenProvider } from "../lib/api/client";
 import { formatCurrency } from "../lib/utils/currency";
+import { etiquetaDeCanal } from "../features/transacciones/canales";
 import type { Cuenta } from "../features/cuentas/types/cuentas.types";
 import { sanearIdDePersona } from "../features/personas/api/personas.api";
 import type {
@@ -39,6 +40,8 @@ function armarActividades(
   cuentas: Cuenta[]
 ) {
   const idsCuenta = new Set(cuentas.map((cuenta) => cuenta.id));
+  // El movimiento no trae la moneda: es la de nuestra cuenta que lo movió.
+  const monedaDeCuenta = new Map(cuentas.map((cuenta) => [cuenta.id, cuenta.moneda ?? "ARS"]));
 
   return transacciones.slice(0, 8).map((transaccion) => {
     const amount = Number(transaccion.monto || 0);
@@ -66,9 +69,14 @@ function armarActividades(
     return {
       id: transaccion.id,
       type: incoming ? "in" : "out",
-      title: transaccion.tipo_transaccion_nombre || "Movimiento",
+      // Por canal y no por el tipo crudo: antes decía "transferencia" en casi
+      // todo, incluidos pagos de servicios, recargas y cambios de moneda.
+      title: etiquetaDeCanal(transaccion.canal, transaccion.tipo_transaccion_nombre || "Movimiento"),
       destinatario,
-      amount: `${incoming ? "+" : "-"}${formatCurrency(Math.abs(amount))}`,
+      amount: `${incoming ? "+" : "-"}${formatCurrency(
+        Math.abs(amount),
+        monedaDeCuenta.get((incoming ? transaccion.cuenta_destino_id : transaccion.cuenta_origen_id) as string) ?? "ARS"
+      )}`,
       date: new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "short" }).format(date),
       time: new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(date),
     } satisfies ActividadDeUsuario;

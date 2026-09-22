@@ -24,7 +24,7 @@ export const DashboardSection = memo(function DashboardSection({
       </div>
 
       <div className="grid gap-6">
-        <RecentActivity activities={activities} loading={loading} onSelect={onSelectActivity} />
+        <RecentActivity activities={activities} loading={loading} onSelect={onSelectActivity} onVerTodo={() => onIr("cuentas")} />
       </div>
     </>
   );

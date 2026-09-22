@@ -7,6 +7,8 @@ interface RecentActivityProps {
   loading?: boolean;
   /** Al tocar un movimiento, abre su detalle. */
   onSelect?: (activityId: string) => void;
+  /** Lleva al extracto completo. Sin esto, el botón "Ver todo" no se muestra. */
+  onVerTodo?: () => void;
 }
 
 const iconMap = {
@@ -16,14 +18,17 @@ const iconMap = {
   service: Smartphone,
 } as const;
 
-export const RecentActivity = memo(function RecentActivity({ activities, loading = false, onSelect }: RecentActivityProps) {
+export const RecentActivity = memo(function RecentActivity({ activities, loading = false, onSelect, onVerTodo }: RecentActivityProps) {
   return (
-    <div className="bg-gradient-to-br from-[#1C0B2E] to-[#2D1548] rounded-2xl p-6 border border-primary/20">
+    <div className="bg-gradient-to-br from-[#1C0B2E] to-[#2D1548] rounded-2xl p-4 sm:p-6 border border-primary/20">
       <div className="flex items-center justify-between mb-4">
         <h3>Actividad reciente</h3>
-        <button className="text-sm text-[#A855F7] hover:text-[#C084FC] transition-colors">
-          Ver todo
-        </button>
+        {/* Antes el botón estaba pero no hacía nada. */}
+        {onVerTodo && (
+          <button type="button" onClick={onVerTodo} className="text-sm text-[#A855F7] hover:text-[#C084FC] transition-colors">
+            Ver todo
+          </button>
+        )}
       </div>
 
       <div className="space-y-3">
@@ -54,10 +59,10 @@ export const RecentActivity = memo(function RecentActivity({ activities, loading
                   onSelect(activity.id);
                 }
               }}
-              className="flex items-center gap-4 p-3 rounded-xl hover:bg-[#2D1548]/70 transition-colors cursor-pointer"
+              className="flex items-center gap-3 sm:gap-4 p-2 sm:p-3 rounded-xl hover:bg-[#2D1548]/70 transition-colors cursor-pointer"
             >
               <div
-                className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center ${
                   activity.type === 'in'
                     ? 'bg-emerald-500/20 text-emerald-400'
                     : activity.type === 'out'
@@ -73,7 +78,7 @@ export const RecentActivity = memo(function RecentActivity({ activities, loading
                 <p className="text-xs text-muted-foreground truncate">{activity.destinatario}</p>
               </div>
 
-              <div className="text-right">
+              <div className="shrink-0 text-right">
                 <p className={`text-sm ${activity.type === 'in' ? 'text-emerald-400' : 'text-foreground'}`}>
                   {activity.amount}
                 </p>

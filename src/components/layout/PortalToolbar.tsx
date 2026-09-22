@@ -26,7 +26,7 @@ export const PortalToolbar = memo(function PortalToolbar({
   submitting,
 }: PortalToolbarProps) {
   return (
-    <section className="mb-8 grid gap-4 lg:grid-cols-[1fr_auto_auto]">
+    <section className="mb-8 grid gap-4 lg:grid-cols-[1fr_auto_auto] lg:items-center">
       <div className="rounded-2xl border border-primary/20 bg-[#1C0B2E] p-4">
         <p className="text-sm text-muted-foreground">Persona activa</p>
         {personas.length > 0 ? (
@@ -51,12 +51,12 @@ export const PortalToolbar = memo(function PortalToolbar({
         )}
       </div>
 
-      <Button onClick={() => onLoadPersona(manualPersonaId || selectedPersonaId || undefined)} disabled={loading || submitting}>
+      <Button className="h-11" onClick={() => onLoadPersona(manualPersonaId || selectedPersonaId || undefined)} disabled={loading || submitting}>
         <RefreshCcw className="mr-2 h-4 w-4" />
         Recargar
       </Button>
 
-      <div className="flex items-center gap-2 rounded-2xl border border-primary/20 bg-[#1C0B2E] px-4">
+      <div className="flex h-11 items-center gap-2 rounded-2xl border border-primary/20 bg-[#1C0B2E] px-4">
         {scope === "admin" ? <ShieldCheck className="h-4 w-4 text-primary" /> : <Building2 className="h-4 w-4 text-primary" />}
         <span className="text-sm">{scope === "admin" ? "Panel administrativo" : "Portal cliente"}</span>
       </div>

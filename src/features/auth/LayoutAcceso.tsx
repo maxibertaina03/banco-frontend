@@ -33,9 +33,13 @@ export function LayoutAcceso({ titulo, bajada, children }: LayoutAccesoProps) {
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-[#0A0118] text-white">
       <Orbitas />
 
-      <div className="relative mx-auto grid w-full max-w-6xl flex-1 items-center gap-10 px-4 py-10 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+      <div className="relative mx-auto grid w-full max-w-6xl flex-1 content-center items-center gap-10 px-4 py-10 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
         <section className="text-center lg:text-left">
-          <img src={logo} alt="Orbital" className="mx-auto h-12 object-contain sm:h-16 lg:mx-0 lg:h-20" />
+          {/* El logo con su propia órbita: en celular y tablet, el easter egg vive acá. */}
+          <div className="relative mx-auto w-fit lg:mx-0">
+            <img src={logo} alt="Orbital" className="relative z-20 h-12 object-contain sm:h-16 lg:h-20" />
+            <OrbitaSecretaMovil onDescubrir={descubrir} />
+          </div>
 
           <h1 className="mt-8 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
             {titulo}
@@ -88,6 +92,39 @@ function OrbitaSecreta({ onDescubrir }: { onDescubrir: () => void }) {
           className="pointer-events-auto absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 cursor-pointer rounded-full p-1 opacity-80 transition hover:scale-125 hover:opacity-100 hover:drop-shadow-[0_0_14px_rgba(168,85,247,0.9)]"
         >
           <IsotipoOrbital size={36} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * La órbita secreta en celular y tablet: el isotipo gira alrededor del logo,
+ * pasando por detrás y por delante. Los anillos grandes del escritorio no
+ * entran en una pantalla chica, pero la idea es la misma: algo orbita, y el
+ * curioso que lo toca se lleva la sorpresa. Se toca cuando pasa por delante.
+ */
+function OrbitaSecretaMovil({ onDescubrir }: { onDescubrir: () => void }) {
+  return (
+    <div aria-hidden className="orbita-movil pointer-events-none absolute inset-0 lg:hidden">
+      {/* El trazo tenue de la órbita: sugiere que algo gira ahí. */}
+      <div
+        className="absolute left-1/2 top-1/2 rounded-[50%] border border-purple-300/15"
+        style={{
+          width: "calc(var(--orbita-rx) * 2)",
+          height: "calc(var(--orbita-ry) * 2)",
+          marginLeft: "calc(var(--orbita-rx) * -1)",
+          marginTop: "calc(var(--orbita-ry) * -1)",
+        }}
+      />
+      <div className="orbita-movil__eje-x absolute left-1/2 top-1/2 -ml-5 -mt-5 h-10 w-10">
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={onDescubrir}
+          className="orbita-movil__eje-y pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full drop-shadow-[0_0_8px_rgba(168,85,247,0.7)]"
+        >
+          <IsotipoOrbital size={22} />
         </button>
       </div>
     </div>

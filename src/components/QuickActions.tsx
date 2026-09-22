@@ -21,20 +21,22 @@ const ACCIONES: Array<{ seccion: Section; label: string; icon: typeof ArrowUpRig
 
 export const QuickActions = memo(function QuickActions({ onIr }: QuickActionsProps) {
   return (
-    <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-[#1C0B2E] to-[#2D1548] p-6">
+    <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-[#1C0B2E] to-[#2D1548] p-4 sm:p-6">
       <h3 className="mb-4">Acciones rápidas</h3>
-      <div className="grid grid-cols-4 gap-4 md:grid-cols-8">
+      {/* En el celular, sin relleno lateral en los botones: con cuatro columnas,
+          el ícono y "Inversiones" no entraban y se salían del botón. */}
+      <div className="grid grid-cols-4 gap-1 sm:gap-4 md:grid-cols-8">
         {ACCIONES.map((accion) => (
           <button
             key={accion.seccion}
             type="button"
             onClick={() => onIr(accion.seccion)}
-            className="group flex flex-col items-center gap-2 rounded-xl p-3 transition-all hover:bg-[#2D1548]/70"
+            className="group flex flex-col items-center gap-2 rounded-xl px-0.5 py-2 transition-all hover:bg-[#2D1548]/70 sm:p-3"
           >
-            <div className={`flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${accion.color} transition-transform group-hover:scale-110`}>
-              <accion.icon className="h-6 w-6 text-white" />
+            <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${accion.color} transition-transform group-hover:scale-110 sm:h-12 sm:w-12`}>
+              <accion.icon className="h-5 w-5 text-white sm:h-6 sm:w-6" />
             </div>
-            <span className="text-center text-xs">{accion.label}</span>
+            <span className="text-center text-[11px] leading-tight sm:text-xs">{accion.label}</span>
           </button>
         ))}
       </div>

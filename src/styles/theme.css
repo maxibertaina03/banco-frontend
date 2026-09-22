@@ -128,6 +128,16 @@
     @apply bg-background text-foreground;
   }
 
+  /* Por defecto, un elemento de grilla no se achica por debajo del texto más
+     largo que tiene adentro, aunque ese texto esté cortado con "…". En el
+     celular, un solo movimiento con descripción larga estiraba la columna
+     entera fuera de la pantalla. Con esto las columnas respetan su ancho y el
+     texto se corta o se parte como corresponde. En la capa base: cualquier
+     `min-w-*` explícito en un elemento sigue ganando. */
+  .grid > * {
+    min-width: 0;
+  }
+
   html {
     font-size: var(--font-size);
   }
@@ -173,4 +183,58 @@
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
   }
+}
+
+/* ── La órbita secreta en celular y tablet ──────────────────────────────────
+   El isotipo gira alrededor del logo en una elipse, con profundidad: por
+   detrás del logo es más chico y tenue, por delante crece. Son dos ejes
+   animados por separado (x e y, desfasados un cuarto de vuelta) en vez de una
+   rotación achatada, para que el ícono no se deforme. La profundidad sale de
+   animar el z-index junto con el eje y: cruza el del logo justo a la mitad. */
+@layer components {
+  /* Más alta que el logo: por delante pasa por debajo del nombre y por detrás
+     por encima, como el anillo de Saturno. Más chata, pasaba por encima de la
+     "O" del logo y se veían dos isotipos amontonados. */
+  .orbita-movil {
+    --orbita-rx: 100px;
+    --orbita-ry: 30px;
+  }
+  @media (min-width: 640px) {
+    .orbita-movil {
+      --orbita-rx: 128px;
+      --orbita-ry: 38px;
+    }
+  }
+  .orbita-movil__eje-x {
+    animation:
+      orbita-x 6s ease-in-out infinite alternate,
+      orbita-z 6s ease-in-out -3s infinite alternate;
+  }
+  .orbita-movil__eje-y {
+    animation: orbita-y 6s ease-in-out -3s infinite alternate;
+  }
+  /* Sin movimiento, queda quieto al costado del logo: se puede tocar igual. */
+  @media (prefers-reduced-motion: reduce) {
+    .orbita-movil__eje-x,
+    .orbita-movil__eje-y {
+      animation: none;
+    }
+    .orbita-movil__eje-x {
+      translate: var(--orbita-rx) 0;
+      z-index: 40;
+    }
+  }
+}
+
+@keyframes orbita-x {
+  from { translate: calc(var(--orbita-rx) * -1) 0; }
+  to { translate: var(--orbita-rx) 0; }
+}
+@keyframes orbita-y {
+  from { translate: 0 calc(var(--orbita-ry) * -1); scale: 0.7; opacity: 0.5; }
+  to { translate: 0 var(--orbita-ry); scale: 1.1; opacity: 1; }
+}
+@keyframes orbita-z {
+  from { z-index: 0; }
+  to { z-index: 40; }
 }
