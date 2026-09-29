@@ -39,6 +39,7 @@ export const queryKeys = {
     all: ["tarjetas"] as const,
     byPersona: (personaId: string) => [...queryKeys.tarjetas.all, "byPersona", personaId] as const,
     resumen: (tarjetaId: string) => [...queryKeys.tarjetas.all, "resumen", tarjetaId] as const,
+    oferta: (personaId: string) => [...queryKeys.tarjetas.all, "oferta", personaId] as const,
   },
   prestamos: {
     all: ["prestamos"] as const,

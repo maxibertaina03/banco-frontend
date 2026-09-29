@@ -1,17 +1,24 @@
 import { ApiError, request } from "../../../lib/api/client";
-import type { Autorizacion, ResumenTarjeta, Tarjeta } from "../types/tarjetas.types";
+import type { Autorizacion, NivelTarjeta, OfertaDeNiveles, ResumenTarjeta, Tarjeta } from "../types/tarjetas.types";
 
-export type { Autorizacion, ResumenTarjeta, Tarjeta } from "../types/tarjetas.types";
+export type { Autorizacion, NivelOfrecido, NivelTarjeta, OfertaDeNiveles, ResumenTarjeta, Tarjeta } from "../types/tarjetas.types";
 
 export function listarTarjetas(personaId: string) {
   return request<Tarjeta[]>(`/personas/${personaId}/tarjetas`);
 }
 
+/** Los cuatro niveles con su límite y cuáles alcanza hoy esta persona. */
+export function obtenerOfertaDeNiveles(personaId: string) {
+  return request<OfertaDeNiveles>(`/personas/${personaId}/tarjetas/oferta`);
+}
+
+// El límite no viaja: lo define el nivel, y el backend rechaza el pedido si se
+// manda un límite propio.
 export function emitirTarjeta(payload: {
   persona_id: string;
   tipo: "debito" | "credito";
   cuenta_id?: string | null;
-  limite?: number | null;
+  nivel?: NivelTarjeta | null;
 }) {
   return request<Tarjeta>("/tarjetas", { method: "POST", body: JSON.stringify(payload) });
 }

@@ -69,3 +69,28 @@ export function parsearMonto(texto: string): number | null {
   const valor = Number(normalizado);
   return Number.isFinite(valor) && valor > 0 ? valor : null;
 }
+
+/**
+ * Número → texto para meter en un campo de monto, en la convención que espera
+ * `parsearMonto`: puntos de miles y coma decimal. Los centavos sólo aparecen si
+ * existen, así "todo el saldo" se ve como "404.000" y no como "404.000,00".
+ *
+ * Trunca a centavos en vez de redondear: si redondeara para arriba, usar el
+ * saldo completo quedaría un centavo por encima de lo disponible.
+ */
+export function formatearMontoEditable(value: number): string {
+  const centavos = Math.floor(Number(value || 0) * 100) / 100;
+  const decimales = Number.isInteger(centavos) ? 0 : 2;
+  return new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: decimales,
+    maximumFractionDigits: 2,
+  }).format(centavos);
+}
+
+/**
+ * Importe sin centavos, para cifras "redondas" como el límite de una tarjeta:
+ * "$ 1.500.000" se lee mejor que "$ 1.500.000,00".
+ */
+export function formatMontoRedondo(value: number, currency: string = "ARS") {
+  return new Intl.NumberFormat("es-AR", { style: "currency", currency, maximumFractionDigits: 0 }).format(value);
+}

@@ -17,6 +17,7 @@ import {
   cambiarEstadoTarjeta,
   emitirTarjeta,
   listarTarjetas,
+  obtenerOfertaDeNiveles,
   obtenerResumenTarjeta,
 } from "../../features/tarjetas/api/tarjetas.api";
 import {
@@ -112,6 +113,19 @@ export function useTarjetas(personaId: string | null | undefined) {
     queryKey: personaId ? queryKeys.tarjetas.byPersona(personaId) : ["tarjetas", "disabled"],
     queryFn: () => listarTarjetas(personaId as string),
     enabled: Boolean(personaId),
+  });
+}
+
+/**
+ * La oferta depende de los saldos y de la Central de Deudores, así que se
+ * refresca al volver a la pantalla en vez de quedar cacheada toda la sesión.
+ */
+export function useOfertaDeNiveles(personaId: string | null | undefined) {
+  return useQuery({
+    queryKey: personaId ? queryKeys.tarjetas.oferta(personaId) : ["tarjetas", "oferta", "disabled"],
+    queryFn: () => obtenerOfertaDeNiveles(personaId as string),
+    enabled: Boolean(personaId),
+    staleTime: 60_000,
   });
 }
 

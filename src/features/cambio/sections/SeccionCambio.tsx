@@ -14,7 +14,7 @@ import {
 } from "../../../components/operaciones/ui";
 import type { PersonaCompleta } from "../../../lib/api";
 import { useCambioDeDivisa, useCotizacion } from "../../../lib/queries";
-import { formatCurrency } from "../../../lib/utils/currency";
+import { formatCurrency, formatearMontoEditable } from "../../../lib/utils/currency";
 import type { ResultadoCambio } from "../api/cambio.api";
 
 type Operacion = "compra" | "venta";
@@ -54,6 +54,9 @@ export function SeccionCambio({ perfil, onIrACuentas }: { perfil: PersonaComplet
   }, [monto, precio, operacion]);
 
   const saldoInsuficiente = Boolean(origen && monto && monto > Number(origen.saldo));
+  // Truncado a centavos: es el mayor monto que el banco va a aceptar de esta caja.
+  const disponible = origen ? Math.floor(Number(origen.saldo) * 100) / 100 : 0;
+  const yaEstaAlMaximo = monto !== null && monto === disponible;
   const cotizacionDeRespaldo = Boolean(cotizacion.data?.desde_respaldo);
 
   if (!cajaDolares) {
@@ -113,13 +116,33 @@ export function SeccionCambio({ perfil, onIrACuentas }: { perfil: PersonaComplet
             confirmar();
           }}
         >
-          <Campo
-            label={`Monto a ${operacion === "compra" ? "pagar" : "vender"} (${monedaOrigen})`}
-            hint={origen ? `Disponible: ${formatCurrency(Number(origen.saldo), monedaOrigen)}` : undefined}
-            error={saldoInsuficiente ? "No te alcanza el saldo." : montoTexto && !monto ? "Ingresá un monto válido." : null}
-          >
-            <Entrada inputMode="decimal" value={montoTexto} onChange={(e) => setMontoTexto(e.target.value)} placeholder="0,00" autoFocus />
-          </Campo>
+          <div className="grid gap-2">
+            <Campo
+              label={`Monto a ${operacion === "compra" ? "pagar" : "vender"} (${monedaOrigen})`}
+              error={saldoInsuficiente ? "No te alcanza el saldo." : montoTexto && !monto ? "Ingresá un monto válido." : null}
+            >
+              <Entrada inputMode="decimal" value={montoTexto} onChange={(e) => setMontoTexto(e.target.value)} placeholder="0,00" autoFocus />
+            </Campo>
+
+            {/* Un toque para operar con todo el saldo de la caja que sale. El botón
+                va fuera del <Campo> porque ese renderiza un <label>. */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-xs text-muted-foreground">
+                Disponible: {origen ? formatCurrency(disponible, monedaOrigen) : "—"}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setMontoTexto(formatearMontoEditable(disponible));
+                  setResultado(null);
+                }}
+                disabled={disponible <= 0 || yaEstaAlMaximo}
+                className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs text-primary transition hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {operacion === "compra" ? "Compra máxima" : "Venta máxima"}
+              </button>
+            </div>
+          </div>
 
           <div className="flex items-center gap-3 rounded-2xl border border-primary/15 bg-[#1C0B2E]/60 p-4">
             <ArrowRightLeft className="h-5 w-5 text-primary" />
