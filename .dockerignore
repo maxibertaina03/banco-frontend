@@ -1,0 +1,17 @@
+# Lo que NO va al contexto de build.
+node_modules
+npm-debug.log*
+
+# El dist se genera adentro de la imagen; copiar uno viejo sería servir una
+# versión que nadie compiló acá.
+dist
+
+# VITE_* se hornea en el bundle: las variables entran por --build-arg, no por
+# un .env copiado.
+.env
+.env.*
+!.env.example
+
+.git
+.gitignore
+coverage
