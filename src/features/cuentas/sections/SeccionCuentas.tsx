@@ -7,7 +7,7 @@ import { PanelAperturaUsd } from "../components/PanelAperturaUsd";
 import { PanelExtracto } from "../components/PanelExtracto";
 
 interface SeccionCuentasProps {
-  onAliasEdit: (cbu: string) => void;
+  onAliasEdit: (cuentaId: string) => void;
   onAliasUpdated: () => void;
   perfil: PersonaCompleta;
   cuentaSeleccionadaParaAlias: string | null;
@@ -29,6 +29,9 @@ export const SeccionCuentas = memo(function SeccionCuentas({
 }: SeccionCuentasProps) {
   const unsynced = perfil.cuentas.filter((cuenta) => !cuenta.banco_central_registrada);
   const tieneCajaEnDolares = perfil.cuentas.some((cuenta) => cuenta.moneda === "USD");
+  // Antes se guardaba el CBU; ahora el id, porque el endpoint del alias
+  // identifica la cuenta por id y así se puede mostrar el alias actual.
+  const cuentaParaAlias = perfil.cuentas.find((cuenta) => cuenta.id === cuentaSeleccionadaParaAlias) ?? null;
 
   return (
     <div className="grid gap-6">
@@ -74,11 +77,16 @@ export const SeccionCuentas = memo(function SeccionCuentas({
 
       {perfil.cuentas.length > 0 && <PanelExtracto cuentas={perfil.cuentas} />}
 
-      {cuentaSeleccionadaParaAlias && (
-        <UpdateAliasForm cbu={cuentaSeleccionadaParaAlias} onSuccess={onAliasUpdated} />
+      {cuentaParaAlias && (
+        <UpdateAliasForm
+          cuentaId={cuentaParaAlias.id}
+          cbu={cuentaParaAlias.cbu}
+          currentAlias={cuentaParaAlias.alias}
+          onSuccess={onAliasUpdated}
+        />
       )}
 
-      {!cuentaSeleccionadaParaAlias && perfil.cuentas.length > 0 && (
+      {!cuentaParaAlias && perfil.cuentas.length > 0 && (
         <div className="rounded-2xl border border-primary/20 bg-gradient-to-br from-[#1C0B2E] to-[#2D1548] p-6">
           <h3 className="mb-4 text-lg font-semibold">Actualizar alias de cuenta</h3>
           <p className="mb-4 text-sm text-muted-foreground">
@@ -89,10 +97,10 @@ export const SeccionCuentas = memo(function SeccionCuentas({
               <button
                 key={cuenta.id}
                 type="button"
-                onClick={() => onAliasEdit(cuenta.cbu)}
+                onClick={() => onAliasEdit(cuenta.id)}
                 className="rounded-xl border border-primary/20 bg-[#2D1548]/50 px-4 py-3 text-left transition hover:bg-[#2D1548]/70"
               >
-                <p className="font-mono text-sm">{cuenta.cbu}</p>
+                <p className="text-sm">{cuenta.alias || "Sin alias todavía"}</p>
                 <p className="text-xs text-muted-foreground">
                   {cuenta.tipo_cuenta_nombre || "Cuenta"} · {cuenta.moneda ?? "ARS"}
                 </p>

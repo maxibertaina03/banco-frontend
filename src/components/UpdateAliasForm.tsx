@@ -3,12 +3,13 @@ import { Tag } from 'lucide-react';
 import { actualizarAlias } from "../features/cuentas/api/cuentas.api";
 
 interface UpdateAliasFormProps {
+  cuentaId: string;
   cbu: string;
   currentAlias?: string | null;
   onSuccess?: (newAlias: string) => void;
 }
 
-export function UpdateAliasForm({ cbu, currentAlias, onSuccess }: UpdateAliasFormProps) {
+export function UpdateAliasForm({ cuentaId, cbu, currentAlias, onSuccess }: UpdateAliasFormProps) {
   const [alias, setAlias] = useState(currentAlias || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,9 +23,16 @@ export function UpdateAliasForm({ cbu, currentAlias, onSuccess }: UpdateAliasFor
       return;
     }
 
-    const aliasRegex = /^[a-zA-Z0-9.]+$/;
+    // Las mismas reglas que valida el backend, para avisar sin ir al servidor.
+    // El guión faltaba en esta expresión aunque el texto lo prometía.
+    const aliasRegex = /^[a-zA-Z0-9.-]+$/;
     if (!aliasRegex.test(alias.trim())) {
       setError('El alias solo puede contener letras, números, puntos y guiones.');
+      return;
+    }
+
+    if (alias.trim().length < 6 || alias.trim().length > 20) {
+      setError('El alias tiene que tener entre 6 y 20 caracteres.');
       return;
     }
 
@@ -33,7 +41,7 @@ export function UpdateAliasForm({ cbu, currentAlias, onSuccess }: UpdateAliasFor
     setSuccess(false);
 
     try {
-      await actualizarAlias(cbu, alias.trim());
+      await actualizarAlias(cuentaId, alias.trim());
       setSuccess(true);
       onSuccess?.(alias.trim());
       setTimeout(() => setSuccess(false), 3000);

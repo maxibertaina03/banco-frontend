@@ -28,8 +28,15 @@ export function crearCuenta(payload: {
   });
 }
 
-export function actualizarAlias(cbu: string, alias: string) {
-  return request<{ message: string }>(`/central-bank/persons/${cbu}/alias`, {
+/**
+ * Cambia el alias de una cuenta propia.
+ *
+ * Va por `/cuentas/:id/alias` y no por la ruta del Banco Central: esa está
+ * reservada a los roles internos, así que a un cliente le respondía 403 aunque
+ * la cuenta fuera suya. Devuelve la cuenta actualizada.
+ */
+export function actualizarAlias(cuentaId: string, alias: string) {
+  return request<Cuenta>(`/cuentas/${cuentaId}/alias`, {
     method: "PUT",
     body: JSON.stringify({ alias }),
   });
