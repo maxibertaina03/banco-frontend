@@ -7,7 +7,7 @@ import {
   DialogFooter,
   DialogTitle,
 } from "./ui/dialog";
-import logo from "../imports/image-3.png";
+import logo from "../imports/orbital-logo.webp";
 import type { RespuestaTransferencia } from "../features/transacciones/types/transacciones.types";
 import {
   filasDelComprobante,

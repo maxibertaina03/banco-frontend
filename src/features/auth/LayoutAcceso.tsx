@@ -3,7 +3,7 @@
 
 import { useState, type ReactNode } from "react";
 import { ArrowLeftRight, Landmark, Wallet } from "lucide-react";
-import logo from "../../imports/image-3.png";
+import logo from "../../imports/orbital-logo.webp";
 import { IsotipoOrbital } from "../../components/marca/IsotipoOrbital";
 import { DialogoOrbitaSecreta } from "../bonificaciones/DialogoOrbitaSecreta";
 import { festejar, marcarPendiente } from "../bonificaciones/orbita-secreta";

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Bell, ChevronDown, LogOut, Menu, User as UserIcon } from "lucide-react";
 import { useClerk } from "@clerk/clerk-react";
-import logo from "../imports/image-3.png";
+import logo from "../imports/orbital-logo.webp";
 import {
   DropdownMenu,
   DropdownMenuContent,

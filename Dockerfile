@@ -30,6 +30,15 @@ RUN test -n "$VITE_CLERK_PUBLISHABLE_KEY" || (echo "Falta VITE_CLERK_PUBLISHABLE
 
 RUN npm run build
 
+# Dejar los archivos ya comprimidos al máximo, listos para servir.
+#
+# nginx comprime al vuelo en nivel 1 (rápido pero flojo) y lo rehace en cada
+# request. Con gzip_static entrega estos .gz, comprimidos en nivel 9: pesan
+# menos y el servidor no gasta CPU. En un droplet de 512 MB las dos cosas
+# importan.
+RUN find dist -type f \( -name '*.js' -o -name '*.css' -o -name '*.html' -o -name '*.svg' \) \
+      -exec gzip -9 -k {} \;
+
 
 # ── Runtime ───────────────────────────────────────────────────────────────────
 # Ya no hay Node: son archivos estáticos y los sirve nginx. La imagen final pesa
