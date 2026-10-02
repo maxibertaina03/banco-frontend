@@ -5,3 +5,6 @@ node_modules/
 
 # Build output: producido por `npm run build`, no debe trackearse.
 dist/
+
+# Reportes de cobertura de los tests.
+coverage/
