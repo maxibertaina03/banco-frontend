@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Bell, ChevronDown, LogOut, Menu, User as UserIcon } from "lucide-react";
 import { useClerk } from "@clerk/clerk-react";
 import logo from "../imports/orbital-logo.webp";
+import { BotonInstalar } from "./BotonInstalar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -204,6 +205,7 @@ export function Header({
               </DropdownMenu>
             </div>
           </div>
+          <BotonInstalar />
         </div>
       </header>
 
