@@ -15,14 +15,16 @@ export const PortalHero = memo(function PortalHero({
   roleOptions,
 }: PortalHeroProps) {
   return (
-    <div className="rounded-3xl bg-gradient-to-br from-[#A855F7] via-[#9333EA] to-[#7C3AED] p-5 text-white shadow-2xl sm:p-8">
+    <div className="flex h-full flex-col rounded-3xl bg-gradient-to-br from-[#A855F7] via-[#9333EA] to-[#7C3AED] p-5 text-white shadow-2xl sm:p-8">
       <p className="text-xs uppercase tracking-[0.24em] text-white/80 sm:text-sm">Banco Orbital</p>
       <h1 className="mt-2 text-xl leading-snug sm:mt-3 sm:text-2xl">Tu banca digital, simple y a un clic</h1>
       {/* En el celular se omite: empuja el contenido real una pantalla más abajo. */}
       <p className="mt-3 hidden max-w-2xl text-white/85 sm:block">
         Consultá tus cuentas, transferí dinero y administrá tus contactos desde un solo lugar.
       </p>
-      <div className="mt-4 flex flex-wrap gap-2 sm:mt-6 sm:gap-3">
+      {/* `mt-auto` empuja los botones al pie: así el banner llena la altura del
+          resumen sin que quede un espacio violeta vacío. */}
+      <div className="mt-4 flex flex-wrap gap-2 sm:mt-auto sm:gap-3 sm:pt-6">
         {roleOptions.map((role) => (
           <button
             key={role}

@@ -22,6 +22,10 @@ interface HeaderProps {
   unreadCount: number;
   onMarkAsRead: (id: string) => void;
   onMarkAllAsRead: () => void;
+  /** Para el menú del celular. Vacío mientras el perfil no está completo. */
+  secciones?: Array<{ key: string; label: string }>;
+  seccionActiva?: string;
+  onSeccionChange?: (seccion: string) => void;
 }
 
 function getInitials(perfil: PerfilUsuarioAutenticado | null, fallback: string): string {
@@ -45,6 +49,9 @@ export function Header({
   unreadCount,
   onMarkAsRead,
   onMarkAllAsRead,
+  secciones = [],
+  seccionActiva,
+  onSeccionChange,
 }: HeaderProps) {
   const { signOut } = useClerk();
   const [editOpen, setEditOpen] = useState(false);
@@ -60,9 +67,34 @@ export function Header({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-2">
-              <button className="lg:hidden p-2 rounded-lg hover:bg-[#2D1548] transition-colors">
-                <Menu className="w-5 h-5" />
-              </button>
+              {/* En el celular, saltar directo a una sección sin tener que
+                  deslizar las diez pestañas. Antes este botón no tenía onClick:
+                  estaba de adorno. */}
+              {secciones.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="lg:hidden p-2 rounded-lg hover:bg-[#2D1548] transition-colors"
+                      aria-label="Secciones del portal"
+                    >
+                      <Menu className="w-5 h-5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56 border-primary/20 bg-[#1C0B2E]">
+                    <DropdownMenuLabel>Ir a</DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-primary/15" />
+                    {secciones.map((item) => (
+                      <DropdownMenuItem
+                        key={item.key}
+                        onSelect={() => onSeccionChange?.(item.key)}
+                        className={seccionActiva === item.key ? "text-primary" : undefined}
+                      >
+                        {item.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
               <img src={logo} alt="Orbital" className="h-9 object-contain" />
             </div>
 

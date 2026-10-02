@@ -150,15 +150,19 @@ export function PortalPage() {
           unreadCount={unreadCount}
           onMarkAsRead={markAsRead}
           onMarkAllAsRead={markAllAsRead}
+          secciones={necesitaCompletarPerfil ? [] : getSectionItems(scope)}
+          seccionActiva={section}
+          onSeccionChange={(valor) => setSection(valor as Section)}
         />
 
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           {!necesitaCompletarPerfil && (
-            <section className="mb-8 grid gap-6 lg:grid-cols-2 lg:items-start xl:grid-cols-[1.3fr_0.7fr]">
+            <section className="mb-8 grid gap-6 lg:grid-cols-2 xl:grid-cols-[1.3fr_0.7fr]">
               {/* Mitad y mitad en tablet horizontal: con la proporción de escritorio,
                   a 1024px el resumen quedaba en 260px y partía "Saldo en pesos" en
-                  tres renglones. `items-start` evita que el banner se estire vacío
-                  hasta la altura del resumen. */}
+                  tres renglones. Las dos tarjetas se estiran a la misma altura (el
+                  `stretch` por defecto de la grilla); el banner reparte su espacio
+                  con `mt-auto` en los botones en vez de dejar un hueco abajo. */}
               <PortalHero
                 rolActivo={rolActivo}
                 onRoleChange={setRolActivo}
@@ -177,7 +181,9 @@ export function PortalPage() {
             </section>
           )}
 
-          {!necesitaCompletarPerfil && (
+          {/* Sólo para los roles internos: a un cliente le mostraba su propio
+              id en un campo de texto, que no le sirve de nada y queda feo. */}
+          {!necesitaCompletarPerfil && scope === "admin" && (
             <PortalToolbar
               loading={loading}
               manualPersonaId={manualPersonaId}
