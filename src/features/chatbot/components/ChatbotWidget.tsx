@@ -1,8 +1,10 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { Bot, LoaderCircle, Send, X } from "lucide-react";
+import { LoaderCircle, Send, Volume2, VolumeX, X } from "lucide-react";
 import { enviarMensajeAlChatbot, type ChatMessageInput } from "../api/chatbot.api";
+import { playReceive, playSend } from "../services/orbisSounds";
 
 const MAX_VISIBLE_HISTORY = 6;
+const SOUND_PREFERENCE_KEY = "orbis-sounds-enabled";
 
 interface ChatMessage extends ChatMessageInput {
   id: number;
@@ -11,8 +13,21 @@ interface ChatMessage extends ChatMessageInput {
 const initialMessage: ChatMessage = {
   id: 0,
   role: "assistant",
-  content: "Hola. Soy el asistente de Banco Orbital. Puedo ayudarte a usar el portal y consultar un resumen de tus productos.",
+  content: "Hola, soy Orbis, el asistente inteligente de Banco Orbital. ¿En qué puedo ayudarte?",
 };
+
+function getInitialSoundPreference() {
+  if (typeof window === "undefined") return false;
+
+  try {
+    const savedPreference = window.localStorage.getItem(SOUND_PREFERENCE_KEY);
+    if (savedPreference !== null) return savedPreference === "true";
+  } catch {
+    // The chat remains usable when browser storage is unavailable.
+  }
+
+  return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
 
 export function ChatbotWidget() {
   const [open, setOpen] = useState(false);
@@ -20,8 +35,17 @@ export function ChatbotWidget() {
   const [messages, setMessages] = useState<ChatMessage[]>([initialMessage]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [soundsEnabled, setSoundsEnabled] = useState(getInitialSoundPreference);
   const nextId = useRef(1);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(SOUND_PREFERENCE_KEY, String(soundsEnabled));
+    } catch {
+      // Sound preference is optional when browser storage is unavailable.
+    }
+  }, [soundsEnabled]);
 
   useEffect(() => {
     if (open) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -31,6 +55,7 @@ export function ChatbotWidget() {
     event.preventDefault();
     const message = draft.trim();
     if (!message || loading) return;
+    if (soundsEnabled) playSend();
 
     const userMessage: ChatMessage = { id: nextId.current++, role: "user", content: message };
     const history = messages
@@ -45,6 +70,7 @@ export function ChatbotWidget() {
 
     try {
       const response = await enviarMensajeAlChatbot(message, history);
+      if (soundsEnabled) playReceive();
       setMessages((current) => [
         ...current,
         { id: nextId.current++, role: "assistant", content: response.reply },
@@ -65,28 +91,44 @@ export function ChatbotWidget() {
         >
           <header className="flex items-center justify-between border-b border-primary/20 bg-gradient-to-r from-[#2D1548] to-[#1C0B2E] px-4 py-3">
             <div className="flex items-center gap-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/20 text-primary">
-                <Bot className="h-5 w-5" aria-hidden="true" />
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--orbis-bg)]">
+                <img src="/orbis-logo.svg" alt="" aria-hidden="true" className="h-7 w-7" />
               </span>
               <div>
-                <h2 className="text-sm font-semibold text-foreground">Asistente Orbital</h2>
+                <h2 className="text-sm font-semibold text-foreground">Orbis</h2>
                 <p className="text-xs text-muted-foreground">Ayuda bancaria segura</p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              aria-label="Cerrar chat"
-              title="Cerrar chat"
-              className="rounded-lg p-2 text-muted-foreground transition hover:bg-[#2D1548] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-            >
-              <X className="h-4 w-4" aria-hidden="true" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setSoundsEnabled((enabled) => !enabled)}
+                aria-label={soundsEnabled ? "Silenciar sonidos de Orbis" : "Activar sonidos de Orbis"}
+                title={soundsEnabled ? "Silenciar sonidos" : "Activar sonidos"}
+                className="rounded-lg p-2 text-muted-foreground transition hover:bg-[#2D1548] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                {soundsEnabled ? <Volume2 className="h-4 w-4" aria-hidden="true" /> : <VolumeX className="h-4 w-4" aria-hidden="true" />}
+              </button>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Cerrar chat"
+                title="Cerrar chat"
+                className="rounded-lg p-2 text-muted-foreground transition hover:bg-[#2D1548] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              >
+                <X className="h-4 w-4" aria-hidden="true" />
+              </button>
+            </div>
           </header>
 
           <div className="flex-1 space-y-3 overflow-y-auto bg-[#0A0118]/35 p-4" aria-live="polite">
             {messages.map((message) => (
-              <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div key={message.id} className={`flex items-end gap-2 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                {message.role === "assistant" && (
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--orbis-bg)]">
+                    <img src="/orbis-logo.svg" alt="" aria-hidden="true" className="h-6 w-6" />
+                  </span>
+                )}
                 <p
                   className={`max-w-[86%] whitespace-pre-wrap rounded-2xl px-3.5 py-2.5 text-sm leading-5 ${
                     message.role === "user"
@@ -147,11 +189,11 @@ export function ChatbotWidget() {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        aria-label={open ? "Cerrar asistente Orbital" : "Abrir asistente Orbital"}
-        title={open ? "Cerrar asistente Orbital" : "Abrir asistente Orbital"}
-        className="flex h-14 w-14 items-center justify-center rounded-full border border-primary/40 bg-primary text-primary-foreground shadow-lg shadow-primary/25 transition hover:scale-105 hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        aria-label={open ? "Cerrar chat con Orbis" : "Abrir chat con Orbis"}
+        title={open ? "Cerrar chat con Orbis" : "Abrir chat con Orbis"}
+        className="flex h-14 w-14 items-center justify-center rounded-full border border-[var(--orbis-ring)]/40 bg-[var(--orbis-bg)] shadow-lg shadow-primary/25 transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--orbis-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
-        {open ? <X className="h-6 w-6" aria-hidden="true" /> : <Bot className="h-6 w-6" aria-hidden="true" />}
+        <img src="/orbis-logo.svg" alt="" aria-hidden="true" className="h-8 w-8" />
       </button>
     </div>
   );
