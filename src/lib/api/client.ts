@@ -31,6 +31,7 @@ export function setAccessTokenProvider(provider: AccessTokenProvider | null) {
 export interface RequestOptions extends Omit<RequestInit, "headers"> {
   headers?: HeadersInit;
   idempotencyKey?: string;
+  clerkReverification?: boolean;
 }
 
 async function buildHeaders(init?: RequestOptions) {
@@ -50,9 +51,16 @@ async function buildHeaders(init?: RequestOptions) {
   return headers;
 }
 
-async function handleResponse<T>(response: Response): Promise<T> {
+async function handleResponse<T>(response: Response, clerkReverification = false): Promise<T> {
   if (!response.ok) {
     const payload = await response.json().catch(() => null);
+    if (
+      clerkReverification &&
+      payload?.clerk_error?.type === "forbidden" &&
+      payload?.clerk_error?.reason === "reverification-error"
+    ) {
+      return payload as T;
+    }
     const details = payload?.details ?? null;
     const baseMessage = payload?.error || payload?.message || "No se pudo completar la solicitud.";
     const detailMessage = typeof details === "string" ? details : typeof payload?.message === "string" ? payload.message : "";
@@ -79,14 +87,19 @@ async function handleResponse<T>(response: Response): Promise<T> {
 // los headers calculados (Authorization, Content-Type, Idempotency-Key).
 function toFetchInit(headers: Headers, options?: RequestOptions): RequestInit {
   if (!options) return { headers };
-  const { idempotencyKey: _idempotencyKey, headers: _headers, ...rest } = options;
+  const {
+    idempotencyKey: _idempotencyKey,
+    clerkReverification: _clerkReverification,
+    headers: _headers,
+    ...rest
+  } = options;
   return { ...rest, headers };
 }
 
 export async function request<T>(path: string, init?: RequestOptions): Promise<T> {
   const headers = await buildHeaders(init);
   const response = await fetch(`${API_BASE_URL}${path}`, toFetchInit(headers, init));
-  return handleResponse<T>(response);
+  return handleResponse<T>(response, init?.clerkReverification);
 }
 
 // Para respuestas que no son JSON (el CSV de movimientos). No se puede usar un

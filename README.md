@@ -86,12 +86,22 @@ npm run preview         # sirve dist/ localmente para verificar
 ```bash
 # API
 VITE_API_BASE_URL=/api                        # default '/api' (usa el proxy de Vite)
+VITE_APP_ORIGIN=https://app.orbital.net.ar    # base de los links de cobro QR
 
 # Auth (Clerk)
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_...        # del dashboard de Clerk
 ```
 
 > Las variables que empiezan con `VITE_` quedan **inlined en el bundle final** — no metas secretos ahí. Solo cosas que el cliente sí o sí necesita ver (publishable key de Clerk, URL del API).
+
+### Cobros por QR
+
+Las rutas protegidas `/cobrar`, `/escanear` y `/pagar?id=...` usan el endpoint
+del backend bajo `/api`. El enlace QR contiene únicamente el UUID del cobro y
+el frontend vuelve a consultar nombre, importe y vigencia al servidor antes de
+mostrar la confirmación. En iPhone, Safari/PWA necesita HTTPS y permiso de
+cámara para escanear; el hosting conserva los enlaces directos con su fallback
+SPA de Nginx.
 
 ---
 

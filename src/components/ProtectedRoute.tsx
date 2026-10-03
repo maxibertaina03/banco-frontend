@@ -1,12 +1,26 @@
-import { useUser } from "@clerk/clerk-react";
-import { Navigate } from "react-router";
+import { useAuth } from "@clerk/clerk-react";
+import { useEffect, useState } from "react";
+import { Navigate, useLocation } from "react-router";
+import { setAccessTokenProvider } from "../lib/api/client";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isSignedIn, isLoaded } = useUser();
+  const { getToken, isSignedIn, isLoaded } = useAuth();
+  const location = useLocation();
+  const [tokenReady, setTokenReady] = useState(false);
+
+  useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      setAccessTokenProvider(() => getToken());
+      setTokenReady(true);
+    } else {
+      setAccessTokenProvider(null);
+      setTokenReady(false);
+    }
+  }, [getToken, isLoaded, isSignedIn]);
 
   if (!isLoaded) {
     return (
@@ -22,7 +36,16 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   // Ruta propia en vez de renderizar el login acá: así el ingreso y el
   // registro tienen URL, y Clerk puede ir y volver entre los dos.
   if (!isSignedIn) {
-    return <Navigate to="/ingresar" replace />;
+    const destino = `${location.pathname}${location.search}${location.hash}`;
+    return <Navigate to={`/ingresar?redirect_url=${encodeURIComponent(destino)}`} replace />;
+  }
+
+  if (!tokenReady) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#1C0B2E] to-[#2D1548] flex items-center justify-center">
+        <p className="text-purple-300">Preparando conexión segura...</p>
+      </div>
+    );
   }
 
   return <>{children}</>;

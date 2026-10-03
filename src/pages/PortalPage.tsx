@@ -1,4 +1,6 @@
 import { lazy, Suspense } from "react";
+import { Link } from "react-router";
+import { QrCode, ScanLine } from "lucide-react";
 import { getSectionItems, roleLabels } from "./portal.config";
 import { Header } from "../components/Header";
 import { PortalHero } from "../components/layout/PortalHero";
@@ -228,6 +230,20 @@ export function PortalPage() {
           ) : (
             <>
               <PortalTabs items={getSectionItems(scope, rolActivo)} onSectionChange={setSection} section={section} />
+              <div className="my-3 grid grid-cols-2 gap-3">
+                <Link
+                  to="/cobrar"
+                  className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#A855F7] to-[#7C3AED] px-3 py-2 text-sm font-medium text-white"
+                >
+                  <QrCode className="size-4" /> Cobrar
+                </Link>
+                <Link
+                  to="/escanear"
+                  className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-primary/30 bg-[#1C0B2E] px-3 py-2 text-sm font-medium text-white"
+                >
+                  <ScanLine className="size-4" /> Escanear
+                </Link>
+              </div>
 
               {loading || !perfil ? (
                 <Card className="border-primary/20 bg-[#1C0B2E]">

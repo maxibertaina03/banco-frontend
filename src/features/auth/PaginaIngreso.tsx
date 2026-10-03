@@ -1,7 +1,12 @@
 import { SignIn } from "@clerk/clerk-react";
+import { useSearchParams } from "react-router";
 import { LayoutAcceso } from "./LayoutAcceso";
+import { rutaInternaSegura } from "./redirect-url";
 
 export function PaginaIngreso() {
+  const [searchParams] = useSearchParams();
+  const redirectUrl = rutaInternaSegura(searchParams.get("redirect_url"));
+
   return (
     <LayoutAcceso
       titulo="Tu dinero, siempre en órbita."
@@ -9,7 +14,7 @@ export function PaginaIngreso() {
     >
       {/* `routing="path"`: los pasos intermedios (verificar el código, elegir
           método) quedan bajo /ingresar en vez de salir a la página de Clerk. */}
-      <SignIn routing="path" path="/ingresar" signUpUrl="/registro" />
+      <SignIn routing="path" path="/ingresar" signUpUrl="/registro" forceRedirectUrl={redirectUrl} />
     </LayoutAcceso>
   );
 }
