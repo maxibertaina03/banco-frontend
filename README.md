@@ -318,6 +318,36 @@ GitHub Actions corre en cada push y PR. Ver [.github/workflows/ci.yml](.github/w
 
 ---
 
+## 📲 Aplicación instalable (PWA)
+
+El frontend usa `vite-plugin-pwa` para generar el manifest y el service worker.
+La instalación automática se ofrece en navegadores compatibles; en iPhone se
+muestran instrucciones para agregar la página a la pantalla de inicio. La
+instalación requiere que el sitio publicado use HTTPS.
+
+Antes de publicar, crea estos PNG dentro de `public/`:
+
+| Archivo | Tamaño |
+|---|---:|
+| `public/pwa-192x192.png` | 192 × 192 |
+| `public/pwa-512x512.png` | 512 × 512 |
+| `public/apple-touch-icon.png` | 180 × 180 |
+
+Usa `public/orbis-logo.svg` como referencia. Por ejemplo, con Inkscape instalado
+puedes abrir una terminal en `banco-frontend/` y exportar:
+
+```powershell
+inkscape .\public\orbis-logo.svg --export-filename=.\public\pwa-192x192.png --export-width=192 --export-height=192
+inkscape .\public\orbis-logo.svg --export-filename=.\public\pwa-512x512.png --export-width=512 --export-height=512
+inkscape .\public\orbis-logo.svg --export-filename=.\public\apple-touch-icon.png --export-width=180 --export-height=180
+```
+
+El icono de 512 también se declara como `maskable`; mantén el isotipo centrado
+y con margen para que no se recorte al aplicarse una máscara. Luego ejecuta
+`npm run build` y `npm run preview`, y vuelve a desplegar la carpeta `dist/`.
+
+---
+
 ## 📄 Documentación adicional
 
 - [CHANGELOG.md](../CHANGELOG.md) — bitácora completa de decisiones arquitectónicas.
