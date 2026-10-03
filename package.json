@@ -10,6 +10,9 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@clerk/clerk-react": "^5.61.6",
     "@clerk/localizations": "^3.37.9",

@@ -352,3 +352,16 @@ y con margen para que no se recorte al aplicarse una máscara. Luego ejecuta
 
 - [CHANGELOG.md](../CHANGELOG.md) — bitácora completa de decisiones arquitectónicas.
 - README del backend con la lista de endpoints disponibles.
+
+## Node 20 o más
+
+El build necesita Node 20 como mínimo. Con Node 18 falla con un error que no
+dice nada: `ReferenceError: crypto is not defined`. Lo pide el plugin de PWA,
+que usa el `crypto` global, disponible recién desde Node 20.
+
+La imagen de Docker usa Node 22, así que el despliegue no se ve afectado: esto
+es sólo para compilar en tu máquina.
+
+```bash
+node -v   # tiene que decir v20 o superior
+```
