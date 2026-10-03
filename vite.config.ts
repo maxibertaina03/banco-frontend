@@ -32,8 +32,14 @@ export default defineConfig({
         description: 'Tu banco digital, siempre con vos.',
         display: 'standalone',
         start_url: '/',
+        // El banco está en castellano rioplatense; por defecto el manifest
+        // declaraba 'en'.
+        lang: 'es-AR',
         theme_color: '#1C0B2E',
-        background_color: '#ffffff',
+        // El fondo de la app, no blanco: es el color que el sistema pinta en
+        // la pantalla de arranque, y con blanco pegaba un flash antes de
+        // cargar el portal, que es oscuro.
+        background_color: '#0A0118',
         icons: [
           {
             src: '/pwa-192x192.png',
