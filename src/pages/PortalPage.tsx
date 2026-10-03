@@ -50,6 +50,9 @@ const SeccionTarjetas = lazy(() =>
 const SeccionPrestamos = lazy(() =>
   import("../features/prestamos/sections/SeccionPrestamos").then((m) => ({ default: m.SeccionPrestamos }))
 );
+const SeccionSolicitudes = lazy(() =>
+  import("../features/prestamos/sections/SeccionSolicitudes").then((m) => ({ default: m.SeccionSolicitudes }))
+);
 const SeccionInversiones = lazy(() =>
   import("../features/inversiones/sections/SeccionInversiones").then((m) => ({ default: m.SeccionInversiones }))
 );
@@ -150,7 +153,7 @@ export function PortalPage() {
           unreadCount={unreadCount}
           onMarkAsRead={markAsRead}
           onMarkAllAsRead={markAllAsRead}
-          secciones={necesitaCompletarPerfil ? [] : getSectionItems(scope)}
+          secciones={necesitaCompletarPerfil ? [] : getSectionItems(scope, rolActivo)}
           seccionActiva={section}
           onSeccionChange={(valor) => setSection(valor as Section)}
         />
@@ -224,7 +227,7 @@ export function PortalPage() {
             </Suspense>
           ) : (
             <>
-              <PortalTabs items={getSectionItems(scope)} onSectionChange={setSection} section={section} />
+              <PortalTabs items={getSectionItems(scope, rolActivo)} onSectionChange={setSection} section={section} />
 
               {loading || !perfil ? (
                 <Card className="border-primary/20 bg-[#1C0B2E]">
@@ -319,6 +322,12 @@ export function PortalPage() {
                     </ErrorBoundary>
                   )}
 
+                  {section === "solicitudes" && (rolActivo === "gerente" || rolActivo === "admin") && (
+                    <ErrorBoundary>
+                      <SeccionSolicitudes habilitado />
+                    </ErrorBoundary>
+                  )}
+
                   {section === "admin" && scope === "admin" && (
                     <ErrorBoundary>
                       <AdminSection
@@ -330,6 +339,8 @@ export function PortalPage() {
                         onSubmit={handleCreateClient}
                         perfil={perfil}
                         roles={roles}
+                        personas={personas}
+                        esAdmin={rolActivo === "admin"}
                         submitting={submitting}
                         totalBalance={formatCurrency(totalBalance)}
                       />

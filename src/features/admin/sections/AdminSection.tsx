@@ -17,6 +17,8 @@ import { BankLookupCard } from "../cards/BankLookupCard";
 import { BankRenameCard } from "../cards/BankRenameCard";
 import { PersonCbuLookupCard } from "../cards/PersonCbuLookupCard";
 import { AliasUpdateCard } from "../cards/AliasUpdateCard";
+import { GestionDeRoles } from "../cards/GestionDeRoles";
+import type { OpcionDePersona } from "../../personas/types/personas.types";
 import { PersonAliasLookupCard } from "../cards/PersonAliasLookupCard";
 import { TarjetaSincronizarCuenta } from "../cards/TarjetaSincronizarCuenta";
 
@@ -36,6 +38,10 @@ interface AdminSectionProps {
   onCreateClientFormChange: (next: CreateClientFormState) => void;
   onCuentaSincronizada: () => Promise<void> | void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  /** Para la gestión de roles: la lista completa de personas del banco. */
+  personas: OpcionDePersona[];
+  /** Repartir roles es repartir permisos: sólo el admin, nunca operador ni tesorería. */
+  esAdmin: boolean;
   perfil: PersonaCompleta;
   roles: Rol[];
   submitting: boolean;
@@ -52,13 +58,20 @@ export const AdminSection = memo(function AdminSection({
   onCuentaSincronizada,
   onSubmit,
   perfil,
+  personas,
+  esAdmin,
   submitting,
   totalBalance,
 }: AdminSectionProps) {
   const env = createClientForm.environment;
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+    <div className="grid gap-6">
+      {/* La gestión de roles va primero y a lo ancho: es la herramienta que más
+          se usa y la que más cuidado pide. Sólo la ve el admin. */}
+      {esAdmin && <GestionDeRoles personas={personas} />}
+
+      <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
       {/* Registrar persona */}
       <Card className="border-primary/20 bg-gradient-to-br from-[#1C0B2E] to-[#2D1548]">
         <CardHeader>
@@ -171,7 +184,8 @@ export const AdminSection = memo(function AdminSection({
       <BankRenameCard environment={env} />
       <PersonCbuLookupCard environment={env} />
       <AliasUpdateCard environment={env} />
-      <PersonAliasLookupCard environment={env} />
+        <PersonAliasLookupCard environment={env} />
+      </div>
     </div>
   );
 });

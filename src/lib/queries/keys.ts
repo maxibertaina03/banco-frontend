@@ -18,6 +18,11 @@ export const queryKeys = {
     byPersona: (personaId: string) => [...queryKeys.transacciones.all, "byPersona", personaId] as const,
     byCuenta: (cuentaId: string) => [...queryKeys.transacciones.all, "byCuenta", cuentaId] as const,
   },
+  roles: {
+    all: ["roles"] as const,
+    catalogo: () => ["roles", "catalogo"] as const,
+    dePersona: (personaId: string) => ["roles", "dePersona", personaId] as const,
+  },
   catalogos: {
     all: ["catalogos"] as const,
     roles: () => [...queryKeys.catalogos.all, "roles"] as const,
@@ -43,6 +48,7 @@ export const queryKeys = {
   },
   prestamos: {
     all: ["prestamos"] as const,
+    pendientes: () => ["prestamos", "pendientes"] as const,
     list: () => [...queryKeys.prestamos.all, "list"] as const,
     detalle: (prestamoId: string) => [...queryKeys.prestamos.all, "detalle", prestamoId] as const,
   },

@@ -1,7 +1,7 @@
 import type { Cuenta } from "../../cuentas/types/cuentas.types";
 import type { Destinatario } from "../../destinatarios/types/destinatarios.types";
 
-export type RolDePortal = "cliente" | "admin" | "operador" | "auditor" | "tesoreria";
+export type RolDePortal = "cliente" | "admin" | "operador" | "auditor" | "tesoreria" | "gerente";
 
 export interface OpcionDePersona {
   id: string;

@@ -60,6 +60,10 @@ function normalizeRole(roleName: string): RolDePortal | null {
     return "admin";
   }
 
+  if (roleName === "gerente") {
+    return "gerente";
+  }
+
   if (roleName === "operador") {
     return "operador";
   }

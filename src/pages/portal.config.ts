@@ -10,6 +10,7 @@ export type Section =
   | "inversiones"
   | "pagos"
   | "destinatarios"
+  | "solicitudes"
   | "admin";
 
 export const roleLabels: Record<RolDePortal, string> = {
@@ -17,10 +18,13 @@ export const roleLabels: Record<RolDePortal, string> = {
   auditor: "Auditor",
   cliente: "Cliente",
   operador: "Operador",
-  tesoreria: "Tesoreria",
+  tesoreria: "Tesorería",
+  gerente: "Gerente",
 };
 
-export function getSectionItems(scope: "user" | "admin") {
+export function getSectionItems(scope: "user" | "admin", rolActivo?: RolDePortal) {
+  const puedeResolverSolicitudes = rolActivo === "gerente" || rolActivo === "admin";
+
   return [
     { key: "dashboard" as const, label: "Resumen" },
     { key: "cuentas" as const, label: "Cuentas" },
@@ -31,6 +35,8 @@ export function getSectionItems(scope: "user" | "admin") {
     { key: "prestamos" as const, label: "Préstamos" },
     { key: "inversiones" as const, label: "Inversiones" },
     { key: "destinatarios" as const, label: "Destinatarios" },
+    // La bandeja de solicitudes sólo aparece para quien puede resolverlas.
+    ...(puedeResolverSolicitudes ? [{ key: "solicitudes" as const, label: "Solicitudes" }] : []),
     ...(scope === "admin" ? [{ key: "admin" as const, label: "Admin" }] : []),
   ];
 }

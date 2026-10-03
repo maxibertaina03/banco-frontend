@@ -12,6 +12,8 @@ import {
   obtenerResumenDeGastos,
 } from "../../features/cuentas/api/cuentas.api";
 import { crearCambio, obtenerCotizacion, obtenerTasas } from "../../features/cambio/api/cambio.api";
+import { listarSolicitudesPendientes, resolverSolicitud } from "../../features/prestamos/api/solicitudes.api";
+import { asignarRol, listarAsignaciones, listarRoles, quitarRol } from "../../features/admin/api/roles.api";
 import {
   autorizarConsumo,
   cambiarEstadoTarjeta,
@@ -103,6 +105,70 @@ export function useCambioDeDivisa(personaId: string | null | undefined) {
     mutationFn: ({ idempotencyKey, ...payload }: Parameters<typeof crearCambio>[0] & { idempotencyKey: string }) =>
       crearCambio(payload, idempotencyKey),
     onSuccess: () => refrescarSaldos(qc, personaId),
+  });
+}
+
+// ── Roles (admin) ──────────────────────────────────────────────────────────
+
+/** El catálogo de roles del banco. Cambia casi nunca. */
+export function useCatalogoDeRoles(habilitado: boolean) {
+  return useQuery({
+    queryKey: queryKeys.roles.catalogo(),
+    queryFn: listarRoles,
+    enabled: habilitado,
+    staleTime: 10 * 60_000,
+  });
+}
+
+export function useRolesDePersona(personaId: string | null) {
+  return useQuery({
+    queryKey: personaId ? queryKeys.roles.dePersona(personaId) : ["roles", "disabled"],
+    queryFn: () => listarAsignaciones(personaId as string),
+    enabled: Boolean(personaId),
+  });
+}
+
+export function useAsignarRol() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ personaId, rolId }: { personaId: string; rolId: string }) => asignarRol(personaId, rolId),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: queryKeys.roles.all }),
+  });
+}
+
+export function useQuitarRol() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ asignacionId }: { asignacionId: string }) => quitarRol(asignacionId),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: queryKeys.roles.all }),
+  });
+}
+
+// ── Solicitudes de préstamo (gerente) ──────────────────────────────────────
+
+/**
+ * Lo que espera una decisión. Se refresca al volver a la pantalla porque otro
+ * gerente puede haber resuelto algo mientras tanto.
+ */
+export function useSolicitudesPendientes(habilitado: boolean) {
+  return useQuery({
+    queryKey: queryKeys.prestamos.pendientes(),
+    queryFn: listarSolicitudesPendientes,
+    enabled: habilitado,
+    staleTime: 30_000,
+  });
+}
+
+export function useResolverSolicitud() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ prestamoId, aprobar, motivo }: { prestamoId: string; aprobar: boolean; motivo: string }) =>
+      resolverSolicitud(prestamoId, aprobar, motivo),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.prestamos.all });
+      // El saldo del cliente cambia cuando se aprueba.
+      void qc.invalidateQueries({ queryKey: queryKeys.personas.all });
+    },
   });
 }
 
