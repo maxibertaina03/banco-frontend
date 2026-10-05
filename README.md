@@ -343,13 +343,14 @@ Antes de publicar, crea estos PNG dentro de `public/`:
 | `public/pwa-512x512.png` | 512 × 512 |
 | `public/apple-touch-icon.png` | 180 × 180 |
 
-Usa `public/orbis-logo.svg` como referencia. Por ejemplo, con Inkscape instalado
-puedes abrir una terminal en `banco-frontend/` y exportar:
+Usa `public/orbital-bank-logo.png` como fuente del logo del banco (no el isotipo
+del chatbot `orbis-logo.svg`). Por ejemplo, con Inkscape instalado puedes abrir
+una terminal en `banco-frontend/` y exportar:
 
 ```powershell
-inkscape .\public\orbis-logo.svg --export-filename=.\public\pwa-192x192.png --export-width=192 --export-height=192
-inkscape .\public\orbis-logo.svg --export-filename=.\public\pwa-512x512.png --export-width=512 --export-height=512
-inkscape .\public\orbis-logo.svg --export-filename=.\public\apple-touch-icon.png --export-width=180 --export-height=180
+inkscape .\public\orbital-bank-logo.png --export-filename=.\public\pwa-192x192.png --export-width=192 --export-height=192
+inkscape .\public\orbital-bank-logo.png --export-filename=.\public\pwa-512x512.png --export-width=512 --export-height=512
+inkscape .\public\orbital-bank-logo.png --export-filename=.\public\apple-touch-icon.png --export-width=180 --export-height=180
 ```
 
 El icono de 512 también se declara como `maskable`; mantén el isotipo centrado
