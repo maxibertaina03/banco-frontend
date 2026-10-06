@@ -12,7 +12,13 @@ import { CargandoOrbital } from "../../../components/marca/CargandoOrbital";
 import { consultarCobroQr, crearCobroQr, transferirCobroQr, type CobroQr } from "../api/cobros.api";
 
 const DOMINIO_APP = (import.meta.env.VITE_APP_ORIGIN || "https://app.orbital.net.ar").replace(/\/$/, "");
-const MONTO_MAXIMO_QR = 1_000_000;
+// El techo real no es del QR sino de la transferencia: ningún cobro puede
+// superar el `limite_transferencia` más alto que haya configurado el banco,
+// porque si no, no hay cuenta que pueda pagarlo. Hoy es el de la Caja de
+// Ahorro. Esto es sólo para avisar antes de pedirle nada al servidor: quien
+// decide es él, y si algún día cambian los límites, contesta con el número
+// nuevo y este cartel queda viejo (no la validación).
+const MONTO_MAXIMO_QR = 500_000;
 
 /** Para no tipear en el teléfono, que es lo más incómodo de esta pantalla. */
 const MONTOS_SUGERIDOS = [1000, 2000, 5000, 10000, 20000];
@@ -130,7 +136,7 @@ export function CobrarPage() {
       return;
     }
     if (valor > MONTO_MAXIMO_QR) {
-      setError(`El monto máximo para un cobro por QR es ${formatCurrency(MONTO_MAXIMO_QR)}.`);
+      setError(`El monto máximo para un cobro por QR es ${formatCurrency(MONTO_MAXIMO_QR)}, que es el límite de transferencia de la cuenta.`);
       return;
     }
     setEnviando(true);
@@ -214,7 +220,9 @@ export function CobrarPage() {
               </button>
             ))}
           </div>
-          <p className="text-xs text-purple-200">Máximo {formatCurrency(MONTO_MAXIMO_QR)}.</p>
+          <p className="text-xs text-purple-200">
+            Máximo {formatCurrency(MONTO_MAXIMO_QR)}, que es el límite de transferencia de tu cuenta.
+          </p>
           {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
           <Button type="button" onClick={generar} disabled={enviando} className="h-14 w-full text-base">
             <QrCode className="size-4" /> {enviando ? "Generando..." : "Generar QR"}
