@@ -18,6 +18,7 @@ import { usePortalPage } from "../hooks/usePortalPage";
 import { ChatbotWidget } from "../features/chatbot/components/ChatbotWidget";
 import { DialogoOrbitaSecreta } from "../features/bonificaciones/DialogoOrbitaSecreta";
 import { useOrbitaSecreta } from "../features/bonificaciones/useOrbitaSecreta";
+import { CargandoOrbital } from "../components/marca/CargandoOrbital";
 
 // Sections cargadas perezosamente: cada una se descarga en su propio chunk
 // cuando el usuario navega a esa tab. Beneficio principal: el cliente normal
@@ -246,11 +247,7 @@ export function PortalPage() {
               </div>
 
               {loading || !perfil ? (
-                <Card className="border-primary/20 bg-[#1C0B2E]">
-                  <CardContent className="py-12 text-center text-sm text-muted-foreground">
-                    Cargando datos de Orbital...
-                  </CardContent>
-                </Card>
+                <CargandoOrbital variante="panel" size={48} mensaje="Cargando datos de Orbital…" />
               ) : (
                 <Suspense fallback={<SectionLoader />}>
                   {section === "dashboard" && (

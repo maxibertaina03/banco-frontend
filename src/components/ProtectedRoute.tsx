@@ -2,6 +2,7 @@ import { useAuth } from "@clerk/clerk-react";
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router";
 import { setAccessTokenProvider } from "../lib/api/client";
+import { CargandoOrbital } from "./marca/CargandoOrbital";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -24,12 +25,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#1C0B2E] to-[#2D1548] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <p className="text-purple-300">Cargando sesión...</p>
-        </div>
-      </div>
+      <CargandoOrbital variante="pantalla" size={56} mensaje="Cargando sesión…" />
     );
   }
 
@@ -42,9 +38,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   if (!tokenReady) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#1C0B2E] to-[#2D1548] flex items-center justify-center">
-        <p className="text-purple-300">Preparando conexión segura...</p>
-      </div>
+      <CargandoOrbital variante="pantalla" size={56} mensaje="Preparando conexión segura…" />
     );
   }
 

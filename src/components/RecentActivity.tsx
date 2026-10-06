@@ -1,6 +1,7 @@
 import { ArrowUpRight, ArrowDownLeft, ShoppingBag, Smartphone } from 'lucide-react';
 import { memo } from 'react';
 import type { ActividadDeUsuario } from "../features/transacciones/types/transacciones.types";
+import { CargandoOrbital } from "./marca/CargandoOrbital";
 
 interface RecentActivityProps {
   activities: ActividadDeUsuario[];
@@ -33,8 +34,8 @@ export const RecentActivity = memo(function RecentActivity({ activities, loading
 
       <div className="space-y-3">
         {loading && (
-          <div className="rounded-xl border border-primary/10 bg-[#2D1548]/30 p-4 text-sm text-muted-foreground">
-            Cargando movimientos...
+          <div className="rounded-xl border border-primary/10 bg-[#2D1548]/30">
+            <CargandoOrbital size={32} mensaje="Cargando movimientos…" />
           </div>
         )}
 

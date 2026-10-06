@@ -1,14 +1,9 @@
-import { Card, CardContent } from "./ui/card";
+import { CargandoOrbital } from "./marca/CargandoOrbital";
 
 // Fallback genérico para Suspense de sections lazy-loaded. Mantiene el
 // layout del portal estable durante el code-split — el chunk típicamente
-// llega en <100ms si está cacheado, así que evitamos un skeleton elaborado.
+// llega en <100ms si está cacheado, así que no hace falta un skeleton
+// elaborado, pero sí que se vea que el banco está trabajando.
 export function SectionLoader() {
-  return (
-    <Card className="border-primary/20 bg-[#1C0B2E]">
-      <CardContent className="py-12 text-center text-sm text-muted-foreground">
-        Cargando sección…
-      </CardContent>
-    </Card>
-  );
+  return <CargandoOrbital variante="panel" mensaje="Cargando sección…" />;
 }

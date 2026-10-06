@@ -7,15 +7,27 @@ import { QRCodeCanvas } from "qrcode.react";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { ApiError, nuevaClaveIdempotencia } from "../../../lib/api/client";
-import { formatCurrency, parsearMonto } from "../../../lib/utils/currency";
+import { formatCurrency, formatearMontoEditable, parsearMonto } from "../../../lib/utils/currency";
+import { CargandoOrbital } from "../../../components/marca/CargandoOrbital";
 import { consultarCobroQr, crearCobroQr, transferirCobroQr, type CobroQr } from "../api/cobros.api";
 
 const DOMINIO_APP = (import.meta.env.VITE_APP_ORIGIN || "https://app.orbital.net.ar").replace(/\/$/, "");
 const MONTO_MAXIMO_QR = 1_000_000;
 
+/** Para no tipear en el teléfono, que es lo más incómodo de esta pantalla. */
+const MONTOS_SUGERIDOS = [1000, 2000, 5000, 10000, 20000];
+
 function PanelQr({ children, titulo, bajada }: { children: React.ReactNode; titulo: string; bajada: string }) {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-[#1C0B2E] to-[#2D1548] px-4 py-6 text-white sm:py-10">
+    // Las dos `safe-area`: sin ellas, en un iPhone el botón de abajo queda
+    // tapado por la barra de gestos y el link de arriba por el notch.
+    <main
+      className="min-h-screen bg-gradient-to-br from-[#1C0B2E] to-[#2D1548] px-4 py-6 text-white sm:py-10"
+      style={{
+        paddingTop: "max(1.5rem, env(safe-area-inset-top))",
+        paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))",
+      }}
+    >
       <div className="mx-auto max-w-lg">
         <Link to="/" className="mb-5 inline-flex items-center gap-2 text-sm text-purple-200 hover:text-white">
           <ArrowLeft className="size-4" /> Volver al inicio
@@ -38,6 +50,45 @@ function mensajeError(error: unknown) {
   return "No se pudo completar la operación. Intentá de nuevo.";
 }
 
+/**
+ * Mantiene la pantalla prendida mientras hay un QR a la vista.
+ *
+ * Sin esto, el teléfono se apaga solo a los 30 segundos y hay que
+ * desbloquearlo justo cuando el otro está por escanear. El bloqueo se suelta
+ * al salir de la pantalla, y también hay que volver a pedirlo al volver de
+ * otra app: el navegador lo libera cuando la pestaña queda oculta.
+ *
+ * Safari en iPhone recién lo soporta desde la 16.4 y el navegador puede
+ * negarlo (batería baja, por ejemplo). Es una comodidad, no algo de lo que la
+ * pantalla dependa: si falla, el QR se ve igual.
+ */
+function usarPantallaDespierta(activo: boolean) {
+  useEffect(() => {
+    if (!activo || !("wakeLock" in navigator)) return;
+    let lock: WakeLockSentinel | null = null;
+    let cancelado = false;
+
+    const pedir = async () => {
+      try {
+        lock = await navigator.wakeLock.request("screen");
+      } catch {
+        // Sin pantalla despierta se sigue pudiendo cobrar.
+      }
+    };
+    const alVolver = () => {
+      if (!cancelado && document.visibilityState === "visible") void pedir();
+    };
+
+    void pedir();
+    document.addEventListener("visibilitychange", alVolver);
+    return () => {
+      cancelado = true;
+      document.removeEventListener("visibilitychange", alVolver);
+      void lock?.release().catch(() => {});
+    };
+  }, [activo]);
+}
+
 function formatearCuentaRegresiva(segundos: number) {
   const minutos = Math.floor(segundos / 60);
   const resto = segundos % 60;
@@ -53,6 +104,7 @@ export function CobrarPage() {
   const [enviando, setEnviando] = useState(false);
   const [segundos, setSegundos] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  usarPantallaDespierta(Boolean(cobroId) && segundos > 0);
   const linkQr = useMemo(() => {
     if (!cobroId) return "";
     const url = new URL("/pagar", DOMINIO_APP);
@@ -136,22 +188,35 @@ export function CobrarPage() {
             </p>
           )}
           <label htmlFor="monto-qr" className="block text-sm font-medium">Monto en pesos</label>
+          {/* Texto y no `type="number"`: el resto del portal pide la plata así,
+              a la argentina (1.500,50). En un input numérico el navegador lee
+              "1.500" como uno con cinco, y `parsearMonto` como mil quinientos:
+              el mismo texto, dos cifras distintas. */}
           <input
             id="monto-qr"
-            type="number"
-            min="0.01"
-            max={MONTO_MAXIMO_QR}
-            step="0.01"
+            type="text"
             inputMode="decimal"
             autoComplete="off"
             value={textoMonto}
             onChange={(event) => setTextoMonto(event.target.value)}
             placeholder="0,00"
-            className="h-12 w-full rounded-lg border border-primary/30 bg-[#2D1548] px-4 text-lg text-white outline-none focus:border-purple-400"
+            className="h-14 w-full rounded-lg border border-primary/30 bg-[#2D1548] px-4 text-2xl text-white outline-none focus:border-purple-400"
           />
+          <div className="flex flex-wrap gap-2">
+            {MONTOS_SUGERIDOS.map((sugerido) => (
+              <button
+                key={sugerido}
+                type="button"
+                onClick={() => setTextoMonto(formatearMontoEditable(sugerido))}
+                className="min-h-9 rounded-full border border-primary/40 bg-primary/10 px-4 text-sm text-purple-100 transition hover:bg-primary/25"
+              >
+                ${formatearMontoEditable(sugerido)}
+              </button>
+            ))}
+          </div>
           <p className="text-xs text-purple-200">Máximo {formatCurrency(MONTO_MAXIMO_QR)}.</p>
           {error && <p role="alert" className="text-sm text-red-300">{error}</p>}
-          <Button type="button" onClick={generar} disabled={enviando} className="h-12 w-full">
+          <Button type="button" onClick={generar} disabled={enviando} className="h-14 w-full text-base">
             <QrCode className="size-4" /> {enviando ? "Generando..." : "Generar QR"}
           </Button>
         </div>
@@ -226,7 +291,7 @@ export function EscanearPage() {
     <PanelQr titulo="Escanear QR" bajada="Apuntá la cámara al QR de cobro de Orbital.">
       {error && <p role="alert" className="mb-4 rounded-lg bg-red-500/10 p-3 text-sm text-red-200">{error}</p>}
       {leyendo ? (
-        <p className="py-8 text-center text-purple-200">Consultando el cobro...</p>
+        <CargandoOrbital mensaje="Consultando el cobro…" />
       ) : (
         <div className="overflow-hidden rounded-xl">
           <Scanner
@@ -303,7 +368,7 @@ export function PagarPage() {
   return (
     <PanelQr titulo={exito ? "Transferencia realizada" : "Confirmar transferencia"} bajada="Revisá los datos antes de confirmar.">
       {cargando ? (
-        <p className="py-8 text-center text-purple-200">Consultando cobro...</p>
+        <CargandoOrbital mensaje="Consultando cobro…" />
       ) : exito ? (
         <div className="space-y-4 text-center">
           <CheckCircle2 className="mx-auto size-14 text-emerald-400" />
@@ -324,8 +389,8 @@ export function PagarPage() {
             <p className="text-3xl font-semibold">{formatCurrency(Number(cobro.monto))}</p>
           </div>
           <p className="text-xs text-purple-200">Clerk puede pedirte verificar tu identidad antes de confirmar esta operación.</p>
-          <Button type="button" onClick={confirmar} disabled={enviando} className="h-12 w-full">
-            {enviando ? "Enviando..." : "Confirmar transferencia"}
+          <Button type="button" onClick={confirmar} disabled={enviando} className="h-14 w-full text-base">
+            {enviando ? "Enviando…" : "Confirmar transferencia"}
           </Button>
           <Button type="button" variant="outline" onClick={() => navigate("/escanear")} disabled={enviando} className="w-full">
             Cancelar
