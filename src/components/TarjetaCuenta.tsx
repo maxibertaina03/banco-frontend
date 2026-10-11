@@ -51,7 +51,8 @@ export const TarjetaCuenta = memo(function TarjetaCuenta({
               </p>
               <button
                 onClick={() => setShowBalance(!showBalance)}
-                className="p-1.5 rounded-lg hover:bg-[#A855F7]/30 transition-colors"
+                aria-label={showBalance ? "Ocultar el saldo" : "Mostrar el saldo"}
+                className="flex size-11 shrink-0 items-center justify-center rounded-lg hover:bg-[#A855F7]/30 transition-colors sm:size-8"
               >
                 {showBalance ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
               </button>

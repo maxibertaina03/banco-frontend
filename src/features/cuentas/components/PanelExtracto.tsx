@@ -118,18 +118,23 @@ function ResumenPorCategoria({
 
   return (
     <div className="grid gap-4">
+      {/* Tres columnas en 390px dejan unos 95px de ancho útil por celda, y
+          "-US$ 196,38" no entraba: el signo menos quedaba en un renglón y el
+          número en el siguiente, que en un banco se lee como un positivo. El
+          `whitespace-nowrap` lo impide y el cuerpo más chico en teléfono hace
+          que entre. `tabular-nums` para que las tres cifras queden alineadas. */}
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="rounded-2xl bg-[#2D1548]/60 p-3">
           <p className="text-xs text-muted-foreground">Ingresos</p>
-          <p className="text-sm text-emerald-300">{formatCurrency(resumen.total_ingresos, moneda)}</p>
+          <p className="whitespace-nowrap text-xs tabular-nums text-emerald-300 sm:text-sm">{formatCurrency(resumen.total_ingresos, moneda)}</p>
         </div>
         <div className="rounded-2xl bg-[#2D1548]/60 p-3">
           <p className="text-xs text-muted-foreground">Gastos</p>
-          <p className="text-sm">{formatCurrency(resumen.total_gastos, moneda)}</p>
+          <p className="whitespace-nowrap text-xs tabular-nums sm:text-sm">{formatCurrency(resumen.total_gastos, moneda)}</p>
         </div>
         <div className="rounded-2xl bg-[#2D1548]/60 p-3">
           <p className="text-xs text-muted-foreground">Balance</p>
-          <p className={`text-sm ${resumen.balance < 0 ? "text-destructive" : "text-primary"}`}>{formatCurrency(resumen.balance, moneda)}</p>
+          <p className={`whitespace-nowrap text-xs tabular-nums sm:text-sm ${resumen.balance < 0 ? "text-destructive" : "text-primary"}`}>{formatCurrency(resumen.balance, moneda)}</p>
         </div>
       </div>
 

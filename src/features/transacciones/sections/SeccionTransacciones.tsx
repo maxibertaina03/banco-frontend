@@ -312,7 +312,7 @@ export const SeccionTransacciones = memo(function SeccionTransacciones({
             type="button"
             onClick={onSyncIncoming}
             disabled={syncingIncoming}
-            className="flex items-center gap-1.5 rounded-lg border border-primary/20 bg-[#2D1548]/60 px-3 py-1.5 text-xs text-primary transition hover:bg-[#2D1548] disabled:opacity-50"
+            className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg border border-primary/20 bg-[#2D1548]/60 px-3 text-xs text-primary transition hover:bg-[#2D1548] disabled:opacity-50 sm:min-h-0 sm:py-1.5"
           >
             <RefreshCcw className={`h-3.5 w-3.5 ${syncingIncoming ? "animate-spin" : ""}`} />
             {syncingIncoming ? "Buscando..." : "Actualizar"}

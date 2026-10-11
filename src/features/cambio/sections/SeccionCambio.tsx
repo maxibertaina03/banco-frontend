@@ -102,7 +102,7 @@ export function SeccionCambio({ perfil, onIrACuentas }: { perfil: PersonaComplet
                 cambio.reset();
                 renovarClave();
               }}
-              className={`rounded-xl py-2 text-sm transition ${operacion === op ? "bg-primary text-primary-foreground" : "hover:bg-[#2D1548]"}`}
+              className={`flex min-h-11 items-center justify-center rounded-xl text-sm transition sm:min-h-0 sm:py-2 ${operacion === op ? "bg-primary text-primary-foreground" : "hover:bg-[#2D1548]"}`}
             >
               {op === "compra" ? "Comprar USD" : "Vender USD"}
             </button>
@@ -137,7 +137,7 @@ export function SeccionCambio({ perfil, onIrACuentas }: { perfil: PersonaComplet
                   setResultado(null);
                 }}
                 disabled={disponible <= 0 || yaEstaAlMaximo}
-                className="rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs text-primary transition hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex min-h-11 items-center rounded-full border border-primary/40 bg-primary/10 px-3 text-xs text-primary transition hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-40 sm:min-h-0 sm:py-1"
               >
                 {operacion === "compra" ? "Compra máxima" : "Venta máxima"}
               </button>
@@ -178,7 +178,7 @@ export function SeccionCambio({ perfil, onIrACuentas }: { perfil: PersonaComplet
         title="Cotización"
         description="Dólar oficial, fuente DolarAPI."
         actions={
-          <button type="button" onClick={() => void cotizacion.refetch()} aria-label="Actualizar cotización" className="rounded-lg p-2 hover:bg-[#2D1548]">
+          <button type="button" onClick={() => void cotizacion.refetch()} aria-label="Actualizar cotización" className="flex size-11 shrink-0 items-center justify-center rounded-lg hover:bg-[#2D1548] sm:size-8">
             <RefreshCw className={`h-4 w-4 ${cotizacion.isFetching ? "animate-spin" : ""}`} />
           </button>
         }

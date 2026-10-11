@@ -75,7 +75,7 @@ export function Header({
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className="lg:hidden p-2 rounded-lg hover:bg-[#2D1548] transition-colors"
+                      className="lg:hidden flex size-11 items-center justify-center rounded-lg hover:bg-[#2D1548] transition-colors"
                       aria-label="Secciones del portal"
                     >
                       <Menu className="w-5 h-5" />
@@ -104,7 +104,7 @@ export function Header({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="relative p-2 rounded-lg hover:bg-[#2D1548] transition-colors"
+                    className="relative flex size-11 items-center justify-center rounded-lg hover:bg-[#2D1548] transition-colors sm:size-9"
                     aria-label="Notificaciones"
                   >
                     <Bell className="w-5 h-5" />
