@@ -7,3 +7,12 @@
 @source '../**/*.{js,ts,jsx,tsx}';
 
 @import 'tw-animate-css';
+
+/* `dedo:` — cuando la pantalla se maneja con el dedo y no con un mouse.
+ *
+ * Los blancos de toque del portal se agrandan a 44px, que es el mínimo que se
+ * acierta sin apuntar. La condición no puede ser el ancho: un teléfono dado
+ * vuelta mide 844px y una tablet 768, y con un corte por ancho los dos
+ * volvían a los 36px del escritorio aunque se sigan tocando con el dedo.
+ * `pointer: coarse` pregunta lo que de verdad importa. */
+@custom-variant dedo (@media (pointer: coarse));

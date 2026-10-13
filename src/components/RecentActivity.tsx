@@ -26,7 +26,7 @@ export const RecentActivity = memo(function RecentActivity({ activities, loading
         <h3>Actividad reciente</h3>
         {/* Antes el botón estaba pero no hacía nada. */}
         {onVerTodo && (
-          <button type="button" onClick={onVerTodo} className="text-sm text-[#A855F7] hover:text-[#C084FC] transition-colors">
+          <button type="button" onClick={onVerTodo} className="flex shrink-0 items-center text-sm text-[#A855F7] transition-colors hover:text-[#C084FC] dedo:min-h-11">
             Ver todo
           </button>
         )}

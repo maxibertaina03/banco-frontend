@@ -42,24 +42,27 @@ export const TarjetaCuenta = memo(function TarjetaCuenta({
       <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl" />
 
       <div className="relative z-10">
-        <div className="flex items-start justify-between mb-6">
-          <div>
+        {/* `flex-wrap`: en 320px el saldo y los badges no entran en la misma
+            línea, y los badges terminaban fuera de la pantalla. Envolviendo,
+            bajan solos; `ml-auto` los mantiene a la derecha en los dos casos. */}
+        <div className="mb-6 flex flex-wrap items-start justify-between gap-y-3">
+          <div className="min-w-0">
             <p className="text-sm text-muted-foreground mb-1">{tipo}</p>
             <div className="flex items-center gap-2">
-              <p className="text-3xl">
+              <p className="text-2xl sm:text-3xl">
                 {showBalance ? formatSaldo(saldo) : '••••••'}
               </p>
               <button
                 onClick={() => setShowBalance(!showBalance)}
                 aria-label={showBalance ? "Ocultar el saldo" : "Mostrar el saldo"}
-                className="flex size-11 shrink-0 items-center justify-center rounded-lg hover:bg-[#A855F7]/30 transition-colors sm:size-8"
+                className="flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors hover:bg-[#A855F7]/30 dedo:size-11"
               >
                 {showBalance ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
               </button>
             </div>
           </div>
 
-          <div className="flex flex-col items-end gap-2">
+          <div className="ml-auto flex flex-col items-end gap-2">
             <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-[#A855F7]/20 text-[#C084FC] text-sm">
               <TrendingUp className="w-3 h-3" />
               <span>{activa ? 'Activa' : 'Suspendida'}</span>

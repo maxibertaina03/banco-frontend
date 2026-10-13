@@ -131,7 +131,7 @@ export const InterbankMassSyncSection = memo(function InterbankMassSyncSection({
             type="button"
             onClick={() => void cargarCuentas()}
             disabled={loading}
-            className="rounded-lg border border-primary/20 p-2 text-muted-foreground transition hover:text-primary disabled:opacity-40"
+            className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-primary/20 text-muted-foreground transition hover:text-primary disabled:opacity-40 dedo:size-11"
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           </button>
@@ -274,7 +274,7 @@ export const InterbankMassSyncSection = memo(function InterbankMassSyncSection({
                         onClick={() => void handleSyncOne(cuenta.id)}
                         disabled={isSyncing || !!syncingId || bulkSyncing || !cuenta.sync_ready}
                         title={!cuenta.sync_ready ? cuenta.sync_issues.join(". ") : "Vincular con Banco Central"}
-                        className="flex shrink-0 items-center gap-1.5 rounded-xl border border-primary/20 bg-[#2D1548]/60 px-3 py-1.5 text-xs text-primary transition hover:bg-[#2D1548] disabled:cursor-not-allowed disabled:opacity-40"
+                        className="flex shrink-0 items-center gap-1.5 rounded-xl border border-primary/20 bg-[#2D1548]/60 px-3 py-1.5 text-xs text-primary transition hover:bg-[#2D1548] disabled:cursor-not-allowed disabled:opacity-40 dedo:min-h-11 dedo:py-0"
                       >
                         <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`} />
                         {isSyncing ? "Vinculando..." : "Vincular"}

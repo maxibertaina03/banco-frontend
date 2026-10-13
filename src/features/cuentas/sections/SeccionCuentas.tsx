@@ -48,7 +48,7 @@ export const SeccionCuentas = memo(function SeccionCuentas({
           <button
             onClick={onBulkSync}
             disabled={bulkSyncing}
-            className="flex items-center gap-2 rounded-xl border border-amber-400/30 bg-amber-400/15 px-4 py-2 text-sm text-amber-300 transition hover:bg-amber-400/25 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-xl border border-amber-400/30 bg-amber-400/15 px-4 py-2 text-sm text-amber-300 transition hover:bg-amber-400/25 disabled:opacity-50 dedo:min-h-11 dedo:py-0"
           >
             <RefreshCw className={`h-4 w-4 ${bulkSyncing ? "animate-spin" : ""}`} />
             {bulkSyncing ? "Habilitando..." : "Habilitar todas"}

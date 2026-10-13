@@ -104,7 +104,7 @@ export function Header({
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button
-                    className="relative flex size-11 items-center justify-center rounded-lg hover:bg-[#2D1548] transition-colors sm:size-9"
+                    className="relative flex size-9 items-center justify-center rounded-lg transition-colors hover:bg-[#2D1548] dedo:size-11"
                     aria-label="Notificaciones"
                   >
                     <Bell className="w-5 h-5" />

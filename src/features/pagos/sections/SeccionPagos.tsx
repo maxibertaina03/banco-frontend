@@ -45,7 +45,7 @@ export function SeccionPagos({ perfil }: { perfil: PersonaCompleta }) {
             key={p}
             type="button"
             onClick={() => setPestana(p)}
-            className={`flex min-h-11 items-center justify-center rounded-xl px-5 text-sm transition sm:min-h-0 sm:py-2 ${pestana === p ? "bg-primary text-primary-foreground" : "hover:bg-[#2D1548]"}`}
+            className={`flex items-center justify-center rounded-xl px-5 py-2 text-sm transition dedo:min-h-11 dedo:py-0 ${pestana === p ? "bg-primary text-primary-foreground" : "hover:bg-[#2D1548]"}`}
           >
             {p === "servicios" ? "Pagar servicios" : "Recargar celular"}
           </button>

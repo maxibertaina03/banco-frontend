@@ -30,7 +30,7 @@ export const PortalHero = memo(function PortalHero({
             key={role}
             type="button"
             onClick={() => onRoleChange(role)}
-            className={`flex min-h-11 items-center rounded-full border px-4 text-sm transition sm:min-h-0 sm:py-2 ${
+            className={`flex items-center rounded-full border px-4 py-1.5 text-sm transition sm:py-2 dedo:min-h-11 dedo:py-0 ${
               role === rolActivo
                 ? "border-white bg-white text-[#6D28D9]"
                 : "border-white/30 bg-white/10 text-white hover:bg-white/15"

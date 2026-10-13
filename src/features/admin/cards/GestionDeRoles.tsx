@@ -146,7 +146,7 @@ export function GestionDeRoles({ personas }: { personas: OpcionDePersona[] }) {
                       onClick={() => quitar.mutate({ asignacionId: asignacion.id })}
                       disabled={quitar.isPending}
                       aria-label={`Quitar el rol ${nombre}`}
-                      className="shrink-0 rounded-lg p-2 text-destructive transition hover:bg-destructive/10 disabled:opacity-50"
+                      className="flex size-9 shrink-0 items-center justify-center rounded-lg text-destructive transition hover:bg-destructive/10 disabled:opacity-50 dedo:size-11"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

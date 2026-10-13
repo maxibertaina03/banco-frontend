@@ -79,11 +79,17 @@ export function PanelExtracto({ cuentas }: { cuentas: Cuenta[] }) {
         </ul>
 
         {(pagina > 1 || hayMas) && (
-          <div className="mt-4 flex items-center justify-between">
+          // Los dos botones más "Página N" no entran en 320px y la fila se
+          // iba 8px fuera de la pantalla. `gap-2` en vez de `justify-between`
+          // con el número al medio empujando, y el contador se esconde en las
+          // pantallas más angostas: los botones ya dicen hacia dónde se va.
+          <div className="mt-4 flex items-center justify-between gap-2">
             <Boton variante="secundario" disabled={pagina === 1} onClick={() => setPagina((p) => p - 1)}>
               <ChevronLeft className="h-4 w-4" /> Anterior
             </Boton>
-            <span className="text-xs text-muted-foreground">Página {pagina}</span>
+            <span className="hidden whitespace-nowrap text-xs text-muted-foreground min-[360px]:inline">
+              Página {pagina}
+            </span>
             <Boton variante="secundario" disabled={!hayMas || movimientos.isPlaceholderData} onClick={() => setPagina((p) => p + 1)}>
               Siguiente <ChevronRight className="h-4 w-4" />
             </Boton>

@@ -105,7 +105,7 @@ export function ChatbotWidget() {
                 onClick={() => setSoundsEnabled((enabled) => !enabled)}
                 aria-label={soundsEnabled ? "Silenciar sonidos de Orbis" : "Activar sonidos de Orbis"}
                 title={soundsEnabled ? "Silenciar sonidos" : "Activar sonidos"}
-                className="rounded-lg p-2 text-muted-foreground transition hover:bg-[#2D1548] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-[#2D1548] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dedo:size-11"
               >
                 {soundsEnabled ? <Volume2 className="h-4 w-4" aria-hidden="true" /> : <VolumeX className="h-4 w-4" aria-hidden="true" />}
               </button>
@@ -114,7 +114,7 @@ export function ChatbotWidget() {
                 onClick={() => setOpen(false)}
                 aria-label="Cerrar chat"
                 title="Cerrar chat"
-                className="rounded-lg p-2 text-muted-foreground transition hover:bg-[#2D1548] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition hover:bg-[#2D1548] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dedo:size-11"
               >
                 <X className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -176,7 +176,7 @@ export function ChatbotWidget() {
                 disabled={loading || !draft.trim()}
                 aria-label="Enviar mensaje"
                 title="Enviar mensaje"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary dedo:size-11"
               >
                 <Send className="h-4 w-4" aria-hidden="true" />
               </button>

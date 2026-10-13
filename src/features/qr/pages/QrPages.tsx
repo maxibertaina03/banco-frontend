@@ -214,7 +214,7 @@ export function CobrarPage() {
                 key={sugerido}
                 type="button"
                 onClick={() => setTextoMonto(formatearMontoEditable(sugerido))}
-                className="min-h-9 rounded-full border border-primary/40 bg-primary/10 px-4 text-sm text-purple-100 transition hover:bg-primary/25"
+                className="min-h-9 rounded-full border border-primary/40 bg-primary/10 px-4 text-sm text-purple-100 transition hover:bg-primary/25 dedo:min-h-11"
               >
                 ${formatearMontoEditable(sugerido)}
               </button>
