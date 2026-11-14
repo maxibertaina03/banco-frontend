@@ -6,6 +6,7 @@ import { PaginaIngreso } from "../features/auth/PaginaIngreso";
 import { PaginaRegistro } from "../features/auth/PaginaRegistro";
 import { ProtectedRoute } from "../components/ProtectedRoute";
 import { CobrarPage, EscanearPage, PagarPage } from "../features/qr/pages/QrPages";
+import { EntradaDemo } from "../features/demo/EntradaDemo";
 import { rutaInternaSegura } from "../features/auth/redirect-url";
 
 function PaginaQrProtegida({ children }: { children: ReactNode }) {
@@ -29,6 +30,9 @@ export function AppRouter() {
           como /registro/verify-email-address. */}
       <Route path="/ingresar/*" element={<SoloSinSesion><PaginaIngreso /></SoloSinSesion>} />
       <Route path="/registro/*" element={<SoloSinSesion><PaginaRegistro /></SoloSinSesion>} />
+      {/* Pública a propósito: es la que se abre al escanear el QR de prueba,
+          y quien llega todavía no tiene sesión de ninguna clase. */}
+      <Route path="/demo" element={<EntradaDemo />} />
       <Route path="/cobrar" element={<PaginaQrProtegida><CobrarPage /></PaginaQrProtegida>} />
       <Route path="/escanear" element={<PaginaQrProtegida><EscanearPage /></PaginaQrProtegida>} />
       <Route path="/pagar" element={<PaginaQrProtegida><PagarPage /></PaginaQrProtegida>} />

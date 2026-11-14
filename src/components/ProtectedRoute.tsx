@@ -1,4 +1,4 @@
-import { useAuth } from "@clerk/clerk-react";
+import { useSesion } from "../hooks/useSesion";
 import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router";
 import { setAccessTokenProvider } from "../lib/api/client";
@@ -9,7 +9,8 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { getToken, isSignedIn, isLoaded } = useAuth();
+  // Clerk o sesión de prueba: para esta pantalla es lo mismo.
+  const { getToken, isSignedIn, isLoaded } = useSesion();
   const location = useLocation();
   const [tokenReady, setTokenReady] = useState(false);
 

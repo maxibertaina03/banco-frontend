@@ -19,6 +19,7 @@ import { ChatbotWidget } from "../features/chatbot/components/ChatbotWidget";
 import { DialogoOrbitaSecreta } from "../features/bonificaciones/DialogoOrbitaSecreta";
 import { useOrbitaSecreta } from "../features/bonificaciones/useOrbitaSecreta";
 import { CargandoOrbital } from "../components/marca/CargandoOrbital";
+import { CartelDemo } from "../features/demo/CartelDemo";
 
 // Sections cargadas perezosamente: cada una se descarga en su propio chunk
 // cuando el usuario navega a esa tab. Beneficio principal: el cliente normal
@@ -70,6 +71,7 @@ const SeccionTransacciones = lazy(() =>
 
 export function PortalPage() {
   const {
+    esDemo,
     rolActivo,
     setRolActivo,
     section,
@@ -230,6 +232,7 @@ export function PortalPage() {
             </Suspense>
           ) : (
             <>
+              {esDemo && <CartelDemo />}
               <PortalTabs items={getSectionItems(scope, rolActivo)} onSectionChange={setSection} section={section} />
               <div className="my-3 grid grid-cols-2 gap-3">
                 <Link

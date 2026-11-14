@@ -1,4 +1,4 @@
-import { useAuth } from "@clerk/clerk-react";
+import { useSesion } from "./useSesion";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { PREFERRED_PERSONA_ID } from "../lib/constants/portal";
 import { sanearIdDePersona } from "../features/personas/api/personas.api";
@@ -14,7 +14,9 @@ import { obtenerOpcionesDeRol, obtenerAlcanceDeRol } from "../features/personas/
 import { totalesPorMoneda } from "../lib/utils/currency";
 
 export function usePortalPage() {
-  const { getToken, isLoaded, isSignedIn } = useAuth();
+  // Clerk o sesión de prueba. `esDemo` lo usa el portal para el cartel y
+  // para el botón de salir, que en una sesión de prueba borra los datos.
+  const { getToken, isLoaded, isSignedIn, esDemo } = useSesion();
   const initialPersonaId = sanearIdDePersona(PREFERRED_PERSONA_ID);
 
   const [rolActivo, setRolActivo] = useState<RolDePortal>("cliente");
@@ -47,6 +49,7 @@ export function usePortalPage() {
     initialPersonaId,
     isLoaded,
     isSignedIn,
+    esDemo,
     preferredPersonaId: PREFERRED_PERSONA_ID,
     setError,
     setSuccess,
