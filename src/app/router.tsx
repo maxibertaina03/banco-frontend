@@ -36,7 +36,7 @@ export function AppRouter() {
       <Route path="/cobrar" element={<PaginaQrProtegida><CobrarPage /></PaginaQrProtegida>} />
       <Route path="/escanear" element={<PaginaQrProtegida><EscanearPage /></PaginaQrProtegida>} />
       <Route path="/pagar" element={<PaginaQrProtegida><PagarPage /></PaginaQrProtegida>} />
-      <Route path="/" element={<App />} />
+      <Route path="/" element={<ProtectedRoute><App /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

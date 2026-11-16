@@ -12,10 +12,11 @@ import {
   mensajeDeError,
   useClaveIdempotencia,
 } from "../../../components/operaciones/ui";
+import { haySesionDemo } from "../../demo/sesion-demo";
 import type { PersonaCompleta } from "../../../lib/api";
 import { useDeudaDeServicio, useEmpresasDeServicios, useOperadoras, usePagarFactura, useRecargarCelular } from "../../../lib/queries";
 import { formatCurrency, formatFecha } from "../../../lib/utils/currency";
-import { USA_MOCK_DE_PAGOS } from "../api/pagos.api";
+import { usaMockPagos } from "../api/pagos.api";
 import type { Factura, Rubro } from "../types/pagos.types";
 import type { Cuenta } from "../../cuentas/types/cuentas.types";
 
@@ -33,11 +34,16 @@ export function SeccionPagos({ perfil }: { perfil: PersonaCompleta }) {
   // Servicios y recargas se pagan sólo en pesos: el backend rechaza cuentas USD.
   const cuentasEnPesos = perfil.cuentas.filter((c) => (c.moneda ?? "ARS") === "ARS" && c.activa);
   const [pestana, setPestana] = useState<"servicios" | "recargas">("servicios");
+  const pagosSimulados = usaMockPagos();
 
   return (
     <div className="grid gap-6">
-      {USA_MOCK_DE_PAGOS && (
-        <Aviso tipo="atencion">Modo demo: los pagos usan datos simulados y no mueven saldo (VITE_PAGOS_MOCK).</Aviso>
+      {pagosSimulados && (
+        <Aviso tipo="atencion">
+          {haySesionDemo()
+            ? "Modo prueba: pagos y recargas simulados. No se contacta a proveedores ni se debita saldo real."
+            : "Modo demo: los pagos usan datos simulados y no mueven saldo (VITE_PAGOS_MOCK)."}
+        </Aviso>
       )}
       <div className="grid w-full grid-cols-2 gap-2 rounded-2xl bg-[#1C0B2E] p-1 sm:w-fit">
         {(["servicios", "recargas"] as const).map((p) => (

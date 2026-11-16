@@ -7,7 +7,6 @@ import { PortalHero } from "../components/layout/PortalHero";
 import { PortalSummary } from "../components/layout/PortalSummary";
 import { PortalTabs } from "../components/layout/PortalTabs";
 import { PortalToolbar } from "../components/layout/PortalToolbar";
-import { ProtectedRoute } from "../components/ProtectedRoute";
 import { SectionLoader } from "../components/SectionLoader";
 import { Card, CardContent } from "../components/ui/card";
 import { formatCurrency } from "../lib/utils/currency";
@@ -142,7 +141,6 @@ export function PortalPage() {
   const orbitaSecreta = useOrbitaSecreta(Boolean(perfil) && !necesitaCompletarPerfil && !loading);
 
   return (
-    <ProtectedRoute>
       <div className="min-h-screen bg-background">
         <Header
           displayName={
@@ -388,6 +386,5 @@ export function PortalPage() {
 
         {!necesitaCompletarPerfil && <ChatbotWidget />}
       </div>
-    </ProtectedRoute>
   );
 }

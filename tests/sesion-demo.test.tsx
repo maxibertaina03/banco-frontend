@@ -97,11 +97,16 @@ describe("ProtectedRoute", () => {
   it("deja pasar al visitante de prueba y le pone su token en el cliente HTTP", async () => {
     guardarToken(TOKEN);
 
-    montar(<p>el portal</p>);
+    let tokenConfiguradoAlMontarHijo = false;
+    function HijoDelPortal() {
+      tokenConfiguradoAlMontarHijo = setAccessTokenProvider.mock.calls.length > 0;
+      return <p>el portal</p>;
+    }
+
+    montar(<HijoDelPortal />);
 
     expect(await screen.findByText("el portal")).toBeInTheDocument();
-    // Si esto no se llama, las queries salen sin Authorization y todo da 401.
-    await waitFor(() => expect(setAccessTokenProvider).toHaveBeenCalled());
+    expect(tokenConfiguradoAlMontarHijo).toBe(true);
   });
 
   it("sin sesión de ninguna clase manda a ingresar", async () => {

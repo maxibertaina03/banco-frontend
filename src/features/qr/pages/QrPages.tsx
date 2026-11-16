@@ -8,10 +8,17 @@ import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { ApiError, nuevaClaveIdempotencia } from "../../../lib/api/client";
 import { formatCurrency, formatearMontoEditable, parsearMonto } from "../../../lib/utils/currency";
+import { haySesionDemo } from "../../demo/sesion-demo";
 import { CargandoOrbital } from "../../../components/marca/CargandoOrbital";
 import { consultarCobroQr, crearCobroQr, transferirCobroQr, type CobroQr } from "../api/cobros.api";
 
-const DOMINIO_APP = (import.meta.env.VITE_APP_ORIGIN || "https://app.orbital.net.ar").replace(/\/$/, "");
+function obtenerDominioApp() {
+  const hostname = window.location.hostname.toLowerCase();
+  const esLocal = ["localhost", "127.0.0.1", "::1", "[::1]"].includes(hostname);
+  if (haySesionDemo() || esLocal) return window.location.origin;
+  return (import.meta.env.VITE_APP_ORIGIN || "https://app.orbital.net.ar").replace(/\/$/, "");
+}
+
 // El techo real no es del QR sino de la transferencia: ningún cobro puede
 // superar el `limite_transferencia` más alto que haya configurado el banco,
 // porque si no, no hay cuenta que pueda pagarlo. Hoy es el de la Caja de
@@ -113,7 +120,7 @@ export function CobrarPage() {
   usarPantallaDespierta(Boolean(cobroId) && segundos > 0);
   const linkQr = useMemo(() => {
     if (!cobroId) return "";
-    const url = new URL("/pagar", DOMINIO_APP);
+    const url = new URL("/pagar", obtenerDominioApp());
     url.searchParams.set("id", cobroId);
     return url.toString();
   }, [cobroId]);
@@ -238,6 +245,14 @@ export function CobrarPage() {
           <p className="inline-flex items-center gap-2 text-amber-200">
             <Clock3 className="size-4" /> Vence en {formatearCuentaRegresiva(segundos)}
           </p>
+          {haySesionDemo() && (
+            <Link
+              to={`/pagar?id=${encodeURIComponent(cobroId)}`}
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
+            >
+              Probar pago de este QR
+            </Link>
+          )}
           <Button type="button" variant="outline" onClick={compartirODescargar} className="w-full">
             <Share2 className="size-4" /> Compartir / descargar QR
           </Button>
@@ -261,10 +276,13 @@ export function EscanearPage() {
     setError(null);
     try {
       const url = new URL(codigos[0].rawValue);
-      const origen = new URL(DOMINIO_APP);
+      const origen = new URL(obtenerDominioApp());
+      const admiteHttpLocal =
+        origen.protocol === "http:" &&
+        ["localhost", "127.0.0.1", "::1", "[::1]"].includes(origen.hostname.toLowerCase());
       const id = url.searchParams.get("id");
       if (
-        url.protocol !== "https:" ||
+        (url.protocol !== "https:" && !(admiteHttpLocal && url.protocol === "http:")) ||
         url.origin !== origen.origin ||
         url.pathname !== "/pagar" ||
         url.hash ||
@@ -311,7 +329,7 @@ export function EscanearPage() {
         </div>
       )}
       <p className="mt-4 flex items-center justify-center gap-2 text-center text-xs text-purple-200">
-        <ScanLine className="size-4" /> Solo se acepta un QR de pago de app.orbital.net.ar.
+        <ScanLine className="size-4" /> Solo se acepta un QR de pago de Banco Orbital.
       </p>
     </PanelQr>
   );

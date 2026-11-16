@@ -2,7 +2,8 @@
 // formulario de Clerk a la derecha. En pantallas chicas se apila.
 
 import { useState, type ReactNode } from "react";
-import { ArrowLeftRight, Landmark, Wallet } from "lucide-react";
+import { ArrowLeftRight, FlaskConical, Landmark, Wallet } from "lucide-react";
+import { Link } from "react-router";
 import logo from "../../imports/orbital-logo.webp";
 import { IsotipoOrbital } from "../../components/marca/IsotipoOrbital";
 import { DialogoOrbitaSecreta } from "../bonificaciones/DialogoOrbitaSecreta";
@@ -57,6 +58,19 @@ export function LayoutAcceso({ titulo, bajada, children }: LayoutAccesoProps) {
               </li>
             ))}
           </ul>
+
+          <div className="mt-8">
+            <Link
+              to="/demo"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-purple-300/30 bg-purple-300/10 px-5 py-2 text-sm font-medium text-purple-100 transition hover:bg-purple-300/20"
+            >
+              <FlaskConical className="h-4 w-4" />
+              Probar la demo sin registrarme
+            </Link>
+            <p className="mt-2 text-sm text-purple-200/60">
+              Explorá las funciones con datos ficticios, sin afectar cuentas reales.
+            </p>
+          </div>
         </section>
 
         <section className="mx-auto w-full max-w-md">{children}</section>
