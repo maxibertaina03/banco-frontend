@@ -292,6 +292,7 @@ export function PortalPage() {
                         syncingIncoming={syncingIncoming}
                         resetSignal={contadorResetTransferencia}
                         onSelectActivity={abrirDetalleDeTransaccion}
+                        esDemo={esDemo}
                       />
                     </ErrorBoundary>
                   )}

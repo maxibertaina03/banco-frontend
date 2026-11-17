@@ -33,6 +33,7 @@ interface UsePortalActionsParams {
   setError: (value: string | null) => void;
   setSubmitting: (value: boolean) => void;
   setSuccess: (value: string | null) => void;
+  esDemo?: boolean;
 }
 
 export interface SyncState {
@@ -49,6 +50,7 @@ export function usePortalActions({
   setError,
   setSubmitting,
   setSuccess,
+  esDemo = false,
 }: UsePortalActionsParams) {
   const [idCuentaSincronizando, setIdCuentaSincronizando] = useState<string | null>(null);
   const [bulkSyncing, setBulkSyncing] = useState(false);
@@ -135,7 +137,7 @@ export function usePortalActions({
       return;
     }
 
-    if (cuentaOrigen.banco_central_registrada === false) {
+    if (!esDemo && cuentaOrigen.banco_central_registrada === false) {
       setError(
         "La cuenta origen todavía no está habilitada para transferencias a otros bancos. Comunicate con el banco para activarla."
       );

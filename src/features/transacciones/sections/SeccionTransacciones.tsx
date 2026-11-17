@@ -34,6 +34,7 @@ interface SeccionTransaccionesProps {
   // El padre incrementa este número tras un submit OK para limpiar el form.
   resetSignal?: number;
   onSelectActivity?: (id: string) => void;
+  esDemo?: boolean;
 }
 
 type LookupState = "idle" | "loading" | "found" | "not_found";
@@ -49,6 +50,7 @@ export const SeccionTransacciones = memo(function SeccionTransacciones({
   syncingIncoming,
   resetSignal,
   onSelectActivity,
+  esDemo = false,
 }: SeccionTransaccionesProps) {
   const {
     register,
@@ -140,7 +142,7 @@ export const SeccionTransacciones = memo(function SeccionTransacciones({
   }
 
   const selectedOrigin = perfil.cuentas.find((cuenta) => cuenta.id === cuentaOrigenId);
-  const originNotRegistered = selectedOrigin && selectedOrigin.banco_central_registrada === false;
+  const originNotRegistered = !esDemo && selectedOrigin && selectedOrigin.banco_central_registrada === false;
 
   return (
     <div className="grid gap-6 xl:grid-cols-[0.8fr_1.2fr]">
@@ -148,7 +150,9 @@ export const SeccionTransacciones = memo(function SeccionTransacciones({
         <CardHeader>
           <CardTitle>Realizar transferencia</CardTitle>
           <CardDescription>
-            Ingresá CBU o alias. Las transferencias a cuentas Orbital se acreditan al instante; a otros bancos son procesadas por la red interbancaria.
+            {esDemo
+              ? "Ingresá un CBU o alias para simular la transferencia. No se envía dinero a ningún banco y los datos se borran al salir del modo prueba."
+              : "Ingresá CBU o alias. Las transferencias a cuentas Orbital se acreditan al instante; a otros bancos son procesadas por la red interbancaria."}
           </CardDescription>
         </CardHeader>
         <CardContent>

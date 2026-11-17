@@ -123,6 +123,7 @@ export function usePortalPage() {
     setError,
     setSubmitting,
     setSuccess,
+    esDemo,
   });
 
   // Detalle de un movimiento: al tocar uno en la lista, lo buscamos en las
